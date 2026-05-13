@@ -9,6 +9,7 @@ interface Monograph {
   title: string;
   category: string;
   content: string;
+  imageUrl?: string | null;
 }
 
 function Dashboard({ data }: { data: Monograph[] }) {
