@@ -86,21 +86,6 @@ function MonographReader({ data }: { data: Monograph[] }) {
     );
   }
 
-  // Auto-linking logic: find other titles in the text and convert them to links
-  // We use a simple regex approach for demonstration. In a production app, a custom remark plugin is better.
-  const processContent = (text: string) => {
-    let processed = text;
-    data.forEach(d => {
-      if (d.id === id) return; // don't link to self
-      // Only replace exact whole word matches
-      const regex = new RegExp(`\\b(${d.title})\\b`, 'g');
-      // If the text contains the name, replace it with a markdown link
-      // But avoid replacing inside existing links. For simplicity, just replace.
-      // This is a naive implementation.
-      // processed = processed.replace(regex, `[$1](/monograph/${d.id})`);
-    });
-    return processed;
-  };
 
   return (
     <div className="reader-wrapper animate-slide-up">
