@@ -48,7 +48,7 @@ function buildData() {
     // Splitte den relativen Pfad. Alles bis auf die Datei selbst sind Kategorien-Ebenen.
     const pathParts = relativePath.split(path.sep);
     pathParts.pop(); // Dateiname entfernen
-    const categoryArray = pathParts.length > 0 ? pathParts : ['Uncategorized'];
+    const categoryString = pathParts.length > 0 ? pathParts.join(' / ') : 'Uncategorized';
 
     // Den Titel parsen (erste Zeile mit #)
     const titleMatch = content.match(/^#\s+(.+)$/m);
@@ -56,6 +56,8 @@ function buildData() {
     
     // "Monographie: Masterclass " aus dem Titel entfernen für eine saubere Ansicht
     title = title.replace(/Monographie:\s*Masterclass\s*/i, '').trim();
+    // Obsidian-Klammern aus dem Titel entfernen, falls vorhanden
+    title = title.replace(/\[\[/g, '').replace(/\]\]/g, '').trim();
 
     // Erstes Bild extrahieren: ![alt](url)
     const imageMatch = content.match(/!\[.*?\]\((.*?)\)/);
@@ -64,7 +66,7 @@ function buildData() {
     monographs.push({
       id: basename,
       title: title,
-      category: categoryArray,
+      category: categoryString,
       imageUrl: imageUrl,
       content: content
     });

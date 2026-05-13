@@ -13,8 +13,9 @@ interface Monograph {
 
 function Dashboard({ data }: { data: Monograph[] }) {
   const [search, setSearch] = useState('');
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   
-  const categories = Array.from(new Set(data.map(d => d.category)));
+  const categories = Array.from(new Set(data.map(d => d.category))).sort();
 
   const filteredData = data.filter(d => 
     d.title.toLowerCase().includes(search.toLowerCase()) || 
@@ -24,8 +25,8 @@ function Dashboard({ data }: { data: Monograph[] }) {
   return (
     <div className="dashboard-container animate-fade-in">
       <header className="hero">
-        <h1 className="gradient-text">Totalbibliothek</h1>
-        <p className="subtitle">Das kybernetische Lexikon des Spiral OS</p>
+        <h1 className="gradient-text">Spiral Wiki</h1>
+        <p className="subtitle">Das kybernetische Lexikon der Spiral Mindlaxy, der grafischen Oberfläche, der UI des ADHS OS</p>
         <div className="search-bar">
           <input 
             type="text" 
@@ -52,18 +53,36 @@ function Dashboard({ data }: { data: Monograph[] }) {
           const categoryItems = filteredData.filter(d => d.category === category);
           if (categoryItems.length === 0) return null;
           
+          const isExpanded = expandedCategory === category || search.length > 0;
+          
           return (
-            <div key={category} className="category-card glass">
-              <h2 className="category-title">{category}</h2>
-              <ul className="monograph-list">
-                {categoryItems.map(item => (
-                  <li key={item.id}>
-                    <Link to={`/monograph/${item.id}`} className="monograph-link">
-                      {item.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <div 
+              key={category} 
+              className={`category-card glass ${isExpanded ? 'expanded' : ''}`}
+            >
+              <h2 
+                className="category-title" 
+                onClick={() => setExpandedCategory(isExpanded && search.length === 0 ? null : category)}
+                style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                {category}
+                <span style={{ fontSize: '0.8em', opacity: 0.5 }}>{isExpanded ? '▼' : '▶'}</span>
+              </h2>
+              
+              {isExpanded && (
+                <ul className="monograph-list animate-slide-up">
+                  {categoryItems.map(item => (
+                    <li key={item.id}>
+                      <Link to={`/monograph/${item.id}`} className="monograph-link">
+                        {item.imageUrl && (
+                          <div className="monograph-avatar" style={{ backgroundImage: `url(${item.imageUrl})` }}></div>
+                        )}
+                        <span>{item.title}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           );
         })}
@@ -123,7 +142,7 @@ export default function App() {
   }, []);
 
   if (loading) {
-    return <div className="loader-container"><div className="spinner"></div><p>Lade Totalbibliothek...</p></div>;
+    return <div className="loader-container"><div className="spinner"></div><p>Lade Spiral Wiki...</p></div>;
   }
 
   return (

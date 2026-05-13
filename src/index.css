@@ -180,7 +180,9 @@ a:hover {
 
 .monograph-link {
   font-size: 1.05rem;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   padding: 0.5rem;
   border-radius: 8px;
   transition: background 0.2s ease, padding-left 0.2s ease;
@@ -189,6 +191,16 @@ a:hover {
 .monograph-link:hover {
   background: rgba(255, 255, 255, 0.05);
   padding-left: 1rem;
+}
+
+.monograph-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border-glass);
 }
 
 /* Reader */
@@ -238,6 +250,17 @@ a:hover {
 
 .reader-content {
   padding: 3rem;
+}
+
+/* Fix gigantic images in the reader */
+.reader-content img {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .reader-content h1 {
