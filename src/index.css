@@ -145,6 +145,37 @@ a:hover {
   color: white;
 }
 
+.highlight-box {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.progress-bar-container.small {
+  height: 4px;
+  margin: 0.5rem 0 0 0;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 .category-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -161,13 +192,37 @@ a:hover {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.category-header {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-glass);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.category-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .category-title {
   font-family: var(--font-display);
   font-size: 1.5rem;
   color: var(--accent-cyan);
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-glass);
-  padding-bottom: 0.5rem;
+}
+
+.expand-icon {
+  font-size: 0.8em;
+  opacity: 0.5;
+}
+
+.category-progress-container {
+  margin-top: 0.5rem;
+}
+
+.category-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .monograph-list {
@@ -185,7 +240,50 @@ a:hover {
   gap: 1rem;
   padding: 0.5rem;
   border-radius: 8px;
-  transition: background 0.2s ease, padding-left 0.2s ease;
+  transition: background 0.2s ease, padding-left 0.2s ease, opacity 0.2s ease;
+}
+
+.monograph-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  padding-left: 1rem;
+}
+
+.monograph-link.read {
+  opacity: 0.6;
+}
+
+.monograph-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border-glass);
+  position: relative;
+}
+
+.read-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: var(--accent-cyan);
+  color: #0a0b10;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.read-badge-text {
+  color: var(--accent-cyan);
+  font-weight: bold;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .monograph-link:hover {
@@ -261,6 +359,30 @@ a:hover {
   display: block;
   margin: 0 auto 2rem;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.wiki-link {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+  text-decoration-color: rgba(6, 182, 212, 0.4);
+  text-underline-offset: 4px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  padding: 0 2px;
+  border-radius: 4px;
+}
+
+.wiki-link:hover {
+  background: rgba(6, 182, 212, 0.1);
+  text-decoration-color: var(--accent-cyan);
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+}
+
+.external-link {
+  color: var(--accent-purple);
+  text-decoration: underline;
+  text-decoration-color: rgba(139, 92, 246, 0.4);
+  text-underline-offset: 4px;
 }
 
 .reader-content h1 {
