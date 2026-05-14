@@ -34,40 +34,10 @@ interface Monograph {
   imageUrl?: string | null;
 }
 
-interface CategoryNode {
-  name: string;
-  items: Monograph[];
-  subcats: Record<string, CategoryNode>;
-}
+// interface ProcessedMonograph removed
 
-function buildTree(data: Monograph[]): CategoryNode {
-  const root: CategoryNode = { name: 'Root', items: [], subcats: {} };
-  for (const item of data) {
-    let current = root;
-    const pathParts = item.category ? item.category.split(' / ') : ['Uncategorized'];
-    
-    for (const part of pathParts) {
-      if (!current.subcats[part]) {
-        current.subcats[part] = { name: part, items: [], subcats: {} };
-      }
-      current = current.subcats[part];
-    }
-    current.items.push(item);
-  }
-  return root;
-}
-
-const getAllItems = (n: CategoryNode): Monograph[] => {
-  let all = [...n.items];
-  for (const sub of Object.values(n.subcats)) {
-    all = [...all, ...getAllItems(sub)];
-  }
-  return all;
-};
-
-// Bereinigt die fetten Präfixe für ein elegantes UI
-const cleanTitle = (title: string) => {
-  return title.replace(/^(Monographie: |Primärquellen: )/i, '').trim();
+const cleanTitleText = (title: string) => {
+  return title.replace(/^(Monographie: |Primärquellen: |Masterclass |Monographie )/i, '').replace(/\s*\(.*?\)/, '').trim();
 };
 
 interface DashboardProps {
@@ -77,66 +47,115 @@ interface DashboardProps {
 
 function Dashboard({ data, readMonographs }: DashboardProps) {
   const [search, setSearch] = useState('');
-  const [currentPath, setCurrentPath] = useState<string[]>([]);
   const viewportRef = useRef<HTMLDivElement>(null);
 
-  const filteredData = data.filter(d => 
+  // 1. Data Processing
+  const processedData = data.map(item => {
+    const topCategory = item.category ? item.category.split(' / ')[0] : 'Uncategorized';
+    
+    let year = 9999;
+    const yearMatch = item.content.match(/\(\*?\s*(\d{4})/);
+    if (yearMatch && yearMatch[1]) {
+      year = parseInt(yearMatch[1], 10);
+    } else {
+       const titleYearMatch = item.title.match(/\(\*?\s*(\d{4})/);
+       if (titleYearMatch && titleYearMatch[1]) {
+          year = parseInt(titleYearMatch[1], 10);
+       }
+    }
+
+    let finalImageUrl = item.imageUrl || null;
+    if (!finalImageUrl) {
+      const imgMatch = item.content.match(/!\[.*?\]\((.*?)\)/);
+      if (imgMatch && imgMatch[1]) {
+        finalImageUrl = imgMatch[1];
+      }
+    }
+
+    return {
+      ...item,
+      topCategory,
+      year,
+      finalImageUrl,
+      cleanTitle: cleanTitleText(item.title)
+    };
+  });
+
+  const filteredData = processedData.filter(d => 
     d.title.toLowerCase().includes(search.toLowerCase()) || 
     d.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  const fullTree = buildTree(filteredData);
+  // 2. Galaxy Math
+  const isSearching = search.trim().length > 0;
+  const itemsToProcess = isSearching ? filteredData : processedData;
   
-  let currentNode = fullTree;
-  for (const part of currentPath) {
-    if (currentNode.subcats[part]) {
-      currentNode = currentNode.subcats[part];
-    }
-  }
+  const categories = Array.from(new Set(itemsToProcess.map(d => d.topCategory))).sort();
+  const N_cats = categories.length || 1;
+  
+  let maxR = 0;
+  const nodes: any[] = [];
+  
+  categories.forEach((cat, catIndex) => {
+    const alpha = catIndex * ((2 * Math.PI) / N_cats);
+    const catItems = itemsToProcess.filter(d => d.topCategory === cat).sort((a, b) => a.year - b.year);
+    
+    const readCount = catItems.filter(item => readMonographs.includes(item.id)).length;
+    const progress = catItems.length > 0 ? Math.round((readCount / catItems.length) * 100) : 0;
 
-  // Auto-Center Canvas on Mount and Path Change
+    // Category Node
+    nodes.push({
+      isCategory: true,
+      name: cat,
+      id: `cat-${cat}`,
+      x: 500 * Math.cos(alpha),
+      y: 500 * Math.sin(alpha),
+      progress
+    });
+
+    // Item Nodes
+    catItems.forEach((item, i) => {
+      const idx = i + 1;
+      const r_base = 650;
+      const b_r = 100;
+      const r = r_base + b_r * idx;
+      
+      if (r > maxR) maxR = r;
+      
+      const b_theta = 0.12;
+      const theta = alpha + b_theta * idx;
+
+      const x = r * Math.cos(theta);
+      const y = r * Math.sin(theta);
+
+      nodes.push({
+        isCategory: false,
+        item,
+        id: item.id,
+        x,
+        y
+      });
+    });
+  });
+
+  const canvasSize = Math.max(4000, maxR * 2 + 2000);
+
+  // Auto-Center Canvas on Mount
   useEffect(() => {
     if (viewportRef.current) {
       const v = viewportRef.current;
-      v.scrollLeft = (4000 - v.clientWidth) / 2;
-      v.scrollTop = (4000 - v.clientHeight) / 2;
+      v.scrollLeft = (canvasSize - v.clientWidth) / 2;
+      v.scrollTop = (canvasSize - v.clientHeight) / 2;
     }
-  }, [currentPath]);
-
-  // Combine subcats and items for the spiral layout
-  const subcats = Object.keys(currentNode.subcats).sort();
-  const items = currentNode.items.sort((a, b) => cleanTitle(a.title).localeCompare(cleanTitle(b.title)));
-
-  // Spiral Math
-  const getSpiralPosition = (index: number) => {
-    // Abstandstuning je nach Typ
-    const spacing = 180; // Arc length between nodes
-    const b = 25; // How fast the spiral grows outward
-    const a = 180; // Inner radius buffer (don't overlap the center orb)
-    
-    // We start index at 1 to push everything outward
-    const i = index + 1;
-    const s = i * spacing;
-    
-    // Archimedean spiral arc length approximation
-    const theta = Math.sqrt((2 * s) / b);
-    const r = a + b * theta;
-    
-    const x = r * Math.cos(theta);
-    const y = r * Math.sin(theta);
-    
-    return { x, y };
-  };
-
-  const isRoot = currentPath.length === 0;
-  const isSearching = search.trim().length > 0;
+  }, [canvasSize]);
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       
       {/* --- HUD OVERLAY (Fixed) --- */}
       <div className="hud-overlay">
-        <h1 className="hud-title hud-interactive">SPiRAL MiND</h1>
+        <h1 className="hud-title hud-interactive">SPiRAL MiND V3</h1>
+        <div className="hud-subtitle" style={{ color: 'var(--accent-pink)', letterSpacing: '2px', fontSize: '0.9rem', marginBottom: '1rem' }}>CHRONOLOGICAL GALAXY</div>
         
         <div className="search-bar-hud hud-interactive">
           <input 
@@ -146,93 +165,53 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-
-        {!isRoot && !isSearching && (
-          <nav className="breadcrumb-nav hud-interactive">
-            <button className="breadcrumb-item" onClick={() => setCurrentPath([])}>Home</button>
-            {currentPath.map((part, index) => (
-              <span key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span className="breadcrumb-separator">/</span>
-                <button 
-                  className={`breadcrumb-item ${index === currentPath.length - 1 ? 'active' : ''}`}
-                  onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
-                >
-                  {part.replace(/_/g, ' ')}
-                </button>
-              </span>
-            ))}
-          </nav>
-        )}
       </div>
 
-      {/* --- SPIRAL VIEWPORT (Scrollable) --- */}
+      {/* --- GALAXY VIEWPORT (Scrollable) --- */}
       {!isSearching ? (
         <div className="spiral-viewport animate-fade-in" ref={viewportRef}>
-          <div className="spiral-canvas">
+          <div className="spiral-canvas" style={{ width: `${canvasSize}px`, height: `${canvasSize}px` }}>
             
-            {/* The Central Orb (Navigates up if not root) */}
-            <div 
-              className="spiral-center-node"
-              onClick={() => {
-                if (currentPath.length > 0) {
-                  setCurrentPath(currentPath.slice(0, -1));
-                }
-              }}
-            >
-              <div className="center-title">
-                {isRoot ? "THE MATRIX" : currentPath[currentPath.length - 1].replace(/_/g, ' ')}
-              </div>
-              {!isRoot && <div className="center-subtitle">← Level Up</div>}
+            {/* The Central Orb */}
+            <div className="spiral-center-node" style={{ transform: 'translate(-50%, -50%)', top: '50%', left: '50%', cursor: 'default' }}>
+              <div className="center-title">THE MATRIX</div>
             </div>
 
-            {/* The Orbiting Subcategories */}
-            {subcats.map((catName, index) => {
-              const pos = getSpiralPosition(index);
-              const subNode = currentNode.subcats[catName];
-              const allItems = getAllItems(subNode);
-              const readCount = allItems.filter(item => readMonographs.includes(item.id)).length;
-              const progress = allItems.length > 0 ? Math.round((readCount / allItems.length) * 100) : 0;
-              
-              return (
-                <div 
-                  key={catName} 
-                  className="node-positioner"
-                  style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
-                >
+            {/* Galaxy Nodes */}
+            {nodes.map(node => {
+              if (node.isCategory) {
+                return (
                   <div 
-                    className="orbital-node node-cat"
-                    onClick={() => setCurrentPath([...currentPath, catName])}
+                    key={node.id} 
+                    className="node-positioner node-pulse"
+                    style={{ transform: `translate(${node.x}px, ${node.y}px)` }}
                   >
-                    <span>{catName.replace(/_/g, ' ')}<br/>({progress}%)</span>
+                    <div className="orbital-node node-cat" style={{ transform: 'translate(-50%, -50%) scale(1.3)' }}>
+                      <span>{node.name.replace(/_/g, ' ')}<br/>({node.progress}%)</span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              }
 
-            {/* The Orbiting Monographs */}
-            {items.map((item, index) => {
-              const pos = getSpiralPosition(subcats.length + index);
-              const isRead = readMonographs.includes(item.id);
-              const clean = cleanTitle(item.title);
+              const isRead = readMonographs.includes(node.item.id);
               
               return (
                 <div 
-                  key={item.id} 
-                  className="node-positioner"
-                  style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
+                  key={node.id} 
+                  className="node-positioner node-pulse-item"
+                  style={{ transform: `translate(${node.x}px, ${node.y}px)` }}
                 >
                   <Link 
-                    to={`/monograph/${item.id}`} 
+                    to={`/monograph/${node.item.id}`} 
                     className={`orbital-node node-item ${isRead ? 'read' : ''}`}
-                    style={{ backgroundImage: item.imageUrl ? `url(${item.imageUrl})` : 'none' }}
+                    style={{ backgroundImage: node.item.finalImageUrl ? `url(${node.item.finalImageUrl})` : 'none' }}
                   >
-                    {!item.imageUrl && <span className="node-icon">◆</span>}
-                    
-                    {/* Elegant Tooltip on Hover */}
-                    <div className="node-tooltip">
-                      {clean} {isRead ? '(Erforscht)' : ''}
-                    </div>
+                    {!node.item.finalImageUrl && <span className="node-icon">◆</span>}
                   </Link>
+                  <div className="node-label">
+                    {node.item.cleanTitle}
+                    {node.item.year !== 9999 && <div className="node-label-year">{node.item.year}</div>}
+                  </div>
                 </div>
               );
             })}
@@ -243,16 +222,16 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
         /* --- SEARCH RESULTS FALLBACK GRID --- */
         <div className="search-results-overlay animate-fade-in hud-interactive">
           <div className="search-grid">
-            {filteredData.sort((a,b) => cleanTitle(a.title).localeCompare(cleanTitle(b.title))).map(item => (
+            {filteredData.map(item => (
               <Link to={`/monograph/${item.id}`} key={item.id} className="search-card">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt="" style={{width: 40, height: 40, borderRadius: 8, objectFit: 'cover'}} />
+                {item.finalImageUrl ? (
+                  <img src={item.finalImageUrl} alt="" style={{width: 40, height: 40, borderRadius: 8, objectFit: 'cover'}} />
                 ) : (
                   <div style={{width: 40, height: 40, borderRadius: 8, background: 'rgba(189,0,255,0.2)', display: 'flex', alignItems:'center', justifyContent:'center'}}>◆</div>
                 )}
                 <div>
-                  <div style={{fontWeight: 500}}>{cleanTitle(item.title)}</div>
-                  <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>{item.category}</div>
+                  <div style={{fontWeight: 500}}>{item.cleanTitle}</div>
+                  <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>{item.topCategory}</div>
                 </div>
               </Link>
             ))}
