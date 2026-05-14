@@ -57,7 +57,6 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
     <div className="dashboard-container animate-fade-in">
       <header className="hero">
         <h1 className="gradient-text">SPiRAL MiND WiKi</h1>
-        <p className="subtitle">Das kybernetische Lexikon der Spiral Mindlaxy, der grafischen Oberfläche, der UI des ADHS OS</p>
         <div className="search-bar">
           <input 
             type="text" 
