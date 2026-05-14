@@ -98,8 +98,8 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
   useEffect(() => {
     if (viewportRef.current) {
       const v = viewportRef.current;
-      v.scrollLeft = (8000 - v.clientWidth) / 2;
-      v.scrollTop = (8000 - v.clientHeight) / 2;
+      v.scrollLeft = (4000 - v.clientWidth) / 2;
+      v.scrollTop = (4000 - v.clientHeight) / 2;
     }
   }, [currentPath]);
 
@@ -196,11 +196,15 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
               return (
                 <div 
                   key={catName} 
-                  className="orbital-node node-cat"
-                  style={{ transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))` }}
-                  onClick={() => setCurrentPath([...currentPath, catName])}
+                  className="node-positioner"
+                  style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
                 >
-                  <span>{catName.replace(/_/g, ' ')}<br/>({progress}%)</span>
+                  <div 
+                    className="orbital-node node-cat"
+                    onClick={() => setCurrentPath([...currentPath, catName])}
+                  >
+                    <span>{catName.replace(/_/g, ' ')}<br/>({progress}%)</span>
+                  </div>
                 </div>
               );
             })}
@@ -212,22 +216,24 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
               const clean = cleanTitle(item.title);
               
               return (
-                <Link 
-                  to={`/monograph/${item.id}`} 
+                <div 
                   key={item.id} 
-                  className={`orbital-node node-item ${isRead ? 'read' : ''}`}
-                  style={{ 
-                    transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`,
-                    backgroundImage: item.imageUrl ? `url(${item.imageUrl})` : 'none'
-                  }}
+                  className="node-positioner"
+                  style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
                 >
-                  {!item.imageUrl && <span className="node-icon">◆</span>}
-                  
-                  {/* Elegant Tooltip on Hover */}
-                  <div className="node-tooltip">
-                    {clean} {isRead ? '(Erforscht)' : ''}
-                  </div>
-                </Link>
+                  <Link 
+                    to={`/monograph/${item.id}`} 
+                    className={`orbital-node node-item ${isRead ? 'read' : ''}`}
+                    style={{ backgroundImage: item.imageUrl ? `url(${item.imageUrl})` : 'none' }}
+                  >
+                    {!item.imageUrl && <span className="node-icon">◆</span>}
+                    
+                    {/* Elegant Tooltip on Hover */}
+                    <div className="node-tooltip">
+                      {clean} {isRead ? '(Erforscht)' : ''}
+                    </div>
+                  </Link>
+                </div>
               );
             })}
 

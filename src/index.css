@@ -56,8 +56,8 @@ html, body {
 }
 
 .spiral-canvas {
-  width: 8000px; /* Massive canvas */
-  height: 8000px;
+  width: 4000px; /* Massive canvas */
+  height: 4000px;
   position: relative;
   /* Origin in the absolute center */
   transform-origin: center;
@@ -187,24 +187,30 @@ html, body {
 }
 
 /* Orbital Nodes */
-.orbital-node {
+.node-positioner {
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 10;
+}
+.node-positioner:hover {
+  z-index: 50;
+}
+
+.orbital-node {
+  position: relative;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 10;
   transform-origin: center;
-  /* Transform is set inline via React (translate(-50%, -50%) + translate(x, y)) */
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .orbital-node:hover {
-  z-index: 50;
-  transform: translate(-50%, -50%) scale(1.3) !important; /* Scale up on hover, overriding inline transform scale if needed, wait we need to keep x,y */
+  transform: translate(-50%, -50%) scale(1.3);
 }
 
 /* Category Node */
