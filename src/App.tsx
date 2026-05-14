@@ -232,7 +232,7 @@ export default function App() {
   }, []);
 
   if (loading) {
-    return <div className="loader-container"><div className="spinner"></div><p>Lade Spiral Wiki...</p></div>;
+    return <div className="loader-container"><div className="spinner"></div><p>Lade SPiRAL MiND WiKi...</p></div>;
   }
 
   return (
