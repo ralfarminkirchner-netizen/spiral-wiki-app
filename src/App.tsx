@@ -37,21 +37,124 @@ interface Monograph {
   imageUrl?: string | null;
 }
 
-interface DashboardProps {
-  data: Monograph[];
-  readMonographs: string[];
+interface CategoryNode {
+  name: string;
+  items: Monograph[];
+  subcats: Record<string, CategoryNode>;
+}
+
+function buildTree(data: Monograph[]): CategoryNode {
+  const root: CategoryNode = { name: 'Root', items: [], subcats: {} };
+  for (const item of data) {
+    let current = root;
+    // Categories are stored like "Philosophie / Existenzialismus"
+    const pathParts = item.category ? item.category.split(' / ') : ['Uncategorized'];
+    
+    for (const part of pathParts) {
+      if (!current.subcats[part]) {
+        current.subcats[part] = { name: part, items: [], subcats: {} };
+      }
+      current = current.subcats[part];
+    }
+    current.items.push(item);
+  }
+  return root;
+}
+
+function TreeNode({ node, level, search, readMonographs }: { node: CategoryNode, level: number, search: string, readMonographs: string[] }) {
+  const hasSearch = search.trim().length > 0;
+  // Automatically expand if searching, otherwise collapsed by default
+  const [isOpen, setIsOpen] = useState(hasSearch || level === 0);
+
+  // Sync open state with search
+  useEffect(() => {
+    if (hasSearch) setIsOpen(true);
+  }, [hasSearch]);
+
+  const subcatNames = Object.keys(node.subcats).sort();
+  const hasSubcats = subcatNames.length > 0;
+  const hasItems = node.items.length > 0;
+
+  if (!hasSubcats && !hasItems) return null;
+
+  // Calculate read progress for this node (recursive)
+  const getAllItems = (n: CategoryNode): Monograph[] => {
+    let all = [...n.items];
+    for (const sub of Object.values(n.subcats)) {
+      all = [...all, ...getAllItems(sub)];
+    }
+    return all;
+  };
+  
+  const allNodeItems = getAllItems(node);
+  const readCount = allNodeItems.filter(item => readMonographs.includes(item.id)).length;
+  const totalCount = allNodeItems.length;
+  const progress = totalCount > 0 ? Math.round((readCount / totalCount) * 100) : 0;
+
+  return (
+    <div className={`tree-node level-${level}`}>
+      <div 
+        className={`tree-header glass ${isOpen ? 'open' : ''} ${level === 0 ? 'root-header' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="tree-title-row">
+          <span className="expand-icon">{isOpen ? '▼' : '▶'}</span>
+          <span className="tree-name">{node.name.replace(/_/g, ' ')}</span>
+        </div>
+        <div className="tree-stats">
+          <span className="tree-count">{readCount}/{totalCount} ({progress}%)</span>
+        </div>
+      </div>
+      
+      {isOpen && (
+        <div className="tree-children animate-slide-up">
+          {subcatNames.map(name => (
+            <TreeNode 
+              key={name} 
+              node={node.subcats[name]} 
+              level={level + 1} 
+              search={search}
+              readMonographs={readMonographs}
+            />
+          ))}
+          
+          {hasItems && (
+            <ul className="monograph-list">
+              {node.items.sort((a, b) => a.title.localeCompare(b.title)).map(item => {
+                const isRead = readMonographs.includes(item.id);
+                return (
+                  <li key={item.id}>
+                    <Link to={`/monograph/${item.id}`} className={`monograph-link ${isRead ? 'read' : ''}`}>
+                      {item.imageUrl && (
+                        <div className="monograph-avatar-wrapper">
+                          <img src={item.imageUrl} alt={item.title} className="monograph-avatar-img" loading="lazy" />
+                          {isRead && <div className="read-badge">✓</div>}
+                        </div>
+                      )}
+                      {!item.imageUrl && isRead && <span className="read-badge-text">✓</span>}
+                      <span>{item.title}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Dashboard({ data, readMonographs }: DashboardProps) {
   const [search, setSearch] = useState('');
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   
-  const categories = Array.from(new Set(data.map(d => d.category))).sort();
-
   const filteredData = data.filter(d => 
     d.title.toLowerCase().includes(search.toLowerCase()) || 
     d.category.toLowerCase().includes(search.toLowerCase())
   );
+
+  const tree = buildTree(filteredData);
+  const mainCategoriesCount = Object.keys(tree.subcats).length;
 
   return (
     <div className="dashboard-container animate-fade-in">
@@ -70,11 +173,11 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
       <div className="stats-container">
         <div className="stat-box glass">
           <h3>Einträge</h3>
-          <p className="stat-number">{data.length}</p>
+          <p className="stat-number">{filteredData.length}</p>
         </div>
         <div className="stat-box glass">
-          <h3>Kategorien</h3>
-          <p className="stat-number">{categories.length}</p>
+          <h3>Hauptordner</h3>
+          <p className="stat-number">{mainCategoriesCount}</p>
         </div>
         <div className="stat-box glass highlight-box">
           <h3>Erforscht</h3>
@@ -86,62 +189,16 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
         </div>
       </div>
 
-      <div className="category-grid">
-        {categories.map(category => {
-          const categoryItems = filteredData.filter(d => d.category === category);
-          if (categoryItems.length === 0) return null;
-          
-          const isExpanded = expandedCategory === category || search.length > 0;
-          const categoryReadCount = categoryItems.filter(item => readMonographs.includes(item.id)).length;
-          const catProgress = Math.round((categoryReadCount / categoryItems.length) * 100);
-          
-          return (
-            <div 
-              key={category} 
-              className={`category-card glass ${isExpanded ? 'expanded' : ''}`}
-            >
-              <div 
-                className="category-header"
-                onClick={() => setExpandedCategory(isExpanded && search.length === 0 ? null : category)}
-              >
-                <div className="category-title-row">
-                  <h2 className="category-title">{category}</h2>
-                  <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
-                </div>
-                <div className="category-progress-container">
-                  <div className="category-progress-text">
-                    {categoryReadCount} von {categoryItems.length} erkundet ({catProgress}%)
-                  </div>
-                  <div className="progress-bar-container small">
-                    <div className="progress-bar-fill" style={{ width: `${catProgress}%` }}></div>
-                  </div>
-                </div>
-              </div>
-              
-              {isExpanded && (
-                <ul className="monograph-list animate-slide-up">
-                  {categoryItems.map(item => {
-                    const isRead = readMonographs.includes(item.id);
-                    return (
-                      <li key={item.id}>
-                        <Link to={`/monograph/${item.id}`} className={`monograph-link ${isRead ? 'read' : ''}`}>
-                          {item.imageUrl && (
-                            <div className="monograph-avatar-wrapper">
-                              <img src={item.imageUrl} alt={item.title} className="monograph-avatar-img" loading="lazy" />
-                              {isRead && <div className="read-badge">✓</div>}
-                            </div>
-                          )}
-                          {!item.imageUrl && isRead && <span className="read-badge-text">✓</span>}
-                          <span>{item.title}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          );
-        })}
+      <div className="tree-container">
+        {Object.keys(tree.subcats).sort().map(catName => (
+          <TreeNode 
+            key={catName} 
+            node={tree.subcats[catName]} 
+            level={0} 
+            search={search}
+            readMonographs={readMonographs}
+          />
+        ))}
       </div>
     </div>
   );
