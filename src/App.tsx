@@ -1,9 +1,8 @@
 import { Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-// Custom Hook für lokalen Speicher
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -58,13 +57,17 @@ function buildTree(data: Monograph[]): CategoryNode {
   return root;
 }
 
-// Hilfsfunktion: Alle Items eines Knotens rekursiv finden
 const getAllItems = (n: CategoryNode): Monograph[] => {
   let all = [...n.items];
   for (const sub of Object.values(n.subcats)) {
     all = [...all, ...getAllItems(sub)];
   }
   return all;
+};
+
+// Bereinigt die fetten Präfixe für ein elegantes UI
+const cleanTitle = (title: string) => {
+  return title.replace(/^(Monographie: |Primärquellen: )/i, '').trim();
 };
 
 interface DashboardProps {
@@ -75,7 +78,8 @@ interface DashboardProps {
 function Dashboard({ data, readMonographs }: DashboardProps) {
   const [search, setSearch] = useState('');
   const [currentPath, setCurrentPath] = useState<string[]>([]);
-  
+  const viewportRef = useRef<HTMLDivElement>(null);
+
   const filteredData = data.filter(d => 
     d.title.toLowerCase().includes(search.toLowerCase()) || 
     d.category.toLowerCase().includes(search.toLowerCase())
@@ -83,7 +87,6 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
 
   const fullTree = buildTree(filteredData);
   
-  // Finde den aktuellen Knoten basierend auf currentPath
   let currentNode = fullTree;
   for (const part of currentPath) {
     if (currentNode.subcats[part]) {
@@ -91,23 +94,51 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
     }
   }
 
-  // Wenn gesucht wird, lösche den Pfad, um alles flach zu zeigen
+  // Auto-Center Canvas on Mount and Path Change
   useEffect(() => {
-    if (search.trim().length > 0 && currentPath.length > 0) {
-      setCurrentPath([]);
+    if (viewportRef.current) {
+      const v = viewportRef.current;
+      v.scrollLeft = (8000 - v.clientWidth) / 2;
+      v.scrollTop = (8000 - v.clientHeight) / 2;
     }
-  }, [search]);
+  }, [currentPath]);
 
-  const mainCategoriesCount = Object.keys(fullTree.subcats).length;
+  // Combine subcats and items for the spiral layout
+  const subcats = Object.keys(currentNode.subcats).sort();
+  const items = currentNode.items.sort((a, b) => cleanTitle(a.title).localeCompare(cleanTitle(b.title)));
+
+  // Spiral Math
+  const getSpiralPosition = (index: number) => {
+    // Abstandstuning je nach Typ
+    const spacing = 180; // Arc length between nodes
+    const b = 25; // How fast the spiral grows outward
+    const a = 180; // Inner radius buffer (don't overlap the center orb)
+    
+    // We start index at 1 to push everything outward
+    const i = index + 1;
+    const s = i * spacing;
+    
+    // Archimedean spiral arc length approximation
+    const theta = Math.sqrt((2 * s) / b);
+    const r = a + b * theta;
+    
+    const x = r * Math.cos(theta);
+    const y = r * Math.sin(theta);
+    
+    return { x, y };
+  };
+
   const isRoot = currentPath.length === 0;
+  const isSearching = search.trim().length > 0;
 
   return (
-    <div className="dashboard-container animate-fade-in">
-      <div className="spiral-bg"></div>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       
-      <header className="hero">
-        <h1 className="gradient-text">SPiRAL MiND</h1>
-        <div className="search-bar">
+      {/* --- HUD OVERLAY (Fixed) --- */}
+      <div className="hud-overlay">
+        <h1 className="hud-title hud-interactive">SPiRAL MiND</h1>
+        
+        <div className="search-bar-hud hud-interactive">
           <input 
             type="text" 
             placeholder="Suche im kybernetischen Netz..." 
@@ -115,104 +146,114 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-      </header>
 
-      {isRoot && search === '' && (
-        <div className="stats-container animate-slide-up">
-          <div className="stat-box glass">
-            <h3>Entitäten</h3>
-            <p className="stat-number">{filteredData.length}</p>
-          </div>
-          <div className="stat-box glass highlight-box">
-            <h3>Erforscht</h3>
-            <p className="stat-number">{readMonographs.length}</p>
-            <div className="progress-bar-container small">
-              <div className="progress-bar-fill" style={{ width: `${Math.round((readMonographs.length / data.length) * 100)}%` }}></div>
-            </div>
-          </div>
-          <div className="stat-box glass">
-            <h3>Dimensionen</h3>
-            <p className="stat-number">{mainCategoriesCount}</p>
-          </div>
-        </div>
-      )}
+        {!isRoot && !isSearching && (
+          <nav className="breadcrumb-nav hud-interactive">
+            <button className="breadcrumb-item" onClick={() => setCurrentPath([])}>Home</button>
+            {currentPath.map((part, index) => (
+              <span key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span className="breadcrumb-separator">/</span>
+                <button 
+                  className={`breadcrumb-item ${index === currentPath.length - 1 ? 'active' : ''}`}
+                  onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
+                >
+                  {part.replace(/_/g, ' ')}
+                </button>
+              </span>
+            ))}
+          </nav>
+        )}
+      </div>
 
-      {/* Breadcrumb Navigation */}
-      {!isRoot && search === '' && (
-        <nav className="breadcrumb-nav glass animate-slide-up">
-          <button className="breadcrumb-item" onClick={() => setCurrentPath([])}>Home</button>
-          {currentPath.map((part, index) => (
-            <span key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="breadcrumb-separator">/</span>
-              <button 
-                className={`breadcrumb-item ${index === currentPath.length - 1 ? 'active' : ''}`}
-                onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
-              >
-                {part.replace(/_/g, ' ')}
-              </button>
-            </span>
-          ))}
-        </nav>
-      )}
-
-      {/* Grid: Zeige Unterkategorien des aktuellen Knotens */}
-      {Object.keys(currentNode.subcats).length > 0 && (
-        <div className="bento-grid animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          {Object.keys(currentNode.subcats).sort().map(catName => {
-            const subNode = currentNode.subcats[catName];
-            const allItems = getAllItems(subNode);
-            const readCount = allItems.filter(item => readMonographs.includes(item.id)).length;
-            const progress = allItems.length > 0 ? Math.round((readCount / allItems.length) * 100) : 0;
+      {/* --- SPIRAL VIEWPORT (Scrollable) --- */}
+      {!isSearching ? (
+        <div className="spiral-viewport animate-fade-in" ref={viewportRef}>
+          <div className="spiral-canvas">
             
-            return (
-              <div 
-                key={catName} 
-                className="bento-card glass glass-interactive"
-                onClick={() => setCurrentPath([...currentPath, catName])}
-              >
-                <h2>{catName.replace(/_/g, ' ')}</h2>
-                
-                {/* Visual Progress Bar inside Card */}
-                <div className="progress-bar-container small" style={{ marginBottom: '1.5rem', opacity: 0.5 }}>
-                  <div className="progress-bar-fill" style={{ width: `${progress}%` }}></div>
-                </div>
-
-                <div className="bento-meta">
-                  <span className="bento-count">{allItems.length} Einträge</span>
-                  <span className="bento-progress">{progress}%</span>
-                </div>
+            {/* The Central Orb (Navigates up if not root) */}
+            <div 
+              className="spiral-center-node"
+              onClick={() => {
+                if (currentPath.length > 0) {
+                  setCurrentPath(currentPath.slice(0, -1));
+                }
+              }}
+            >
+              <div className="center-title">
+                {isRoot ? "THE MATRIX" : currentPath[currentPath.length - 1].replace(/_/g, ' ')}
               </div>
-            );
-          })}
-        </div>
-      )}
+              {!isRoot && <div className="center-subtitle">← Level Up</div>}
+            </div>
 
-      {/* Liste: Zeige Monographien des aktuellen Knotens */}
-      {currentNode.items.length > 0 && (
-        <div className="monograph-list-grid animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          {currentNode.items.sort((a, b) => a.title.localeCompare(b.title)).map(item => {
-            const isRead = readMonographs.includes(item.id);
-            return (
-              <Link to={`/monograph/${item.id}`} key={item.id} className={`monograph-card glass glass-interactive ${isRead ? 'read' : ''}`}>
+            {/* The Orbiting Subcategories */}
+            {subcats.map((catName, index) => {
+              const pos = getSpiralPosition(index);
+              const subNode = currentNode.subcats[catName];
+              const allItems = getAllItems(subNode);
+              const readCount = allItems.filter(item => readMonographs.includes(item.id)).length;
+              const progress = allItems.length > 0 ? Math.round((readCount / allItems.length) * 100) : 0;
+              
+              return (
+                <div 
+                  key={catName} 
+                  className="orbital-node node-cat"
+                  style={{ transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))` }}
+                  onClick={() => setCurrentPath([...currentPath, catName])}
+                >
+                  <span>{catName.replace(/_/g, ' ')}<br/>({progress}%)</span>
+                </div>
+              );
+            })}
+
+            {/* The Orbiting Monographs */}
+            {items.map((item, index) => {
+              const pos = getSpiralPosition(subcats.length + index);
+              const isRead = readMonographs.includes(item.id);
+              const clean = cleanTitle(item.title);
+              
+              return (
+                <Link 
+                  to={`/monograph/${item.id}`} 
+                  key={item.id} 
+                  className={`orbital-node node-item ${isRead ? 'read' : ''}`}
+                  style={{ 
+                    transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`,
+                    backgroundImage: item.imageUrl ? `url(${item.imageUrl})` : 'none'
+                  }}
+                >
+                  {!item.imageUrl && <span className="node-icon">◆</span>}
+                  
+                  {/* Elegant Tooltip on Hover */}
+                  <div className="node-tooltip">
+                    {clean} {isRead ? '(Erforscht)' : ''}
+                  </div>
+                </Link>
+              );
+            })}
+
+          </div>
+        </div>
+      ) : (
+        /* --- SEARCH RESULTS FALLBACK GRID --- */
+        <div className="search-results-overlay animate-fade-in hud-interactive">
+          <div className="search-grid">
+            {filteredData.sort((a,b) => cleanTitle(a.title).localeCompare(cleanTitle(b.title))).map(item => (
+              <Link to={`/monograph/${item.id}`} key={item.id} className="search-card">
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.title} className="monograph-avatar" loading="lazy" />
+                  <img src={item.imageUrl} alt="" style={{width: 40, height: 40, borderRadius: 8, objectFit: 'cover'}} />
                 ) : (
-                  <div className="monograph-avatar"></div>
+                  <div style={{width: 40, height: 40, borderRadius: 8, background: 'rgba(189,0,255,0.2)', display: 'flex', alignItems:'center', justifyContent:'center'}}>◆</div>
                 )}
-                <div className="monograph-info">
-                  <span className="monograph-title">{item.title}</span>
-                  {isRead && <span className="read-badge-inline">Erforscht</span>}
+                <div>
+                  <div style={{fontWeight: 500}}>{cleanTitle(item.title)}</div>
+                  <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>{item.category}</div>
                 </div>
               </Link>
-            );
-          })}
-        </div>
-      )}
-      
-      {/* Wenn gesucht wird und nichts gefunden wird */}
-      {search.trim().length > 0 && filteredData.length === 0 && (
-        <div className="glass" style={{ padding: '3rem', textAlign: 'center' }}>
-          <h2 style={{ color: 'var(--text-muted)' }}>Keine Einträge im kybernetischen Netz gefunden.</h2>
+            ))}
+            {filteredData.length === 0 && (
+              <div style={{ color: 'var(--text-muted)' }}>Keine Einträge gefunden.</div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -235,7 +276,6 @@ function MonographReader({ data, markAsRead }: ReaderProps) {
     }
   }, [id, monograph, markAsRead]);
 
-  // Scroll to top on load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
@@ -243,7 +283,6 @@ function MonographReader({ data, markAsRead }: ReaderProps) {
   if (!monograph) {
     return (
       <div className="app-layout">
-        <div className="spiral-bg"></div>
         <div className="reader-content glass" style={{ textAlign: 'center' }}>
           <h2>Signal verloren. Monographie nicht gefunden.</h2>
           <button className="btn-back" style={{ margin: '2rem auto', border: '1px solid var(--accent-cyan)', padding: '0.5rem 1rem', borderRadius: '8px' }} onClick={() => navigate('/')}>Zurück zur Matrix</button>
@@ -253,33 +292,33 @@ function MonographReader({ data, markAsRead }: ReaderProps) {
   }
 
   return (
-    <div className="app-layout">
-      <div className="spiral-bg"></div>
-      
-      <div className="reader-wrapper animate-slide-up">
-        <nav className="reader-nav glass">
-          <button className="btn-back" onClick={() => navigate(-1)}>
-            <span style={{ fontSize: '1.2rem', color: 'var(--accent-cyan)' }}>←</span> Zurück
-          </button>
-          <span className="category-badge">{monograph.category.split(' / ').pop()?.replace(/_/g, ' ')}</span>
-        </nav>
-        
-        <article className="reader-content glass">
-          <ReactMarkdown 
-            remarkPlugins={[remarkGfm]}
-            components={{
-              a: ({node, ...props}) => {
-                const href = props.href || '';
-                if (href.startsWith('/monograph/')) {
-                  return <Link to={href} className="wiki-link">{props.children}</Link>;
+    <div style={{ background: 'var(--bg-dark)', minHeight: '100vh' }}>
+      <div className="app-layout">
+        <div className="reader-wrapper animate-slide-up">
+          <nav className="reader-nav glass">
+            <button className="btn-back" onClick={() => navigate(-1)}>
+              <span style={{ fontSize: '1.2rem', color: 'var(--accent-cyan)' }}>←</span> Zurück
+            </button>
+            <span className="category-badge">{monograph.category.split(' / ').pop()?.replace(/_/g, ' ')}</span>
+          </nav>
+          
+          <article className="reader-content glass">
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a: ({node, ...props}) => {
+                  const href = props.href || '';
+                  if (href.startsWith('/monograph/')) {
+                    return <Link to={href} className="wiki-link">{props.children}</Link>;
+                  }
+                  return <a target="_blank" rel="noopener noreferrer" className="external-link" {...props}>{props.children}</a>;
                 }
-                return <a target="_blank" rel="noopener noreferrer" className="external-link" {...props}>{props.children}</a>;
-              }
-            }}
-          >
-            {monograph.content}
-          </ReactMarkdown>
-        </article>
+              }}
+            >
+              {monograph.content}
+            </ReactMarkdown>
+          </article>
+        </div>
       </div>
     </div>
   );
@@ -314,8 +353,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="app-layout">
-        <div className="spiral-bg"></div>
+      <div style={{ background: 'var(--bg-dark)', height: '100vh', width: '100vw' }}>
         <div className="loader-container">
           <div className="spinner"></div>
           <p style={{ color: 'var(--accent-cyan)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Initialisiere Spiral Mind...</p>
