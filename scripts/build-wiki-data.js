@@ -58,6 +58,8 @@ function buildData() {
     title = title.replace(/Monographie:\s*Masterclass\s*/i, '').trim();
     // Obsidian-Klammern aus dem Titel entfernen, falls vorhanden
     title = title.replace(/\[\[/g, '').replace(/\]\]/g, '').trim();
+    // Meta-Kommentare und Lebensdaten aus dem Titel entfernen (z.B. "(*1950)" oder "(1900-1990)")
+    title = title.replace(/\s*\([^)]*\)\s*$/g, '').trim();
 
     // Erstes Bild extrahieren: ![alt](url)
     const imageMatch = content.match(/!\[.*?\]\((.*?)\)/);

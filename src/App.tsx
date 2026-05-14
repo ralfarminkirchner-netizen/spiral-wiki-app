@@ -56,7 +56,7 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
   return (
     <div className="dashboard-container animate-fade-in">
       <header className="hero">
-        <h1 className="gradient-text">Spiral Wiki</h1>
+        <h1 className="gradient-text">SPiRAL MiND WiKi</h1>
         <p className="subtitle">Das kybernetische Lexikon der Spiral Mindlaxy, der grafischen Oberfläche, der UI des ADHS OS</p>
         <div className="search-bar">
           <input 
@@ -127,7 +127,8 @@ function Dashboard({ data, readMonographs }: DashboardProps) {
                       <li key={item.id}>
                         <Link to={`/monograph/${item.id}`} className={`monograph-link ${isRead ? 'read' : ''}`}>
                           {item.imageUrl && (
-                            <div className="monograph-avatar" style={{ backgroundImage: `url(${item.imageUrl})` }}>
+                            <div className="monograph-avatar-wrapper">
+                              <img src={item.imageUrl} alt={item.title} className="monograph-avatar-img" loading="lazy" />
                               {isRead && <div className="read-badge">✓</div>}
                             </div>
                           )}
