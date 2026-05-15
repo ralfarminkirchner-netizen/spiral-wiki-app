@@ -30,14 +30,10 @@ html, body {
 .spiral-viewport {
   width: 100vw;
   height: 100vh;
-  overflow: auto;
+  overflow: hidden; /* We manage zooming/panning manually via React */
   position: relative;
   background: radial-gradient(circle at center, #0a0b14 0%, #020205 100%);
-  /* Custom Scrollbar for Mac/Windows */
-  scrollbar-width: none; /* Firefox */
-}
-.spiral-viewport::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
+  touch-action: none;
 }
 
 /* Star background */
@@ -56,11 +52,21 @@ html, body {
 }
 
 .spiral-canvas {
-  width: 4000px; /* Massive canvas */
-  height: 4000px;
-  position: relative;
-  /* Origin in the absolute center */
-  transform-origin: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  /* NO transition here — it causes massive lag when zooming with 1000+ nodes */
+  will-change: transform;
+}
+
+/* LOD fade-in when nodes appear due to zoom level change */
+@keyframes lodFadeIn {
+  from { opacity: 0; transform: scale(0.7); filter: blur(6px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+.animate-lod-in {
+  animation: lodFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Overlay UI (Title, Breadcrumbs, Stats) fixed to screen */
@@ -192,6 +198,7 @@ html, body {
   top: 50%;
   left: 50%;
   z-index: 10;
+  will-change: transform;
 }
 .node-positioner:hover {
   z-index: 50;
@@ -230,9 +237,9 @@ html, body {
   animation: float 6s ease-in-out infinite, pulse-glow 8s ease-in-out infinite;
 }
 
-/* Give items slightly staggered animation delays based on nth-child (approx) or randomize slightly if possible. We'll just apply standard float */
+/* Reduced animation complexity for items to prevent browser hanging on 1000+ nodes */
 .node-pulse-item {
-  animation: float 8s ease-in-out infinite alternate;
+  transition: transform 0.3s ease;
 }
 
 
@@ -261,8 +268,7 @@ html, body {
   width: 70px;
   height: 70px;
   background: rgba(15, 17, 26, 0.9);
-  border: 2px solid rgba(189, 0, 255, 0.4);
-  box-shadow: 0 0 15px rgba(189, 0, 255, 0.2);
+  border: 1px solid rgba(189, 0, 255, 0.4);
   background-size: cover;
   background-position: center;
 }
@@ -284,12 +290,9 @@ html, body {
   filter: grayscale(0%);
 }
 
-.node-icon {
-  font-size: 1.5rem;
-  color: var(--accent-purple);
-}
+/* node-icon removed as fallback is always an image */
 
-/* Node Labels (Always Visible) */
+/* Node Labels — hidden by default, visible on hover */
 .node-label {
   position: absolute;
   top: 40px; /* Below the 70px image */
@@ -301,13 +304,13 @@ html, body {
   font-size: 0.75rem;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.8);
-  background: rgba(10, 11, 16, 0.8);
+  background: rgba(10, 11, 16, 0.9);
   padding: 4px 8px;
   border-radius: 8px;
-  backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   pointer-events: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  opacity: 0;
   z-index: -1;
 }
 
@@ -318,6 +321,7 @@ html, body {
 }
 
 .node-positioner:hover .node-label {
+  opacity: 1;
   color: #fff;
   border-color: var(--accent-purple);
   box-shadow: 0 4px 15px rgba(189, 0, 255, 0.4);

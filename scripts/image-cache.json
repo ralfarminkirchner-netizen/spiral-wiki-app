@@ -2138,5 +2138,893 @@
   "Siddhartha_Gautama_monographie": {
     "original": "https://upload.wikimedia.org/wikipedia/commons/d/de/Buddha_Kopf.jpg",
     "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Buddha_Kopf.jpg/120px-Buddha_Kopf.jpg"
+  },
+  "marcel_duchamp_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/en/3/34/Man_Ray%2C_1920-21%2C_Portrait_of_Marcel_Duchamp%2C_gelatin_silver_print%2C_Yale_University_Art_Gallery.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/thumb/3/34/Man_Ray%2C_1920-21%2C_Portrait_of_Marcel_Duchamp%2C_gelatin_silver_print%2C_Yale_University_Art_Gallery.jpg/120px-Man_Ray%2C_1920-21%2C_Portrait_of_Marcel_Duchamp%2C_gelatin_silver_print%2C_Yale_University_Art_Gallery.jpg"
+  },
+  "ironie_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Achtung_Hund_2.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Achtung_Hund_2.jpg/120px-Achtung_Hund_2.jpg"
+  },
+  "pastiche_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/61/Pastiche.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Pastiche.jpg/120px-Pastiche.jpg"
+  },
+  "david_foster_wallace_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/ff/David_Foster_Wallace_in_2006.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/David_Foster_Wallace_in_2006.jpg/120px-David_Foster_Wallace_in_2006.jpg"
+  },
+  "don_delillo_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/06/Don_delillo_nyc_02-cropped.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Don_delillo_nyc_02-cropped.jpg/120px-Don_delillo_nyc_02-cropped.jpg"
+  },
+  "jorge_luis_borges_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/89/Jorge_Luis_Borges_1951%2C_by_Grete_Stern_%28full%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Jorge_Luis_Borges_1951%2C_by_Grete_Stern_%28full%29.jpg/120px-Jorge_Luis_Borges_1951%2C_by_Grete_Stern_%28full%29.jpg"
+  },
+  "thomas_pynchon_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Thomas_Pynchon%2C_high_school_yearbook_editor%2C_1953.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Thomas_Pynchon%2C_high_school_yearbook_editor%2C_1953.jpg/120px-Thomas_Pynchon%2C_high_school_yearbook_editor%2C_1953.jpg"
+  },
+  "umberto_eco_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/64/Italiaanse_schrijver_Umberto_Eco%2C_portret.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Italiaanse_schrijver_Umberto_Eco%2C_portret.jpg/120px-Italiaanse_schrijver_Umberto_Eco%2C_portret.jpg"
+  },
+  "cyberpunk_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Cyberpunk_city_%284065413356%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Cyberpunk_city_%284065413356%29.jpg/120px-Cyberpunk_city_%284065413356%29.jpg"
+  },
+  "dystopie_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Endzeit_LARP.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Endzeit_LARP.jpg/120px-Endzeit_LARP.jpg"
+  },
+  "arthur_c_clarke_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/be/Arthur_C._Clarke_1965_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Arthur_C._Clarke_1965_%28cropped%29.jpg/120px-Arthur_C._Clarke_1965_%28cropped%29.jpg"
+  },
+  "frank_herbert_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Frank_Herbert_1984_%28square%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Frank_Herbert_1984_%28square%29.jpg/120px-Frank_Herbert_1984_%28square%29.jpg"
+  },
+  "isaac_asimov_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/34/Isaac.Asimov01.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Isaac.Asimov01.jpg/120px-Isaac.Asimov01.jpg"
+  },
+  "neal_stephenson_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/85/Neal_Stephenson_in_2019_A_021.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Neal_Stephenson_in_2019_A_021.jpg/120px-Neal_Stephenson_in_2019_A_021.jpg"
+  },
+  "william_gibson_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/df/William_Gibson_60th_birthday_portrait_%283x4_cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/William_Gibson_60th_birthday_portrait_%283x4_cropped%29.jpg/120px-William_Gibson_60th_birthday_portrait_%283x4_cropped%29.jpg"
+  },
+  "ursula_k_le_guin_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Ursula_Le_Guin_%283551195631%29_-_Restoration.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Ursula_Le_Guin_%283551195631%29_-_Restoration.jpg/120px-Ursula_Le_Guin_%283551195631%29_-_Restoration.jpg"
+  },
+  "andre_breton_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Andr%C3%A9_Breton.JPG",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Andr%C3%A9_Breton.JPG/120px-Andr%C3%A9_Breton.JPG"
+  },
+  "autopoiesis_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e0/3D-SIM-4_Anaphase_3_color.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/3D-SIM-4_Anaphase_3_color.jpg/120px-3D-SIM-4_Anaphase_3_color.jpg"
+  },
+  "Norbert_Wiener_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/56/Norbert_Wiener.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Norbert_Wiener.png/120px-Norbert_Wiener.png"
+  },
+  "francisco_varela_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Francisco_Varela.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Francisco_Varela.jpg/120px-Francisco_Varela.jpg"
+  },
+  "humberto_maturana_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/02/Humberto_Maturana-FILSA2015.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Humberto_Maturana-FILSA2015.jpg/120px-Humberto_Maturana-FILSA2015.jpg"
+  },
+  "stafford_beer_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/99/Stafford_Beer_1990.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Stafford_Beer_1990.png/120px-Stafford_Beer_1990.png"
+  },
+  "w_ross_ashby_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d1/W._Ross_Ashby_%281948%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/W._Ross_Ashby_%281948%29.jpg/120px-W._Ross_Ashby_%281948%29.jpg"
+  },
+  "hans_asperger_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/52/Hans_Asperger_portrait_ca_1940.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Hans_Asperger_portrait_ca_1940.png/120px-Hans_Asperger_portrait_ca_1940.png"
+  },
+  "leo_kanner_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/af/Leo-Kanner.jpeg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Leo-Kanner.jpeg/120px-Leo-Kanner.jpeg"
+  },
+  "temple_grandin_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/47/TempleGrandin.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/TempleGrandin.jpg/120px-TempleGrandin.jpg"
+  },
+  "default_mode_network_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Default_mode_network-WRNMMC.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Default_mode_network-WRNMMC.jpg/120px-Default_mode_network-WRNMMC.jpg"
+  },
+  "michael_gazzaniga_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Gazzaniga.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Gazzaniga.jpg/120px-Gazzaniga.jpg"
+  },
+  "stanislas_dehaene_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Stanislas_Dehaene_2014.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Stanislas_Dehaene_2014.jpg/120px-Stanislas_Dehaene_2014.jpg"
+  },
+  "daniel_kahneman_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Daniel_Kahneman_%283283955327%29_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Daniel_Kahneman_%283283955327%29_%28cropped%29.jpg/120px-Daniel_Kahneman_%283283955327%29_%28cropped%29.jpg"
+  },
+  "christof_koch_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Koch_TASC2008.JPG",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Koch_TASC2008.JPG/120px-Koch_TASC2008.JPG"
+  },
+  "diogenes_von_sinope_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Diogenes_von_Sinope.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Diogenes_von_Sinope.jpg/120px-Diogenes_von_Sinope.jpg"
+  },
+  "pythagoras_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Pythagoras_in_the_Roman_Forum%2C_Colosseum.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Pythagoras_in_the_Roman_Forum%2C_Colosseum.jpg/120px-Pythagoras_in_the_Roman_Forum%2C_Colosseum.jpg"
+  },
+  "Jean_Paul_Sartre_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Jean_Paul_Sartre_1965.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Jean_Paul_Sartre_1965.jpg/120px-Jean_Paul_Sartre_1965.jpg"
+  },
+  "albert_camus_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/08/Albert_Camus%2C_gagnant_de_prix_Nobel%2C_portrait_en_buste%2C_pos%C3%A9_au_bureau%2C_faisant_face_%C3%A0_gauche%2C_cigarette_de_tabagisme.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Albert_Camus%2C_gagnant_de_prix_Nobel%2C_portrait_en_buste%2C_pos%C3%A9_au_bureau%2C_faisant_face_%C3%A0_gauche%2C_cigarette_de_tabagisme.jpg/120px-Albert_Camus%2C_gagnant_de_prix_Nobel%2C_portrait_en_buste%2C_pos%C3%A9_au_bureau%2C_faisant_face_%C3%A0_gauche%2C_cigarette_de_tabagisme.jpg"
+  },
+  "simone_de_beauvoir_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/55/Simone_De_Beauvoir_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Simone_De_Beauvoir_%28cropped%29.jpg/120px-Simone_De_Beauvoir_%28cropped%29.jpg"
+  },
+  "søren_kierkegaard_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d4/S%C3%B8ren_Kierkegaard_%281813-1855%29_-_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/S%C3%B8ren_Kierkegaard_%281813-1855%29_-_%28cropped%29.jpg/120px-S%C3%B8ren_Kierkegaard_%281813-1855%29_-_%28cropped%29.jpg"
+  },
+  "nous_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Ptolemaicsystem-small.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Ptolemaicsystem-small.png/120px-Ptolemaicsystem-small.png"
+  },
+  "proklos_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/98/Procli_Diadochi_Lycii_Institutio_Physica_in_London%2C_British_Library%2C_Harley_MS_5685%2C_fol._133r.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Procli_Diadochi_Lycii_Institutio_Physica_in_London%2C_British_Library%2C_Harley_MS_5685%2C_fol._133r.jpg/120px-Procli_Diadochi_Lycii_Institutio_Physica_in_London%2C_British_Library%2C_Harley_MS_5685%2C_fol._133r.jpg"
+  },
+  "plotin_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/30/Roman_sarcophagus_of_a_reader_identified_to_Plotinus_and_disciples.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Roman_sarcophagus_of_a_reader_identified_to_Plotinus_and_disciples.jpg/120px-Roman_sarcophagus_of_a_reader_identified_to_Plotinus_and_disciples.jpg"
+  },
+  "Friedrich_Nietzsche_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Nietzsche187a.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Nietzsche187a.jpg/120px-Nietzsche187a.jpg"
+  },
+  "bodhidharma_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/a2/BodhidharmaYoshitoshi1887.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/BodhidharmaYoshitoshi1887.jpg/120px-BodhidharmaYoshitoshi1887.jpg"
+  },
+  "nagarjuna_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e3/Nagarjuna_with_84_mahasiddha_cropped.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Nagarjuna_with_84_mahasiddha_cropped.jpg/120px-Nagarjuna_with_84_mahasiddha_cropped.jpg"
+  },
+  "paramahansa_yogananda_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Paramahansa_Yogananda_Standard_Pose.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Paramahansa_Yogananda_Standard_Pose.jpg/120px-Paramahansa_Yogananda_Standard_Pose.jpg"
+  },
+  "patanjali_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/85/Pata%C3%B1jali11.JPG",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Pata%C3%B1jali11.JPG/120px-Pata%C3%B1jali11.JPG"
+  },
+  "rumi_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/ea/%D9%85%D9%88%D9%84%D8%A7%D9%86%D8%A7_%D8%A7%D8%AB%D8%B1_%D8%AD%D8%B3%DB%8C%D9%86_%D8%A8%D9%87%D8%B2%D8%A7%D8%AF_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/%D9%85%D9%88%D9%84%D8%A7%D9%86%D8%A7_%D8%A7%D8%AB%D8%B1_%D8%AD%D8%B3%DB%8C%D9%86_%D8%A8%D9%87%D8%B2%D8%A7%D8%AF_%28cropped%29.jpg/120px-%D9%85%D9%88%D9%84%D8%A7%D9%86%D8%A7_%D8%A7%D8%AB%D8%B1_%D8%AD%D8%B3%DB%8C%D9%86_%D8%A8%D9%87%D8%B2%D8%A7%D8%AF_%28cropped%29.jpg"
+  },
+  "aldous_huxley_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Aldous_Huxley_psychical_researcher.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Aldous_Huxley_psychical_researcher.png/120px-Aldous_Huxley_psychical_researcher.png"
+  },
+  "edmund_husserl_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Edmund_Husserl_1910s.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Edmund_Husserl_1910s.jpg/120px-Edmund_Husserl_1910s.jpg"
+  },
+  "martin_heidegger_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/12/Freiburg%2C_Z%C3%A4hringen-_Jahnhalle%2C_Prof._Martin_Heidegger_w%C3%A4hrend_eines_Vortrags_-_LABW_-_Staatsarchiv_Freiburg_W_134_Nr._023740f_%28cropped%29.jpeg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Freiburg%2C_Z%C3%A4hringen-_Jahnhalle%2C_Prof._Martin_Heidegger_w%C3%A4hrend_eines_Vortrags_-_LABW_-_Staatsarchiv_Freiburg_W_134_Nr._023740f_%28cropped%29.jpeg/120px-Freiburg%2C_Z%C3%A4hringen-_Jahnhalle%2C_Prof._Martin_Heidegger_w%C3%A4hrend_eines_Vortrags_-_LABW_-_Staatsarchiv_Freiburg_W_134_Nr._023740f_%28cropped%29.jpeg"
+  },
+  "apatheia_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Chrysippus_of_Soli.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Chrysippus_of_Soli.jpg/120px-Chrysippus_of_Soli.jpg"
+  },
+  "logos_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/98/Logos.svg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Logos.svg/120px-Logos.svg.png"
+  },
+  "chrysippos_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Chrysippus_of_Soli.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Chrysippus_of_Soli.jpg/120px-Chrysippus_of_Soli.jpg"
+  },
+  "zenon_von_kition_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg/120px-Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg"
+  },
+  "epiktet_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/39/Epictetus_from_L._Annaei_Senecae_philosophi_Opera%2C_1605%2C_title_page_detail.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Epictetus_from_L._Annaei_Senecae_philosophi_Opera%2C_1605%2C_title_page_detail.png/120px-Epictetus_from_L._Annaei_Senecae_philosophi_Opera%2C_1605%2C_title_page_detail.png"
+  },
+  "seneca_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/44/Duble_herma_of_Socrates_and_Seneca_Antikensammlung_Berlin_07.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Duble_herma_of_Socrates_and_Seneca_Antikensammlung_Berlin_07.jpg/120px-Duble_herma_of_Socrates_and_Seneca_Antikensammlung_Berlin_07.jpg"
+  },
+  "achille_mbembe_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Achille_Mbembe_2.JPG",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Achille_Mbembe_2.JPG/120px-Achille_Mbembe_2.JPG"
+  },
+  "alain_badiou_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/89/Alain_Badiou-2.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Alain_Badiou-2.jpg/120px-Alain_Badiou-2.jpg"
+  },
+  "alva_noe_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/56/Alva_No%C3%AB_%283419836383%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Alva_No%C3%AB_%283419836383%29.jpg/120px-Alva_No%C3%AB_%283419836383%29.jpg"
+  },
+  "antonio_gramsci_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Gramsci.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Gramsci.png/120px-Gramsci.png"
+  },
+  "axel_honneth_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/02/Axel_Honneth_2016-04-18.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Axel_Honneth_2016-04-18.jpg/120px-Axel_Honneth_2016-04-18.jpg"
+  },
+  "baruch_de_spinoza_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Spinoza.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Spinoza.jpg/120px-Spinoza.jpg"
+  },
+  "byung_chul_han_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/4d/2015_Byung-Chul_Han_%283x4_cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/2015_Byung-Chul_Han_%283x4_cropped%29.jpg/120px-2015_Byung-Chul_Han_%283x4_cropped%29.jpg"
+  },
+  "carl_schmitt_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/f0/1929_report_on_Carl_Schmitt.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/1929_report_on_Carl_Schmitt.jpg/120px-1929_report_on_Carl_Schmitt.jpg"
+  },
+  "daniel_dennett_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Daniel_Dennett_2.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Daniel_Dennett_2.jpg/120px-Daniel_Dennett_2.jpg"
+  },
+  "david_chalmers_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/fb/David_chalmers.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/David_chalmers.jpg/120px-David_chalmers.jpg"
+  },
+  "david_hume_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/03/David_Hume_Ramsay.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/David_Hume_Ramsay.jpg/120px-David_Hume_Ramsay.jpg"
+  },
+  "donna_haraway_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Donna_Haraway_2006_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Donna_Haraway_2006_%28cropped%29.jpg/120px-Donna_Haraway_2006_%28cropped%29.jpg"
+  },
+  "edward_said_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Edward_Said_and_Daniel_Barenboim_in_Sevilla%2C_2002_%28Said%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Edward_Said_and_Daniel_Barenboim_in_Sevilla%2C_2002_%28Said%29.jpg/120px-Edward_Said_and_Daniel_Barenboim_in_Sevilla%2C_2002_%28Said%29.jpg"
+  },
+  "felix_guattari_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/14/%E3%83%95%E3%82%A7%E3%83%AA%E3%83%83%E3%82%AF%E3%82%B9%E3%83%BB%E3%82%AC%E3%82%BF%E3%83%AA.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/%E3%83%95%E3%82%A7%E3%83%AA%E3%83%83%E3%82%AF%E3%82%B9%E3%83%BB%E3%82%AC%E3%82%BF%E3%83%AA.jpg/120px-%E3%83%95%E3%82%A7%E3%83%AA%E3%83%83%E3%82%AF%E3%82%B9%E3%83%BB%E3%82%AC%E3%82%BF%E3%83%AA.jpg"
+  },
+  "frantz_fanon_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Photograph_of_Frantz_Fanon_from_Black_Skin_White_Masks_%281967%29_dust_jacket.webp",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Photograph_of_Frantz_Fanon_from_Black_Skin_White_Masks_%281967%29_dust_jacket.webp/120px-Photograph_of_Frantz_Fanon_from_Black_Skin_White_Masks_%281967%29_dust_jacket.webp.png"
+  },
+  "friedrich_nietzsche_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Nietzsche187a.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Nietzsche187a.jpg/120px-Nietzsche187a.jpg"
+  },
+  "gayatri_spivak_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Gayatri_Spivak_on_Subversive_Festival.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Gayatri_Spivak_on_Subversive_Festival.jpg/120px-Gayatri_Spivak_on_Subversive_Festival.jpg"
+  },
+  "gilles_deleuze_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0e/AVT_Gilles-Deleuze_6342.webp",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/AVT_Gilles-Deleuze_6342.webp/120px-AVT_Gilles-Deleuze_6342.webp.png"
+  },
+  "giorgio_agamben_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/da/Agamben.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Agamben.png/120px-Agamben.png"
+  },
+  "guy_debord_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/66/Situationist.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Situationist.jpg/120px-Situationist.jpg"
+  },
+  "hannah_arendt_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Hannah_Arendt_auf_dem_1._Kulturkritikerkongress%2C_Barbara_Niggl_Radloff%2C_FM-2019-1-5-9-16_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Hannah_Arendt_auf_dem_1._Kulturkritikerkongress%2C_Barbara_Niggl_Radloff%2C_FM-2019-1-5-9-16_%28cropped%29.jpg/120px-Hannah_Arendt_auf_dem_1._Kulturkritikerkongress%2C_Barbara_Niggl_Radloff%2C_FM-2019-1-5-9-16_%28cropped%29.jpg"
+  },
+  "herbert_marcuse_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Herbert_Marcuse_in_Newton%2C_Massachusetts_1955_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Herbert_Marcuse_in_Newton%2C_Massachusetts_1955_%28cropped%29.jpg/120px-Herbert_Marcuse_in_Newton%2C_Massachusetts_1955_%28cropped%29.jpg"
+  },
+  "homi_bhabha_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Homi_K._Bhabha-cropd.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Homi_K._Bhabha-cropd.jpg/120px-Homi_K._Bhabha-cropd.jpg"
+  },
+  "hubert_dreyfus_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Hubert_Dreyfus_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Hubert_Dreyfus_%28cropped%29.jpg/120px-Hubert_Dreyfus_%28cropped%29.jpg"
+  },
+  "immanuel_kant_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/79/Immanuel_Kant_-_Gemaelde_1.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Immanuel_Kant_-_Gemaelde_1.jpg/120px-Immanuel_Kant_-_Gemaelde_1.jpg"
+  },
+  "jacques_derrida_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Derrida_EHESS_%28cropped%29.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Derrida_EHESS_%28cropped%29.png/120px-Derrida_EHESS_%28cropped%29.png"
+  },
+  "jean_francois_lyotard_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/46/Jean-Francois_Lyotard_cropped.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Jean-Francois_Lyotard_cropped.jpg/120px-Jean-Francois_Lyotard_cropped.jpg"
+  },
+  "john_locke_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/db/Godfrey_Kneller_-_Portrait_of_John_Locke_%28Hermitage%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Godfrey_Kneller_-_Portrait_of_John_Locke_%28Hermitage%29.jpg/120px-Godfrey_Kneller_-_Portrait_of_John_Locke_%28Hermitage%29.jpg"
+  },
+  "john_searle_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/69/John_searle2.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/John_searle2.jpg/120px-John_searle2.jpg"
+  },
+  "judith_butler_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/bf/JudithButler2013.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/JudithButler2013.jpg/120px-JudithButler2013.jpg"
+  },
+  "julia_kristeva_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/43/Julia_Kristeva_%C3%A0_Paris_en_2008.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Julia_Kristeva_%C3%A0_Paris_en_2008.jpg/120px-Julia_Kristeva_%C3%A0_Paris_en_2008.jpg"
+  },
+  "karl_popper_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/43/Karl_Popper.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Karl_Popper.jpg/120px-Karl_Popper.jpg"
+  },
+  "mark_fisher_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/10/Mark_fisher.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Mark_fisher.jpg/120px-Mark_fisher.jpg"
+  },
+  "max_horkheimer_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/94/Max_Horkheimer.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Max_Horkheimer.jpg/120px-Max_Horkheimer.jpg"
+  },
+  "michel_serres_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Michel_Serres_-_Espace_des_sciences_-_15-02-2011.JPG",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Michel_Serres_-_Espace_des_sciences_-_15-02-2011.JPG/120px-Michel_Serres_-_Espace_des_sciences_-_15-02-2011.JPG"
+  },
+  "nancy_fraser_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e8/NancyFraser_%28cropped%29.JPG",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/NancyFraser_%28cropped%29.JPG/120px-NancyFraser_%28cropped%29.JPG"
+  },
+  "niccolo_machiavelli_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Portrait_of_Niccol%C3%B2_Machiavelli_by_Santi_di_Tito.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Portrait_of_Niccol%C3%B2_Machiavelli_by_Santi_di_Tito.jpg/120px-Portrait_of_Niccol%C3%B2_Machiavelli_by_Santi_di_Tito.jpg"
+  },
+  "paul_b_preciado_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/ff/2017-06-07_Documenta_14_Paul_B._Preciado_by_Olaf_Kosinsky-10.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/2017-06-07_Documenta_14_Paul_B._Preciado_by_Olaf_Kosinsky-10.jpg/120px-2017-06-07_Documenta_14_Paul_B._Preciado_by_Olaf_Kosinsky-10.jpg"
+  },
+  "peter_sloterdijk_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Peter_Sloterdijk%2C_Karlsruhe_07-2009%2C_IMGP3019.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Peter_Sloterdijk%2C_Karlsruhe_07-2009%2C_IMGP3019.jpg/120px-Peter_Sloterdijk%2C_Karlsruhe_07-2009%2C_IMGP3019.jpg"
+  },
+  "rene_descartes_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/73/Frans_Hals_-_Portret_van_Ren%C3%A9_Descartes.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Frans_Hals_-_Portret_van_Ren%C3%A9_Descartes.jpg/120px-Frans_Hals_-_Portret_van_Ren%C3%A9_Descartes.jpg"
+  },
+  "roland_barthes_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Roland_Barthes_signature.svg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Roland_Barthes_signature.svg/120px-Roland_Barthes_signature.svg.png"
+  },
+  "slavoj_zizek_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Slavoj_%C5%BDi%C5%BEek_2015_%28closeup%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Slavoj_%C5%BDi%C5%BEek_2015_%28closeup%29.jpg/120px-Slavoj_%C5%BDi%C5%BEek_2015_%28closeup%29.jpg"
+  },
+  "susan_sontag_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Susan_Sontag_1979_%C2%A9Lynn_Gilbert_%28headshot%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Susan_Sontag_1979_%C2%A9Lynn_Gilbert_%28headshot%29.jpg/120px-Susan_Sontag_1979_%C2%A9Lynn_Gilbert_%28headshot%29.jpg"
+  },
+  "thomas_hobbes_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/09/Thomas_Hobbes_by_John_Michael_Wright_%28colour%29_%283x4_cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Thomas_Hobbes_by_John_Michael_Wright_%28colour%29_%283x4_cropped%29.jpg/120px-Thomas_Hobbes_by_John_Michael_Wright_%28colour%29_%283x4_cropped%29.jpg"
+  },
+  "thomas_nagel_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Thomas_Nagel_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Thomas_Nagel_%28cropped%29.jpg/120px-Thomas_Nagel_%28cropped%29.jpg"
+  },
+  "walter_benjamin_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Walter_Benjamin_vers_1928.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Walter_Benjamin_vers_1928.jpg/120px-Walter_Benjamin_vers_1928.jpg"
+  },
+  "quantenmechanik_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/15/Co_ellipse.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Co_ellipse.png/120px-Co_ellipse.png"
+  },
+  "relativitaetstheorie_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/a4/BBH_gravitational_lensing_of_gw150914.webm",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/BBH_gravitational_lensing_of_gw150914.webm/120px--BBH_gravitational_lensing_of_gw150914.webm.jpg"
+  },
+  "erwin_schroedinger_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/77/Erwin_Schr%C3%B6dinger_-_Narodowe_Archiwum_Cyfrowe_%281-E-939%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Erwin_Schr%C3%B6dinger_-_Narodowe_Archiwum_Cyfrowe_%281-E-939%29.jpg/120px-Erwin_Schr%C3%B6dinger_-_Narodowe_Archiwum_Cyfrowe_%281-E-939%29.jpg"
+  },
+  "richard_feynman_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/en/4/42/Richard_Feynman_Nobel.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/thumb/4/42/Richard_Feynman_Nobel.jpg/120px-Richard_Feynman_Nobel.jpg"
+  },
+  "werner_heisenberg_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Werner_Heisenberg_Portrait_%283x4_cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Werner_Heisenberg_Portrait_%283x4_cropped%29.jpg/120px-Werner_Heisenberg_Portrait_%283x4_cropped%29.jpg"
+  },
+  "timothy_leary_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/74/Dr._Timothy_Leary_%281970_AP_Photo%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Dr._Timothy_Leary_%281970_AP_Photo%29.jpg/120px-Dr._Timothy_Leary_%281970_AP_Photo%29.jpg"
+  },
+  "william_james_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/9c/William_James_b1842c.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/William_James_b1842c.jpg/120px-William_James_b1842c.jpg"
+  },
+  "alfried_laengle_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Alfried_L%C3%A4ngle.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Alfried_L%C3%A4ngle.jpg/120px-Alfried_L%C3%A4ngle.jpg"
+  },
+  "irvin_d_yalom_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Yalom.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Yalom.jpg/120px-Yalom.jpg"
+  },
+  "rollo_may_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/66/Rollo_May_USD_Alcal%C3%A1_1977.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Rollo_May_USD_Alcal%C3%A1_1977.jpg/120px-Rollo_May_USD_Alcal%C3%A1_1977.jpg"
+  },
+  "viktor_frankl_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Viktor_Frankl2.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Viktor_Frankl2.jpg/120px-Viktor_Frankl2.jpg"
+  },
+  "roberto_assagioli_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Roberto_Assagioli_foto.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Roberto_Assagioli_foto.jpg/120px-Roberto_Assagioli_foto.jpg"
+  },
+  "stephen_porges_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/en/6/6b/Steve_Porges.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/thumb/6/6b/Steve_Porges.jpg/120px-Steve_Porges.jpg"
+  },
+  "francine_shapiro_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Conference-Francine-Shapiro-Bali-09-July-2010-1.webm",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Conference-Francine-Shapiro-Bali-09-July-2010-1.webm/120px--Conference-Francine-Shapiro-Bali-09-July-2010-1.webm.jpg"
+  },
+  "carl_jung_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/5b/ETH-BIB-Jung%2C_Carl_Gustav_%281875-1961%29-Portrait-Portr_14163_%28cropped%29.tif",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/ETH-BIB-Jung%2C_Carl_Gustav_%281875-1961%29-Portrait-Portr_14163_%28cropped%29.tif/lossy-page1-120px-ETH-BIB-Jung%2C_Carl_Gustav_%281875-1961%29-Portrait-Portr_14163_%28cropped%29.tif.jpg"
+  },
+  "erich_fromm_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/72/Erich_Fromm_1974.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Erich_Fromm_1974.jpg/120px-Erich_Fromm_1974.jpg"
+  },
+  "friedemann_schulz_von_thun_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/45/Friedemann_Schulz_von_Thun.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Friedemann_Schulz_von_Thun.jpg/120px-Friedemann_Schulz_von_Thun.jpg"
+  },
+  "fritz_perls_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Fritz_Perls.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fritz_Perls.jpg/120px-Fritz_Perls.jpg"
+  },
+  "haim_omer_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/26/Haim_Omer_2015.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Haim_Omer_2015.jpg/120px-Haim_Omer_2015.jpg"
+  },
+  "jacques_lacan_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/25/Jacques_Lacan_during_an_interview_1969.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Jacques_Lacan_during_an_interview_1969.jpg/120px-Jacques_Lacan_during_an_interview_1969.jpg"
+  },
+  "marshall_rosenberg_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/82/Marshall_B._Rosenberg_11-05-2005.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Marshall_B._Rosenberg_11-05-2005.jpg/120px-Marshall_B._Rosenberg_11-05-2005.jpg"
+  },
+  "mihaly_csikszentmihalyi_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Mihaly_Csikszentmihalyi.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Mihaly_Csikszentmihalyi.jpg/120px-Mihaly_Csikszentmihalyi.jpg"
+  },
+  "paul_watzlawick_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Paul_Watzlawick_am_ISC-Symposium_1988_HSGH_022-000762_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Paul_Watzlawick_am_ISC-Symposium_1988_HSGH_022-000762_%28cropped%29.jpg/120px-Paul_Watzlawick_am_ISC-Symposium_1988_HSGH_022-000762_%28cropped%29.jpg"
+  },
+  "virginia_satir_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/14/VirginiaSatir.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/VirginiaSatir.jpg/120px-VirginiaSatir.jpg"
+  },
+  "wilhelm_reich_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Wilhelm_Reich.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Wilhelm_Reich.jpg/120px-Wilhelm_Reich.jpg"
+  },
+  "chögyam_trungpa_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Chogyam_Trungpa_Rinpoche.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Chogyam_Trungpa_Rinpoche.jpg/120px-Chogyam_Trungpa_Rinpoche.jpg"
+  },
+  "milarepa_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/78/Milarepa-statue-made-by-root-student-rechungpa.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Milarepa-statue-made-by-root-student-rechungpa.jpg/120px-Milarepa-statue-made-by-root-student-rechungpa.jpg"
+  },
+  "padmasambhava_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/19/Guru_Rinpoche_in_mist_2.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Guru_Rinpoche_in_mist_2.jpg/120px-Guru_Rinpoche_in_mist_2.jpg"
+  },
+  "linji_yixuan_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e8/RinzaiGigen.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/RinzaiGigen.jpg/120px-RinzaiGigen.jpg"
+  },
+  "dao_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Dao-character.svg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Dao-character.svg/120px-Dao-character.svg.png"
+  },
+  "qi_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Qi_3_forms.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Qi_3_forms.jpg/120px-Qi_3_forms.jpg"
+  },
+  "yin_und_yang_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/41/Yin_and_yang.svg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Yin_and_yang.svg/120px-Yin_and_yang.svg.png"
+  },
+  "ziran_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0b/%E5%8D%B0%E7%AB%A0_%E8%87%AA%E7%84%B6.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/%E5%8D%B0%E7%AB%A0_%E8%87%AA%E7%84%B6.jpg/120px-%E5%8D%B0%E7%AB%A0_%E8%87%AA%E7%84%B6.jpg"
+  },
+  "guo_xiang_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/55/Guo_Xiang_Mask.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Guo_Xiang_Mask.jpg/120px-Guo_Xiang_Mask.jpg"
+  },
+  "laozi_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/91/Laozi_%28Chinese_characters%29.svg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Laozi_%28Chinese_characters%29.svg/120px-Laozi_%28Chinese_characters%29.svg.png"
+  },
+  "liezi_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/76/Brooklyn_Museum_-_Calligraphy_Lieh_Tzu_Yang-chu_Chapter_-_Kojima_Soshin.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Brooklyn_Museum_-_Calligraphy_Lieh_Tzu_Yang-chu_Chapter_-_Kojima_Soshin.jpg/120px-Brooklyn_Museum_-_Calligraphy_Lieh_Tzu_Yang-chu_Chapter_-_Kojima_Soshin.jpg"
+  },
+  "wang_bi_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/71/%E8%87%B3%E8%81%96%E5%85%88%E8%B3%A2%E5%8D%8A%E8%BA%AB%E5%83%8F_%E5%86%8A-107-%E7%8E%8B%E5%BC%BC.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/%E8%87%B3%E8%81%96%E5%85%88%E8%B3%A2%E5%8D%8A%E8%BA%AB%E5%83%8F_%E5%86%8A-107-%E7%8E%8B%E5%BC%BC.jpg/120px-%E8%87%B3%E8%81%96%E5%85%88%E8%B3%A2%E5%8D%8A%E8%BA%AB%E5%83%8F_%E5%86%8A-107-%E7%8E%8B%E5%BC%BC.jpg"
+  },
+  "adi_shankara_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e3/Raja_Ravi_Varma_-_Sankaracharya.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Raja_Ravi_Varma_-_Sankaracharya.jpg/120px-Raja_Ravi_Varma_-_Sankaracharya.jpg"
+  },
+  "nisargadatta_maharaj_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/66/Nisargadatta_Maharaj.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Nisargadatta_Maharaj.jpg/120px-Nisargadatta_Maharaj.jpg"
+  },
+  "ramana_maharshi_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Sri_Ramana_Maharshi_-_Portrait_-_G._G_Welling_-_1948.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Sri_Ramana_Maharshi_-_Portrait_-_G._G_Welling_-_1948.jpg/120px-Sri_Ramana_Maharshi_-_Portrait_-_G._G_Welling_-_1948.jpg"
+  },
+  "swami_vivekananda_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Swami_Vivekananda-1893-09-signed.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Swami_Vivekananda-1893-09-signed.jpg/120px-Swami_Vivekananda-1893-09-signed.jpg"
+  },
+  "anandamayi_ma_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Sri_Anandamayi_Ma.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Sri_Anandamayi_Ma.jpg/120px-Sri_Anandamayi_Ma.jpg"
+  },
+  "ramakrishna_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Ramakrishna.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Ramakrishna.jpg/120px-Ramakrishna.jpg"
+  },
+  "sri_aurobindo_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/71/Sri_aurobindo.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Sri_aurobindo.jpg/120px-Sri_aurobindo.jpg"
+  },
+  "sufismus_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Dervish_def.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Dervish_def.jpg/120px-Dervish_def.jpg"
+  },
+  "jiddu_krishnamurti_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Jiddu_Krishnamurti_01.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Jiddu_Krishnamurti_01.jpg/120px-Jiddu_Krishnamurti_01.jpg"
+  },
+  "helena_blavatsky_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Helena_Petrovna_Blavatsky.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Helena_Petrovna_Blavatsky.jpg/120px-Helena_Petrovna_Blavatsky.jpg"
+  },
+  "hermes_trismegistos_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Hermes_mercurius_trismegistus_siena_cathedral.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Hermes_mercurius_trismegistus_siena_cathedral.jpg/120px-Hermes_mercurius_trismegistus_siena_cathedral.jpg"
+  },
+  "jakob_böhme_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Jacob-B%C3%B6hme.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Jacob-B%C3%B6hme.jpg/120px-Jacob-B%C3%B6hme.jpg"
+  },
+  "paracelsus_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/25/Aureolus_Theophrastus_Bombastus_von_Hohenheim_%28Paracelsus%29._Wellcome_V0004455.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Aureolus_Theophrastus_Bombastus_von_Hohenheim_%28Paracelsus%29._Wellcome_V0004455.jpg/120px-Aureolus_Theophrastus_Bombastus_von_Hohenheim_%28Paracelsus%29._Wellcome_V0004455.jpg"
+  },
+  "rudolf_steiner_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Steiner_um_1905.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Steiner_um_1905.jpg/120px-Steiner_um_1905.jpg"
+  },
+  "arjun_appadurai_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Arjun_Appadurai%2C_2009_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Arjun_Appadurai%2C_2009_%28cropped%29.jpg/120px-Arjun_Appadurai%2C_2009_%28cropped%29.jpg"
+  },
+  "clifford_geertz_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Photo_of_Clifford_Geertz_on_dust_jacket_of_The_Interpretation_of_Cultures.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Photo_of_Clifford_Geertz_on_dust_jacket_of_The_Interpretation_of_Cultures.jpg/120px-Photo_of_Clifford_Geertz_on_dust_jacket_of_The_Interpretation_of_Cultures.jpg"
+  },
+  "david_graeber_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e0/David_Graeber_Fire_Island_headshot_cropped.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/David_Graeber_Fire_Island_headshot_cropped.jpg/120px-David_Graeber_Fire_Island_headshot_cropped.jpg"
+  },
+  "james_george_frazer_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/7a/JamesGeorgeFrazer.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/JamesGeorgeFrazer.jpg/120px-JamesGeorgeFrazer.jpg"
+  },
+  "jared_diamond_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/79/Jared_Diamond_author_academic.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Jared_Diamond_author_academic.jpg/120px-Jared_Diamond_author_academic.jpg"
+  },
+  "joseph_campbell_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/97/Joseph_Campbell_%28cropped%29.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Joseph_Campbell_%28cropped%29.png/120px-Joseph_Campbell_%28cropped%29.png"
+  },
+  "mircea_eliade_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/59/Mircea_Eliade_young.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Mircea_Eliade_young.jpg/120px-Mircea_Eliade_young.jpg"
+  },
+  "rene_girard_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Ren%C3%A9_Girard.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Ren%C3%A9_Girard.jpg/120px-Ren%C3%A9_Girard.jpg"
+  },
+  "rutger_bregman_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Rutger_Bregman_%282024%29-32_%282%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Rutger_Bregman_%282024%29-32_%282%29.jpg/120px-Rutger_Bregman_%282024%29-32_%282%29.jpg"
+  },
+  "yuval_noah_harari_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/58/MKr364751_Yuval_Noah_Harari_%28Frankfurter_Buchmesse_2024%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/MKr364751_Yuval_Noah_Harari_%28Frankfurter_Buchmesse_2024%29.jpg/120px-MKr364751_Yuval_Noah_Harari_%28Frankfurter_Buchmesse_2024%29.jpg"
+  },
+  "douglas_rushkoff_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Sxsw-20230311-rushkoff-PORTRAIT.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Sxsw-20230311-rushkoff-PORTRAIT.jpg/120px-Sxsw-20230311-rushkoff-PORTRAIT.jpg"
+  },
+  "friedrich_kittler_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Friedrich_Kittler_%282009%29.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Friedrich_Kittler_%282009%29.png/120px-Friedrich_Kittler_%282009%29.png"
+  },
+  "harold_innis_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Harold_Innis_public-domain_library_archives-canada.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Harold_Innis_public-domain_library_archives-canada.jpg/120px-Harold_Innis_public-domain_library_archives-canada.jpg"
+  },
+  "jaron_lanier_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Jaron_Lanier_in_2010.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Jaron_Lanier_in_2010.jpg/120px-Jaron_Lanier_in_2010.jpg"
+  },
+  "vilem_flusser_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Vilem_Flusser_1940.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Vilem_Flusser_1940.jpg/120px-Vilem_Flusser_1940.jpg"
+  },
+  "albert_laszlo_barabasi_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Albert-Laszlo_Barabasi_-_Annual_Meeting_of_the_New_Champions_2012.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Albert-Laszlo_Barabasi_-_Annual_Meeting_of_the_New_Champions_2012.jpg/120px-Albert-Laszlo_Barabasi_-_Annual_Meeting_of_the_New_Champions_2012.jpg"
+  },
+  "duncan_watts_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/72/Duncan_Watts.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Duncan_Watts.jpg/120px-Duncan_Watts.jpg"
+  },
+  "harrison_white_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/68/Harrisonwhite.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Harrisonwhite.jpg/120px-Harrisonwhite.jpg"
+  },
+  "manuel_castells_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/28/Manuel_Castells_2020b_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Manuel_Castells_2020b_%28cropped%29.jpg/120px-Manuel_Castells_2020b_%28cropped%29.jpg"
+  },
+  "anthony_giddens_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/05/Anthony_Giddens_at_the_Progressive_Governance_Converence%2C_Budapest%2C_Hungary%2C_2004_October.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Anthony_Giddens_at_the_Progressive_Governance_Converence%2C_Budapest%2C_Hungary%2C_2004_October.jpg/120px-Anthony_Giddens_at_the_Progressive_Governance_Converence%2C_Budapest%2C_Hungary%2C_2004_October.jpg"
+  },
+  "bell_hooks_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/37/Bell_hooks%2C_October_2014.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Bell_hooks%2C_October_2014.jpg/120px-Bell_hooks%2C_October_2014.jpg"
+  },
+  "bruno_latour_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Bruno_Latour_in_Taiwan_P1250394_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Bruno_Latour_in_Taiwan_P1250394_%28cropped%29.jpg/120px-Bruno_Latour_in_Taiwan_P1250394_%28cropped%29.jpg"
+  },
+  "claude_levi_strauss_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/80/Levi-strauss_260_%28cropped2%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Levi-strauss_260_%28cropped2%29.jpg/120px-Levi-strauss_260_%28cropped2%29.jpg"
+  },
+  "david_harvey_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Entrevista_a_David_Harvey_en_el_Proyecto_Buen_Conocer_-_FLOK_Society.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Entrevista_a_David_Harvey_en_el_Proyecto_Buen_Conocer_-_FLOK_Society.png/120px-Entrevista_a_David_Harvey_en_el_Proyecto_Buen_Conocer_-_FLOK_Society.png"
+  },
+  "erving_goffman_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/78/Erving_Goffman_circa_1940.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Erving_Goffman_circa_1940.jpg/120px-Erving_Goffman_circa_1940.jpg"
+  },
+  "hartmut_rosa_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Hartmut_Rosa%2C_2015_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Hartmut_Rosa%2C_2015_%28cropped%29.jpg/120px-Hartmut_Rosa%2C_2015_%28cropped%29.jpg"
+  },
+  "jurgen_habermas_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/75/JuergenHabermas_crop1.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/JuergenHabermas_crop1.jpg/120px-JuergenHabermas_crop1.jpg"
+  },
+  "paul_gilroy_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/4a/PaulGilroy2.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/PaulGilroy2.jpg/120px-PaulGilroy2.jpg"
+  },
+  "pierre_bourdieu_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Pierre_Bourdieu_%281%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Pierre_Bourdieu_%281%29.jpg/120px-Pierre_Bourdieu_%281%29.jpg"
+  },
+  "saskia_sassen_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/94/Saskia_Sassen_2012.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Saskia_Sassen_2012.jpg/120px-Saskia_Sassen_2012.jpg"
+  },
+  "shoshana_zuboff_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/88/Shoshana_Zuboff_at_Alexander_von_Humboldt_Institut.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Shoshana_Zuboff_at_Alexander_von_Humboldt_Institut.jpg/120px-Shoshana_Zuboff_at_Alexander_von_Humboldt_Institut.jpg"
+  },
+  "ulrich_beck_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/be/Beck-St-Gallen-Symposium.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Beck-St-Gallen-Symposium.png/120px-Beck-St-Gallen-Symposium.png"
+  },
+  "zygmunt_bauman_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/36/Zigmunt_Bauman_na_20_Forumi_vydavciv%28Cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Zigmunt_Bauman_na_20_Forumi_vydavciv%28Cropped%29.jpg/120px-Zigmunt_Bauman_na_20_Forumi_vydavciv%28Cropped%29.jpg"
+  },
+  "johannes_vom_kreuz_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Zurbar%C3%A1n_%28atribuido%29-John_of_the_Cross-1656.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Zurbar%C3%A1n_%28atribuido%29-John_of_the_Cross-1656.jpg/120px-Zurbar%C3%A1n_%28atribuido%29-John_of_the_Cross-1656.jpg"
+  },
+  "teresa_von_avila_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Peter_Paul_Rubens_138.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Peter_Paul_Rubens_138.jpg/120px-Peter_Paul_Rubens_138.jpg"
+  },
+  "alan_watts_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Alan_Watts_painted_on_mural.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Alan_Watts_painted_on_mural.jpg/120px-Alan_Watts_painted_on_mural.jpg"
+  },
+  "thich_nhat_hanh_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/82/%E4%B8%80%E8%A1%8C%E7%A6%AA%E5%B8%AB_%E8%B6%8A%E5%8D%97%E4%BD%9B%E6%95%99%E8%87%A8%E6%BF%9F%E5%AE%97%E7%AC%AC%E5%9B%9B%E5%8D%81%E4%BA%8C%E4%BB%A3%E6%B3%95%E5%97%A3.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/%E4%B8%80%E8%A1%8C%E7%A6%AA%E5%B8%AB_%E8%B6%8A%E5%8D%97%E4%BD%9B%E6%95%99%E8%87%A8%E6%BF%9F%E5%AE%97%E7%AC%AC%E5%9B%9B%E5%8D%81%E4%BA%8C%E4%BB%A3%E6%B3%95%E5%97%A3.jpg/120px-%E4%B8%80%E8%A1%8C%E7%A6%AA%E5%B8%AB_%E8%B6%8A%E5%8D%97%E4%BD%9B%E6%95%99%E8%87%A8%E6%BF%9F%E5%AE%97%E7%AC%AC%E5%9B%9B%E5%8D%81%E4%BA%8C%E4%BB%A3%E6%B3%95%E5%97%A3.jpg"
+  },
+  "keynesianismus_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/04/Keynes_1933.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Keynes_1933.jpg/120px-Keynes_1933.jpg"
+  },
+  "nudging_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Richard_Thaler_Chatham.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Richard_Thaler_Chatham.jpg/120px-Richard_Thaler_Chatham.jpg"
+  },
+  "adam_smith_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/43/Adam_Smith_The_Muir_portrait.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Adam_Smith_The_Muir_portrait.jpg/120px-Adam_Smith_The_Muir_portrait.jpg"
+  },
+  "elinor_ostrom_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/65/Nobel_Prize_2009-Press_Conference_KVA-30.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Nobel_Prize_2009-Press_Conference_KVA-30.jpg/120px-Nobel_Prize_2009-Press_Conference_KVA-30.jpg"
+  },
+  "friedrich_august_von_hayek_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Friedrich_Hayek_portrait.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Friedrich_Hayek_portrait.jpg/120px-Friedrich_Hayek_portrait.jpg"
+  },
+  "john_maynard_keynes_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/5f/John_Maynard_Keynes_%281929%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/John_Maynard_Keynes_%281929%29.jpg/120px-John_Maynard_Keynes_%281929%29.jpg"
+  },
+  "joseph_schumpeter_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Joseph_Schumpeter_1945_Bachrach_portrait.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Joseph_Schumpeter_1945_Bachrach_portrait.png/120px-Joseph_Schumpeter_1945_Bachrach_portrait.png"
+  },
+  "richard_thaler_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Richard_Thaler_Chatham.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Richard_Thaler_Chatham.jpg/120px-Richard_Thaler_Chatham.jpg"
+  },
+  "thorstein_veblen_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Veblen3a.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Veblen3a.jpg/120px-Veblen3a.jpg"
+  },
+  "marian_diamond_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Marian-Smiling-in-lab-coat_v1.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Marian-Smiling-in-lab-coat_v1.jpg/120px-Marian-Smiling-in-lab-coat_v1.jpg"
+  },
+  "james_lovelock_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b7/James_Lovelock%2C_2005_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/James_Lovelock%2C_2005_%28cropped%29.jpg/120px-James_Lovelock%2C_2005_%28cropped%29.jpg"
+  },
+  "entropie_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Time-Lapse.ogv",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Time-Lapse.ogv/120px--Time-Lapse.ogv.jpg"
+  },
+  "katalyse_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Heterogene_Katalyse_2.svg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Heterogene_Katalyse_2.svg/120px-Heterogene_Katalyse_2.svg.png"
+  },
+  "antoine_lavoisier_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/d8/David_-_Portrait_of_Monsieur_Lavoisier_%28cropped%292.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/David_-_Portrait_of_Monsieur_Lavoisier_%28cropped%292.jpg/120px-David_-_Portrait_of_Monsieur_Lavoisier_%28cropped%292.jpg"
+  },
+  "linus_pauling_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/53/Linus_Pauling_in_the_1940s.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Linus_Pauling_in_the_1940s.jpg/120px-Linus_Pauling_in_the_1940s.jpg"
+  },
+  "marie_curie_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Marie_Curie_c._1920s.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Marie_Curie_c._1920s.jpg/120px-Marie_Curie_c._1920s.jpg"
+  },
+  "albert_hofmann_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Albert_Hofmann_Oct_1993.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Albert_Hofmann_Oct_1993.jpg/120px-Albert_Hofmann_Oct_1993.jpg"
+  },
+  "joseph_weizenbaum_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/17/Joseph_Weizenbaum.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Joseph_Weizenbaum.jpg/120px-Joseph_Weizenbaum.jpg"
+  },
+  "ada_lovelace_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Ada_Lovelace_daguerreotype_by_Antoine_Claudet_1843_-_cropped.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Ada_Lovelace_daguerreotype_by_Antoine_Claudet_1843_-_cropped.png/120px-Ada_Lovelace_daguerreotype_by_Antoine_Claudet_1843_-_cropped.png"
+  },
+  "ted_nelson_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Ted_Nelson_cropped.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Ted_Nelson_cropped.jpg/120px-Ted_Nelson_cropped.jpg"
+  },
+  "tim_berners_lee_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/8d/LS3_4919_%28cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/LS3_4919_%28cropped%29.jpg/120px-LS3_4919_%28cropped%29.jpg"
+  },
+  "buckminster_fuller_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/3b/BuckminsterFuller1.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/BuckminsterFuller1.jpg/120px-BuckminsterFuller1.jpg"
+  },
+  "douglas_hofstadter_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/16/Douglas_Hofstadter%2C_Stanford_2006_%28crop%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Douglas_Hofstadter%2C_Stanford_2006_%28crop%29.jpg/120px-Douglas_Hofstadter%2C_Stanford_2006_%28crop%29.jpg"
+  },
+  "dekonstruktion_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Text.JPG",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Text.JPG/120px-Text.JPG"
+  },
+  "ferdinand_de_saussure_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/69/Ferdinand_de_Saussure_by_Jullien_Restored.png",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Ferdinand_de_Saussure_by_Jullien_Restored.png/120px-Ferdinand_de_Saussure_by_Jullien_Restored.png"
+  },
+  "david_hilbert_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/79/Hilbert.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Hilbert.jpg/120px-Hilbert.jpg"
+  },
+  "emmy_noether_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Emmy_Noether_%283x4_cropped%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Emmy_Noether_%283x4_cropped%29.jpg/120px-Emmy_Noether_%283x4_cropped%29.jpg"
+  },
+  "georg_cantor_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0e/Georg_Cantor_%28Portr%C3%A4t%29.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Georg_Cantor_%28Portr%C3%A4t%29.jpg/120px-Georg_Cantor_%28Portr%C3%A4t%29.jpg"
+  },
+  "benoit_mandelbrot_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/19/Benoit_Mandelbrot_mg_1804.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Benoit_Mandelbrot_mg_1804.jpg/120px-Benoit_Mandelbrot_mg_1804.jpg"
+  },
+  "carl_sagan_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/be/Carl_Sagan_Planetary_Society.JPG",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Carl_Sagan_Planetary_Society.JPG/120px-Carl_Sagan_Planetary_Society.JPG"
+  },
+  "ilya_prigogine_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Ilya_Prigogine_1977c.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Ilya_Prigogine_1977c.jpg/120px-Ilya_Prigogine_1977c.jpg"
+  },
+  "christopher_alexander_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0f/ChristopherAlexander2012_cropped.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/ChristopherAlexander2012_cropped.jpg/120px-ChristopherAlexander2012_cropped.jpg"
+  },
+  "stuart_kauffman_monographie": {
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Stuart_Kauffman.jpg",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Stuart_Kauffman.jpg/120px-Stuart_Kauffman.jpg"
   }
 }
