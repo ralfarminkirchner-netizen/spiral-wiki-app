@@ -44,9 +44,31 @@ function fetchJson(url) {
   });
 }
 
+async function fetchBingImage(query) {
+  return new Promise((resolve) => {
+    https.get(`https://www.bing.com/images/search?q=${encodeURIComponent(query + " person")}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        // Find Microsoft's own cached thumbnail URLs which never have hotlink protection!
+        const match = data.match(/(https:\/\/tse\d+\.mm\.bing\.net\/th\?id=[a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          resolve(match[1]);
+        } else {
+          resolve(null);
+        }
+      });
+    }).on('error', () => resolve(null));
+  });
+}
+
 async function run() {
   const files = getMarkdownFiles(libraryDir);
-  console.log(`Prüfe ${files.length} Dateien...`);
+  console.log(`Prüfe ${files.length} Dateien auf fehlende Bilder...`);
 
   let addedCount = 0;
 
@@ -54,6 +76,12 @@ async function run() {
     let content = fs.readFileSync(file, 'utf-8');
     const basename = path.basename(file, '.md');
     
+    // Check if the file already has an image
+    const existingImageMatch = content.match(/!\[.*?\]\((.*?)\)/);
+    if (existingImageMatch) {
+      continue; // Skip files that ALREADY have an image!
+    }
+
     const titleMatch = content.match(/^#\s+(.+)$/m);
     if (!titleMatch) continue;
 
@@ -68,67 +96,63 @@ async function run() {
       cleanTitle = cleanTitle.split(': ')[0].trim();
     }
     
-    let originalUrl = null;
-    let thumbUrl = null;
+    let finalUrl = null;
 
     if (imageCache[basename] && imageCache[basename].original) {
-      originalUrl = imageCache[basename].original;
-      thumbUrl = imageCache[basename].thumbnail;
+      finalUrl = imageCache[basename].original;
     } else {
-      console.log(`Suche nach: ${cleanTitle}`);
-      let url = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=thumbnail|original&pithumbsize=100&titles=${encodeURIComponent(cleanTitle)}`;
+      console.log(`\nSuche nach Bild für: ${cleanTitle}`);
+      
+      // 1. Try Exact Wikipedia EN
+      let url = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${encodeURIComponent(cleanTitle)}`;
       let data;
       try {
         data = await fetchJson(url);
-      } catch(e) {
-        console.log(`Fehler bei ${cleanTitle}`);
-        continue;
-      }
+        let pages = data.query?.pages;
+        let page = pages ? Object.values(pages)[0] : null;
+        if (page && page.original) finalUrl = page.original.source;
+      } catch(e) {}
 
-      let pages = data.query?.pages;
-      let page = pages ? Object.values(pages)[0] : null;
-
-      if (!page || page.pageid === undefined || (!page.thumbnail && !page.original)) {
-        url = `https://de.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=thumbnail|original&pithumbsize=100&titles=${encodeURIComponent(cleanTitle)}`;
+      // 2. Try Exact Wikipedia DE
+      if (!finalUrl) {
+        url = `https://de.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${encodeURIComponent(cleanTitle)}`;
         try {
           data = await fetchJson(url);
-          pages = data.query?.pages;
-          page = pages ? Object.values(pages)[0] : null;
-        } catch(e) {
-          continue;
-        }
+          let pages = data.query?.pages;
+          let page = pages ? Object.values(pages)[0] : null;
+          if (page && page.original) finalUrl = page.original.source;
+        } catch(e) {}
       }
 
-      if (page && page.pageid !== undefined) {
-        originalUrl = page.original?.source;
-        thumbUrl = page.thumbnail?.source;
-        if (!originalUrl && thumbUrl) originalUrl = thumbUrl;
-        if (!thumbUrl && originalUrl) thumbUrl = originalUrl;
+      // 3. Try Bing Images Scraper (The Ultimate Fallback for Obscure Entries)
+      if (!finalUrl) {
+        console.log(`-> Wikipedia gescheitert. Suche in Bing Images...`);
+        finalUrl = await fetchBingImage(cleanTitle);
+      }
 
-        if (originalUrl && thumbUrl) {
-          imageCache[basename] = { original: originalUrl, thumbnail: thumbUrl };
-          fs.writeFileSync(cachePath, JSON.stringify(imageCache, null, 2));
-        }
+      if (finalUrl) {
+        imageCache[basename] = { original: finalUrl, thumbnail: finalUrl };
+        fs.writeFileSync(cachePath, JSON.stringify(imageCache, null, 2));
       }
     }
 
-    if (originalUrl) {
-      if (!content.includes(originalUrl)) {
+    if (finalUrl) {
+      if (!content.includes(finalUrl)) {
         const lines = content.split('\n');
         const titleIndex = lines.findIndex(line => line.startsWith('# '));
         if (titleIndex !== -1) {
-          lines.splice(titleIndex + 1, 0, `\n![${cleanTitle}](${originalUrl})\n`);
+          lines.splice(titleIndex + 1, 0, `\n![${cleanTitle}](${finalUrl})\n`);
           fs.writeFileSync(file, lines.join('\n'));
           addedCount++;
-          console.log(`[+] Wikipedia-Bild für ${cleanTitle} hinzugefügt!`);
+          console.log(`[+] Bild für ${cleanTitle} hinzugefügt: ${finalUrl}`);
         }
       }
     } else {
-      console.log(`[-] Nichts für ${cleanTitle} gefunden.`);
+      console.log(`[-] Komplett gescheitert für ${cleanTitle}. Nichts gefunden.`);
     }
 
     if (!imageCache[basename]) {
-      await new Promise(r => setTimeout(r, 50)); 
+      await new Promise(r => setTimeout(r, 100)); // Be polite to APIs
     }
   }
 

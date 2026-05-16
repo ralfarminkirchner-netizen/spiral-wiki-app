@@ -292,7 +292,7 @@ html, body {
 
 /* node-icon removed as fallback is always an image */
 
-/* Node Labels — hidden by default, visible on hover */
+/* Node Labels — permanently visible so users can read the Wiki */
 .node-label {
   position: absolute;
   top: 40px; /* Below the 70px image */
@@ -303,15 +303,15 @@ html, body {
   text-align: center;
   font-size: 0.75rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(10, 11, 16, 0.9);
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(10, 11, 16, 0.95);
   padding: 4px 8px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   pointer-events: none;
   transition: all 0.2s ease;
-  opacity: 0;
-  z-index: -1;
+  opacity: 1; /* PERMANENTLY VISIBLE */
+  z-index: 10;
 }
 
 .node-label-year {

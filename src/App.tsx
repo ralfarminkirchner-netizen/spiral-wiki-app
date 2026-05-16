@@ -134,10 +134,7 @@ function Dashboard({ data, readMonographs, viewMode, setViewMode }: DashboardPro
         }
       }
 
-      // Final fallback: use category image
-      if (!finalImageUrl) {
-        finalImageUrl = getCatImage(topCategory);
-      }
+      // (Removed category fallback for individual items so they don't get generic images)
 
       return {
         ...item,
@@ -330,12 +327,20 @@ function Dashboard({ data, readMonographs, viewMode, setViewMode }: DashboardPro
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    // Only drag on left click (button 0) to allow right click context menus, etc.
+    if (e.button !== 0) return;
+    
+    // Check if the user clicked on a link
+    const target = e.target as HTMLElement;
+    if (target.closest('a') || target.closest('button')) {
+      return; // Do not start panning if clicking a link!
+    }
+    
     isDragging.current = true;
     dragStart.current = {
       x: e.clientX - positionRef.current.x,
       y: e.clientY - positionRef.current.y
     };
-    if (viewportRef.current) viewportRef.current.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -347,22 +352,17 @@ function Dashboard({ data, readMonographs, viewMode, setViewMode }: DashboardPro
       if (canvasRef.current) {
         canvasRef.current.style.transform = `translate(calc(50vw + ${newX}px), calc(50vh + ${newY}px)) scale(${scale})`;
       }
-
-      // Dynamic Culling Threshold: Update React occasionally during fast pans to spawn new nodes
-      const dx = newX - cullPosition.x;
-      const dy = newY - cullPosition.y;
-      if (Math.abs(dx) > 200 || Math.abs(dy) > 200) {
-        setCullPosition({ x: newX, y: newY });
-      }
+      // Removed rapid setCullPosition here to prevent React from re-rendering the 2000 nodes while panning.
+      // This guarantees hardware-accelerated 60 FPS performance.
     }
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (isDragging.current) {
       isDragging.current = false;
+      // Only update cull position when user STOPS panning
       setCullPosition({ x: positionRef.current.x, y: positionRef.current.y });
     }
-    if (viewportRef.current) viewportRef.current.releasePointerCapture(e.pointerId);
   };
 
   return (
@@ -503,8 +503,9 @@ function Dashboard({ data, readMonographs, viewMode, setViewMode }: DashboardPro
                   <Link 
                     to={`/monograph/${node.item.id}`} 
                     className={`orbital-node node-item ${isRead ? 'read' : ''}`}
-                    style={{ backgroundImage: `url(${node.item.finalImageUrl})` }}
+                    style={{ backgroundImage: node.item.finalImageUrl ? `url(${node.item.finalImageUrl})` : 'none' }}
                   >
+                    {!node.item.finalImageUrl && <span className="node-icon">◆</span>}
                   </Link>
                   <div className="node-label" style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
                     {node.item.cleanTitle}
