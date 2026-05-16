@@ -66,6 +66,28 @@ async function fetchBingImage(query) {
   });
 }
 
+async function searchWikiCanonicalTitle(query, lang = 'en') {
+  let searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&srlimit=1`;
+  try {
+    let searchData = await fetchJson(searchUrl);
+    if (searchData.query?.search?.length > 0) {
+      return searchData.query.search[0].title;
+    }
+  } catch(e) {}
+  return null;
+}
+
+async function fetchWikiImageForTitle(title, lang = 'en') {
+  let url = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${encodeURIComponent(title)}`;
+  try {
+    let data = await fetchJson(url);
+    let pages = data.query?.pages;
+    let page = pages ? Object.values(pages)[0] : null;
+    if (page && page.original) return page.original.source;
+  } catch(e) {}
+  return null;
+}
+
 async function run() {
   const files = getMarkdownFiles(libraryDir);
   console.log(`Prüfe ${files.length} Dateien auf fehlende Bilder...`);
@@ -104,27 +126,24 @@ async function run() {
       console.log(`\nSuche nach Bild für: ${cleanTitle}`);
       
       // 1. Try Exact Wikipedia EN
-      let url = `https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${encodeURIComponent(cleanTitle)}`;
-      let data;
-      try {
-        data = await fetchJson(url);
-        let pages = data.query?.pages;
-        let page = pages ? Object.values(pages)[0] : null;
-        if (page && page.original) finalUrl = page.original.source;
-      } catch(e) {}
-
+      finalUrl = await fetchWikiImageForTitle(cleanTitle, 'en');
+      
       // 2. Try Exact Wikipedia DE
+      if (!finalUrl) finalUrl = await fetchWikiImageForTitle(cleanTitle, 'de');
+
+      // 3. Try Search Wikipedia EN (resolves typos and middle names)
       if (!finalUrl) {
-        url = `https://de.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${encodeURIComponent(cleanTitle)}`;
-        try {
-          data = await fetchJson(url);
-          let pages = data.query?.pages;
-          let page = pages ? Object.values(pages)[0] : null;
-          if (page && page.original) finalUrl = page.original.source;
-        } catch(e) {}
+        let canonicalTitle = await searchWikiCanonicalTitle(cleanTitle, 'en');
+        if (canonicalTitle) finalUrl = await fetchWikiImageForTitle(canonicalTitle, 'en');
       }
 
-      // 3. Try Bing Images Scraper (The Ultimate Fallback for Obscure Entries)
+      // 4. Try Search Wikipedia DE
+      if (!finalUrl) {
+        let canonicalTitle = await searchWikiCanonicalTitle(cleanTitle, 'de');
+        if (canonicalTitle) finalUrl = await fetchWikiImageForTitle(canonicalTitle, 'de');
+      }
+
+      // 5. Try Bing Images Scraper (The Ultimate Fallback for Obscure Entries)
       if (!finalUrl) {
         console.log(`-> Wikipedia gescheitert. Suche in Bing Images...`);
         finalUrl = await fetchBingImage(cleanTitle);

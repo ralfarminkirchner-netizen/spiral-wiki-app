@@ -1,116 +1,138 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { fetchImageWithFallback } from './image-fetcher.js';
+import pLimit from './limit.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Pfad zum Bibliotheks-Ordner
+// Path to the core library containing markdown monographs
 const libraryDir = path.resolve('/Users/ralfkirchner/spiral-os/knowledge_base/core_library');
-// Output JSON and JS in public folder so Vite can serve it
+// Output directory (served by Vite/VitePress)
 const outputDir = path.resolve(__dirname, '../public');
 const outputFileJson = path.join(outputDir, 'data.json');
 const outputFileJs = path.join(outputDir, 'appData.js');
 
-// Rekursive Funktion zum Finden von .md Dateien
+/** Recursively collect all *.md files under a directory */
 function getMarkdownFiles(dir, fileList = []) {
-  if (!fs.existsSync(dir)) {
-    console.warn(`Verzeichnis nicht gefunden: ${dir}`);
-    return fileList;
-  }
-  
-  const files = fs.readdirSync(dir);
-  for (const file of files) {
-    const filePath = path.join(dir, file);
-    if (fs.statSync(filePath).isDirectory()) {
-      getMarkdownFiles(filePath, fileList);
-    } else if (file.endsWith('.md')) {
-      fileList.push(filePath);
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        getMarkdownFiles(fullPath, fileList);
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        fileList.push(fullPath);
+      }
     }
+  } catch (e) {
+    console.warn(`Zugriff verweigert oder Verzeichnis nicht gefunden: ${dir}`);
   }
   return fileList;
 }
 
-function buildData() {
+/** Main build routine */
+async function buildData() {
   console.log('Starte Build-Prozess für die Spiral Wiki App...');
   const files = getMarkdownFiles(libraryDir);
   console.log(`${files.length} Markdown-Dateien gefunden.`);
 
-  const monographs = [];
+  const monographMap = new Map();
+  const limit = pLimit(10); // limit concurrent file reads
 
-  for (const file of files) {
+  // 1️⃣ Read and parse markdown files in parallel
+  await Promise.all(files.map(file => limit(async () => {
     const content = fs.readFileSync(file, 'utf-8');
     const basename = path.basename(file, '.md');
-    
-    // Kategorie aus dem Ordnernamen extrahieren
-    // libraryDir ist .../core_library. Das direkte Unterverzeichnis ist die Kategorie.
-    const relativePath = path.relative(libraryDir, file);
-    // Splitte den relativen Pfad. Alles bis auf die Datei selbst sind Kategorien-Ebenen.
-    const pathParts = relativePath.split(path.sep);
-    pathParts.pop(); // Dateiname entfernen
-    const categoryString = pathParts.length > 0 ? pathParts.join(' / ') : 'Uncategorized';
 
-    // Den Titel parsen (erste Zeile mit #)
+    // Extract category hierarchy from the folder structure
+    const relativePath = path.relative(libraryDir, file);
+    const parts = relativePath.split(path.sep);
+    parts.pop(); // drop the file name
+    const category = parts.length > 0 ? parts.join(' / ') : 'Uncategorized';
+
+    // Parse title (first line beginning with #)
     const titleMatch = content.match(/^#\s+(.+)$/m);
     let title = titleMatch ? titleMatch[1] : basename;
-    
-    // "Monographie: Masterclass " aus dem Titel entfernen für eine saubere Ansicht
+    // Normalise title for deduplication
     title = title.replace(/Monographie:\s*Masterclass\s*/i, '').trim();
-    // Obsidian-Klammern aus dem Titel entfernen, falls vorhanden
     title = title.replace(/\[\[/g, '').replace(/\]\]/g, '').trim();
-    // Meta-Kommentare und Lebensdaten aus dem Titel entfernen (z.B. "(*1950)" oder "(1900-1990)")
     title = title.replace(/\s*\([^)]*\)\s*$/g, '').trim();
+    let cleanTitle = title.replace(/\(.*?\)/g, '').trim();
+    if (cleanTitle.includes(' - ')) cleanTitle = cleanTitle.split(' - ')[0].trim();
+    if (cleanTitle.includes(': ')) cleanTitle = cleanTitle.split(': ')[0].trim();
 
-    // Erstes Bild extrahieren: ![alt](url)
+    // Extract first image markdown if present
     const imageMatch = content.match(/!\[.*?\]\((.*?)\)/);
     const imageUrl = imageMatch ? imageMatch[1] : null;
 
-    monographs.push({
-      id: basename,
-      title: title,
-      category: categoryString,
-      imageUrl: imageUrl,
-      content: content
-    });
-  }
-
-  // Cross-Linking generieren
-  console.log('Generiere Querverweise (Auto-Linking)...');
-  const titles = monographs.map(m => m.title.replace(/\(.*\)/g, '').trim());
-  
-  for (let m of monographs) {
-    let processedContent = m.content;
-    for (let i=0; i<titles.length; i++) {
-      const otherTitle = titles[i];
-      const otherId = monographs[i].id;
-      
-      if (m.id === otherId) continue; // Sich selbst nicht verlinken
-      if (otherTitle.length < 4) continue; // Zu kurze Namen ignorieren
-
-      // Regex-Sonderzeichen escapen, um SyntaxErrors zu vermeiden (z.B. bei Titeln mit Klammern)
-      const escapedOtherTitle = otherTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      // Obsidian links auflösen: [[Title]] -> [Title](/monograph/id)
-      const obsRegex = new RegExp(`\\[\\[${escapedOtherTitle}\\]\\]`, 'g');
-      processedContent = processedContent.replace(obsRegex, `[${otherTitle}](/monograph/${otherId})`);
-
-      // Nur verlinken, wenn es nicht schon verlinkt ist (einfache Heuristik)
-      // Das ist ein einfacher Regex für Demonstration.
-      const regex = new RegExp(`(?<!\\[)\\b(${escapedOtherTitle})\\b(?!\\])`, 'g');
-      processedContent = processedContent.replace(regex, `[$1](/monograph/${otherId})`);
+    const existing = monographMap.get(cleanTitle);
+    if (existing) {
+      existing.content += '\n\n---\n\n' + content;
+      if (!existing.imageUrl && imageUrl) existing.imageUrl = imageUrl;
+    } else {
+      monographMap.set(cleanTitle, {
+        id: basename,
+        title: cleanTitle,
+        category,
+        imageUrl,
+        content,
+      });
     }
-    m.content = processedContent;
-  }
+  })));
 
-  // Sicherstellen, dass public existiert
+  // 2️⃣ Convert map to enriched array (metadata, word count, timestamp)
+  const monographs = Array.from(monographMap.values()).map(m => ({
+    ...m,
+    wordCount: m.content.split(/\s+/).filter(Boolean).length,
+    lastModified: new Date().toISOString(),
+  }));
+
+  // 3️⃣ Fetch missing images using Wikipedia → Bing fallback, limited concurrency
+  console.log('Fetching fehlende Bilder (Wikipedia → Bing fallback)...');
+  await Promise.all(monographs.map(m => limit(async () => {
+    if (!m.imageUrl) {
+      m.imageUrl = await fetchImageWithFallback(m.title);
+    }
+  })));
+
+  // 4️⃣ Generate cross‑links (max 5 per monograph to keep UI tidy)
+  console.log('Generiere Querverweise...');
+  const MAX_LINKS = 5;
+  const plainTitles = monographs.map(m => m.title.replace(/\(.*\)/g, '').trim());
+  monographs.forEach(m => {
+    let processed = m.content;
+    let added = 0;
+    for (let i = 0; i < plainTitles.length && added < MAX_LINKS; i++) {
+      const otherTitle = plainTitles[i];
+      const otherId = monographs[i].id;
+      if (m.id === otherId) continue;
+      if (otherTitle.length < 4) continue;
+      const esc = otherTitle.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+      const bracketRegex = new RegExp(`\\\\[\\\\[${esc}\\\\]\\\\]`, 'g');
+      if (bracketRegex.test(processed)) {
+        processed = processed.replace(bracketRegex, `[${otherTitle}](/monograph/${otherId})`);
+        added++;
+        continue;
+      }
+      const wordRegex = new RegExp(`(?<!\\\\[)\\\\b(${esc})\\\\b(?!\\\\])`, 'g');
+      if (wordRegex.test(processed)) {
+        processed = processed.replace(wordRegex, `[$1](/monograph/${otherId})`);
+        added++;
+      }
+    }
+    m.content = processed;
+  });
+
+  // 5️⃣ Write results to the public folder
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
-
-  const jsonContent = JSON.stringify(monographs, null, 2);
-  fs.writeFileSync(outputFileJson, jsonContent, 'utf-8');
-  fs.writeFileSync(outputFileJs, `const windowWikiData = ${jsonContent};`, 'utf-8');
+  const json = JSON.stringify(monographs, null, 2);
+  fs.writeFileSync(outputFileJson, json, 'utf-8');
+  fs.writeFileSync(outputFileJs, `const windowWikiData = ${json};`, 'utf-8');
   console.log(`Erfolgreich ${monographs.length} Monographien geschrieben.`);
 }
 
-buildData();
+await buildData();

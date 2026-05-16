@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+// Utility: navigate is used by Dashboard via useNavigate import above
+
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -32,6 +34,7 @@ interface Monograph {
   category: string;
   content: string;
   imageUrl?: string | null;
+  wordCount?: number;
 }
 
 // interface ProcessedMonograph removed
@@ -68,13 +71,35 @@ const getCatImage = (catName: string) => {
 interface DashboardProps {
   data: Monograph[];
   readMonographs: string[];
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
   viewMode: 'galaxy' | 'wiki';
   setViewMode: (mode: 'galaxy' | 'wiki') => void;
 }
 
-function Dashboard({ data, readMonographs, viewMode, setViewMode }: DashboardProps) {
+function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, setViewMode }: DashboardProps) {
   const [search, setSearch] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const goToRandom = useCallback(() => {
+    if (data.length === 0) return;
+    const item = data[Math.floor(Math.random() * data.length)];
+    navigate(`/monograph/${item.id}`);
+  }, [data, navigate]);
   
   // Pan and Zoom State
   const [scale, setScale] = useState(0.08); // Start zoomed out to see all
@@ -376,21 +401,41 @@ function Dashboard({ data, readMonographs, viewMode, setViewMode }: DashboardPro
             
             <div className="search-bar-hud hud-interactive" style={{ pointerEvents: 'auto' }}>
               <input 
+                ref={searchRef}
                 type="text" 
-                placeholder="Suche im kybernetischen Netz..." 
+                placeholder="Suche im kybernetischen Netz... (drücke /)" 
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
+
+            {/* Stats Panel */}
+            <div className="stats-panel hud-interactive" style={{ pointerEvents: 'auto' }}>
+              <div className="stat-chip">
+                <span className="stat-value">{data.length}</span> Monographien
+              </div>
+              <div className="stat-chip">
+                <span className="stat-value">{readMonographs.length}</span> gelesen
+              </div>
+              <div className="stat-chip">
+                <span className="stat-value">{favorites.length}</span> ★ Favoriten
+              </div>
+              <div className="stat-chip">
+                <span className="stat-value">{sortedCategories.length}</span> Kategorien
+              </div>
+            </div>
           </div>
           
-          <div className="view-toggle hud-interactive" style={{ pointerEvents: 'auto' }}>
+          <div className="view-toggle hud-interactive" style={{ pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
             <button 
               className="glass"
               style={{ padding: '0.6rem 1.2rem', color: '#fff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600, boxShadow: '0 4px 15px rgba(0,0,0,0.3)', backdropFilter: 'blur(12px)', transition: 'all 0.2s ease' }}
               onClick={() => setViewMode(viewMode === 'galaxy' ? 'wiki' : 'galaxy')}
             >
               {viewMode === 'galaxy' ? '→ Listenansicht' : '→ Spiralansicht'}
+            </button>
+            <button className="random-btn" onClick={goToRandom}>
+              🎲 Zufällige Monographie
             </button>
           </div>
         </div>
@@ -628,12 +673,20 @@ function Dashboard({ data, readMonographs, viewMode, setViewMode }: DashboardPro
                                 </div>
                                 {/* Info */}
                                 <div style={{ padding: '0.6rem 0.7rem' }}>
-                                  <div style={{
-                                    fontSize: '0.85rem', fontWeight: 700,
-                                    lineHeight: 1.3, marginBottom: '0.2rem',
-                                    overflow: 'hidden', textOverflow: 'ellipsis',
-                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any
-                                  }}>{item.cleanTitle}</div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div style={{
+                                      fontSize: '0.85rem', fontWeight: 700,
+                                      lineHeight: 1.3, marginBottom: '0.2rem',
+                                      overflow: 'hidden', textOverflow: 'ellipsis',
+                                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any,
+                                      flex: 1
+                                    }}>{item.cleanTitle}</div>
+                                    <button
+                                      className={`fav-btn ${favorites.includes(item.id) ? 'is-fav' : ''}`}
+                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(item.id); }}
+                                      title={favorites.includes(item.id) ? 'Favorit entfernen' : 'Als Favorit markieren'}
+                                    >★</button>
+                                  </div>
                                   {item.year !== 9999 && (
                                     <div style={{ fontSize: '0.7rem', color: 'rgba(0,240,255,0.7)' }}>{item.year}</div>
                                   )}
@@ -663,22 +716,51 @@ function Dashboard({ data, readMonographs, viewMode, setViewMode }: DashboardPro
 interface ReaderProps {
   data: Monograph[];
   markAsRead: (id: string) => void;
+  favorites: string[];
+  toggleFavorite: (id: string) => void;
 }
 
-function MonographReader({ data, markAsRead }: ReaderProps) {
+function MonographReader({ data, markAsRead, favorites, toggleFavorite }: ReaderProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const monograph = data.find(d => d.id === id);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [readProgress, setReadProgress] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    if (id && monograph) {
-      markAsRead(id);
-    }
+    if (id && monograph) markAsRead(id);
   }, [id, monograph, markAsRead]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const el = scrollContainerRef.current;
+    if (el) el.scrollTop = 0;
+    setReadProgress(0);
+    setShowScrollTop(false);
   }, [id]);
+
+  // Scroll progress + scroll-to-top visibility
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const handler = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const progress = scrollHeight <= clientHeight ? 100 : (scrollTop / (scrollHeight - clientHeight)) * 100;
+      setReadProgress(progress);
+      setShowScrollTop(scrollTop > 400);
+    };
+    el.addEventListener('scroll', handler, { passive: true });
+    return () => el.removeEventListener('scroll', handler);
+  }, [monograph]);
+
+  // Keyboard: Escape to go back
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') navigate(-1);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [navigate]);
 
   if (!monograph) {
     return (
@@ -691,15 +773,31 @@ function MonographReader({ data, markAsRead }: ReaderProps) {
     );
   }
 
+  const isFav = id ? favorites.includes(id) : false;
+  const wordCount = monograph.wordCount || monograph.content.split(/\s+/).filter(Boolean).length;
+  const readTimeMin = Math.max(1, Math.round(wordCount / 200));
+
   return (
-    <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', background: 'var(--bg-dark)' }}>
+    <div ref={scrollContainerRef} style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', background: 'var(--bg-dark)' }}>
+      {/* Reading Progress Bar */}
+      <div className="reading-progress-bar" style={{ width: `${readProgress}%` }} />
+
       <div className="app-layout">
         <div className="reader-wrapper animate-slide-up">
           <nav className="reader-nav glass">
             <button className="btn-back" onClick={() => navigate(-1)}>
               <span style={{ fontSize: '1.2rem', color: 'var(--accent-cyan)' }}>←</span> Zurück
             </button>
-            <span className="category-badge">{monograph.category.split(' / ').pop()?.replace(/_/g, ' ')}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{readTimeMin} Min. Lesezeit</span>
+              <button
+                className={`fav-btn ${isFav ? 'is-fav' : ''}`}
+                onClick={() => id && toggleFavorite(id)}
+                title={isFav ? 'Favorit entfernen' : 'Als Favorit markieren'}
+                style={{ fontSize: '1.3rem' }}
+              >★</button>
+              <span className="category-badge">{monograph.category.split(' / ').pop()?.replace(/_/g, ' ')}</span>
+            </div>
           </nav>
           
           <article className="reader-content glass">
@@ -720,6 +818,13 @@ function MonographReader({ data, markAsRead }: ReaderProps) {
           </article>
         </div>
       </div>
+
+      {/* Scroll to Top Button */}
+      <button
+        className={`scroll-to-top ${showScrollTop ? 'visible' : ''}`}
+        onClick={() => scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+        title="Nach oben scrollen"
+      >↑</button>
     </div>
   );
 }
@@ -728,16 +833,22 @@ export default function App() {
   const [data, setData] = useState<Monograph[]>([]);
   const [loading, setLoading] = useState(true);
   const [readMonographs, setReadMonographs] = useLocalStorage<string[]>('spiral-wiki-read', []);
+  const [favorites, setFavorites] = useLocalStorage<string[]>('spiral-wiki-favorites', []);
   const [viewMode, setViewMode] = useLocalStorage<'galaxy' | 'wiki'>('spiral-view-mode', 'galaxy');
 
   const markAsRead = useCallback((id: string) => {
     setReadMonographs(prev => {
-      if (!prev.includes(id)) {
-        return [...prev, id];
-      }
+      if (!prev.includes(id)) return [...prev, id];
       return prev;
     });
   }, [setReadMonographs]);
+
+  const toggleFavorite = useCallback((id: string) => {
+    setFavorites(prev => {
+      if (prev.includes(id)) return prev.filter(f => f !== id);
+      return [...prev, id];
+    });
+  }, [setFavorites]);
 
   useEffect(() => {
     fetch('/data.json')
@@ -750,8 +861,6 @@ export default function App() {
             const existing = uniqueDataMap.get(item.id);
             const hasImg = !!item.imageUrl || (item.content && item.content.includes("!["));
             const existingHasImg = !!existing.imageUrl || (existing.content && existing.content.includes("!["));
-            
-            // Override if new has image and existing doesn't, or if both don't but new is longer
             if ((hasImg && !existingHasImg) || (!existingHasImg && item.content?.length > existing.content?.length)) {
               uniqueDataMap.set(item.id, item);
             }
@@ -781,8 +890,12 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Dashboard data={data} readMonographs={readMonographs} viewMode={viewMode} setViewMode={setViewMode} />} />
-      <Route path="/monograph/:id" element={<MonographReader data={data} markAsRead={markAsRead} />} />
+      <Route path="/" element={
+        <Dashboard data={data} readMonographs={readMonographs} favorites={favorites} toggleFavorite={toggleFavorite} viewMode={viewMode} setViewMode={setViewMode} />
+      } />
+      <Route path="/monograph/:id" element={
+        <MonographReader data={data} markAsRead={markAsRead} favorites={favorites} toggleFavorite={toggleFavorite} />
+      } />
     </Routes>
   );
 }
