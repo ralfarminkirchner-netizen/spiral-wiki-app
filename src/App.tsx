@@ -692,7 +692,7 @@ function MonographReader({ data, markAsRead }: ReaderProps) {
   }
 
   return (
-    <div style={{ background: 'var(--bg-dark)', minHeight: '100vh' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', background: 'var(--bg-dark)' }}>
       <div className="app-layout">
         <div className="reader-wrapper animate-slide-up">
           <nav className="reader-nav glass">
