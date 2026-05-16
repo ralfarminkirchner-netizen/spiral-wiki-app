@@ -82,6 +82,10 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
   const searchRef = useRef<HTMLInputElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [alphaFilter, setAlphaFilter] = useState<string>('');
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -159,7 +163,10 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         }
       }
 
-      // (Removed category fallback for individual items so they don't get generic images)
+      // Category-based fallback for entries missing specific images
+      if (!finalImageUrl) {
+        finalImageUrl = getCatImage(topCategory);
+      }
 
       return {
         ...item,
@@ -175,16 +182,20 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
   }, [data]);
 
   const filteredData = useMemo(() => {
-    return processedData.filter(d => 
-      d.title.toLowerCase().includes(search.toLowerCase()) || 
-      d.category.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [processedData, search]);
+    return processedData.filter(d => {
+      if (search && !d.title.toLowerCase().includes(search.toLowerCase()) && !d.category.toLowerCase().includes(search.toLowerCase())) return false;
+      if (selectedCategory !== 'all' && d.topCategory !== selectedCategory) return false;
+      if (showFavoritesOnly && !favorites.includes(d.id)) return false;
+      if (showUnreadOnly && readMonographs.includes(d.id)) return false;
+      if (alphaFilter && !d.cleanTitle.toUpperCase().startsWith(alphaFilter)) return false;
+      return true;
+    });
+  }, [processedData, search, selectedCategory, showFavoritesOnly, showUnreadOnly, favorites, readMonographs, alphaFilter]);
 
   // 2. Multi-Arm Galaxy Layout & Culling
   const isSearching = search.trim().length > 0;
   const showGrid = isSearching || viewMode === 'wiki';
-  const displayData = showGrid && !isSearching ? processedData : filteredData;
+  const displayData = filteredData;
   
   const { macroNodes, mesoNodes, microNodes } = useMemo(() => {
     const itemsToProcess = isSearching ? filteredData : processedData;
@@ -439,6 +450,31 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
             </button>
           </div>
         </div>
+
+        {/* Filter Bar — visible in Wiki list view */}
+        {viewMode === 'wiki' && (
+          <div className="filter-bar hud-interactive" style={{ pointerEvents: 'auto', width: '100%', maxWidth: '1400px', margin: '0 auto', padding: '0.5rem 1.5rem' }}>
+            <select
+              value={selectedCategory}
+              onChange={e => setSelectedCategory(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">Alle Kategorien</option>
+              {sortedCategories.map(cat => (
+                <option key={cat} value={cat}>{cat.replace(/_/g, ' ')}</option>
+              ))}
+            </select>
+            <button
+              className={`filter-toggle ${showFavoritesOnly ? 'active' : ''}`}
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            >★ Favoriten</button>
+            <button
+              className={`filter-toggle ${showUnreadOnly ? 'active' : ''}`}
+              onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+            >◯ Ungelesen</button>
+            <span className="filter-count">{filteredData.length} Ergebnisse</span>
+          </div>
+        )}
       </div>
 
       {/* --- GALAXY VIEWPORT (Pan/Zoom) --- */}
@@ -569,6 +605,27 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
           background: 'var(--bg-dark)'
         }}>
           <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem' }}>
+            {/* Alphabet Quick-Jump Index */}
+            <div className="alpha-index">
+              {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => {
+                const hasItems = filteredData.some(d => d.cleanTitle.toUpperCase().startsWith(letter));
+                return (
+                  <button
+                    key={letter}
+                    className={`alpha-letter ${hasItems ? 'has-items' : ''} ${alphaFilter === letter ? 'active' : ''}`}
+                    onClick={() => setAlphaFilter(alphaFilter === letter ? '' : letter)}
+                    disabled={!hasItems && alphaFilter !== letter}
+                  >{letter}</button>
+                );
+              })}
+              {alphaFilter && (
+                <button
+                  className="alpha-letter active"
+                  onClick={() => setAlphaFilter('')}
+                  style={{ width: 'auto', padding: '0 8px', fontSize: '0.7rem' }}
+                >✕ Reset</button>
+              )}
+            </div>
             {/* Category Sections */}
             {sortedCategories.map(cat => {
               const catItems = displayData.filter(d => d.topCategory === cat);
@@ -727,6 +784,37 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [readProgress, setReadProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showToc, setShowToc] = useState(false);
+  const headingIndexRef = useRef(0);
+
+  // Parse headings for Table of Contents
+  const headings = useMemo(() => {
+    if (!monograph) return [];
+    return monograph.content.split('\n')
+      .filter(l => /^#{2,3}\s/.test(l))
+      .map((l, i) => {
+        const level = l.startsWith('### ') ? 3 : 2;
+        const text = l.replace(/^#{2,3}\s+/, '').trim();
+        const slug = `toc-${i}-${text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 40)}`;
+        return { level, text, slug };
+      });
+  }, [monograph]);
+
+  const scrollToHeading = useCallback((slug: string) => {
+    const el = scrollContainerRef.current?.querySelector(`[id="${slug}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setShowToc(false);
+  }, []);
+
+  // Related monographs from same top-level category
+  const relatedMonographs = useMemo(() => {
+    if (!monograph) return [];
+    const myCat = monograph.category.split(' / ')[0];
+    return data
+      .filter(d => d.id !== monograph.id && d.category.split(' / ')[0] === myCat)
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .slice(0, 4);
+  }, [monograph, data]);
 
   useEffect(() => {
     if (id && monograph) markAsRead(id);
@@ -790,6 +878,9 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{readTimeMin} Min. Lesezeit</span>
+              {headings.length > 0 && (
+                <button className="toc-toggle" onClick={() => setShowToc(!showToc)}>☰ Inhalt</button>
+              )}
               <button
                 className={`fav-btn ${isFav ? 'is-fav' : ''}`}
                 onClick={() => id && toggleFavorite(id)}
@@ -810,12 +901,59 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
                     return <Link to={href} className="wiki-link">{props.children}</Link>;
                   }
                   return <a target="_blank" rel="noopener noreferrer" className="external-link" {...props}>{props.children}</a>;
+                },
+                h2: ({node, children, ...props}: any) => {
+                  const idx = headingIndexRef.current++;
+                  const heading = headings.find((h, i) => h.level === 2 && i === idx);
+                  const slug = heading ? heading.slug : `h2-${idx}`;
+                  return <h2 id={slug} {...props}>{children}</h2>;
+                },
+                h3: ({node, children, ...props}: any) => {
+                  const idx = headingIndexRef.current++;
+                  const heading = headings.find((h, i) => h.level === 3 && i === idx);
+                  const slug = heading ? heading.slug : `h3-${idx}`;
+                  return <h3 id={slug} {...props}>{children}</h3>;
                 }
               }}
             >
-              {monograph.content}
+              {(() => { headingIndexRef.current = 0; return monograph.content; })()}
             </ReactMarkdown>
+
+            {/* Related Monographs */}
+            {relatedMonographs.length > 0 && (
+              <div className="related-section">
+                <div className="related-title">Verwandte Monographien</div>
+                <div className="related-grid">
+                  {relatedMonographs.map(rm => (
+                    <Link to={`/monograph/${rm.id}`} key={rm.id} className="related-card">
+                      <div className="related-card-img" style={{ backgroundImage: `url(${rm.imageUrl || ''})` }} />
+                      <div className="related-card-info">
+                        <div className="related-card-title">{cleanTitleText(rm.title)}</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </article>
+        </div>
+      </div>
+
+      {/* Table of Contents Sidebar */}
+      <div className={`toc-backdrop ${showToc ? 'open' : ''}`} onClick={() => setShowToc(false)} />
+      <div className={`toc-panel ${showToc ? 'open' : ''}`}>
+        <div className="toc-header">
+          <h3>Inhaltsverzeichnis</h3>
+          <button className="toc-close" onClick={() => setShowToc(false)}>✕</button>
+        </div>
+        <div className="toc-list">
+          {headings.map((h, i) => (
+            <button
+              key={i}
+              className={`toc-item ${h.level === 3 ? 'level-3' : ''}`}
+              onClick={() => scrollToHeading(h.slug)}
+            >{h.text}</button>
+          ))}
         </div>
       </div>
 
