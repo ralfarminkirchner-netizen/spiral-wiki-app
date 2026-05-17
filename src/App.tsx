@@ -241,17 +241,35 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     return positions;
   }, [filteredData, viewMode]);
 
-  // Circle positions: all items in one big circle
+  // Circle positions: fill a disc with concentric rings of portraits
   const circlePositions = useMemo(() => {
     if (viewMode !== 'circle') return [];
     const items = filteredData;
     const n = items.length;
-    const radius = Math.max(180, n * 0.7);
-    return items.map((item, i) => ({
-      item,
-      x: radius * Math.cos((i / n) * 2 * Math.PI),
-      y: radius * Math.sin((i / n) * 2 * Math.PI),
-    }));
+    if (n === 0) return [];
+    const nodeSize = 26; // half the node diameter (48/2 + gap)
+    const positions: { item: typeof items[0]; x: number; y: number }[] = [];
+    let placed = 0;
+    // Center item
+    if (placed < n) {
+      positions.push({ item: items[placed], x: 0, y: 0 });
+      placed++;
+    }
+    // Concentric rings outward
+    let ring = 1;
+    while (placed < n) {
+      const r = ring * nodeSize * 1.15;
+      const circumference = 2 * Math.PI * r;
+      const maxInRing = Math.max(1, Math.floor(circumference / (nodeSize * 1.1)));
+      const count = Math.min(maxInRing, n - placed);
+      for (let j = 0; j < count; j++) {
+        const angle = (j / count) * 2 * Math.PI - Math.PI / 2;
+        positions.push({ item: items[placed], x: r * Math.cos(angle), y: r * Math.sin(angle) });
+        placed++;
+      }
+      ring++;
+    }
+    return positions;
   }, [filteredData, viewMode]);
 
   // Pan/Zoom handlers for spiral and circle
