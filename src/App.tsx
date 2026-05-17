@@ -246,7 +246,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     if (viewMode !== 'circle') return [];
     const items = filteredData;
     const n = items.length;
-    const radius = Math.max(200, n * 1.2);
+    const radius = Math.max(180, n * 0.7);
     return items.map((item, i) => ({
       item,
       x: radius * Math.cos((i / n) * 2 * Math.PI),
