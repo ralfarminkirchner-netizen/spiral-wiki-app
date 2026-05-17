@@ -124,9 +124,10 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
   const [alphaFilter, setAlphaFilter] = useState<string>('');
   const [zoomLevel, setZoomLevel] = useState<number>(1); // 0=S, 1=M, 2=L
 
-  // Spiral state
+  // Spiral/Circle state
   const spiralRef = useRef<HTMLDivElement>(null);
-  const [spiralTransform, setSpiralTransform] = useState({ x: 0, y: 0, scale: 1.0 });
+  const [spiralTransform, setSpiralTransform] = useState({ x: 0, y: 0, scale: 0.6 });
+  const dragStartPos = useRef({ x: 0, y: 0 });
   const dragRef = useRef({ dragging: false, lastX: 0, lastY: 0 });
 
   // Keyboard shortcuts
@@ -272,17 +273,25 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     return positions;
   }, [filteredData, viewMode]);
 
-  // Pan/Zoom handlers for spiral and circle
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    setSpiralTransform(prev => {
-      const factor = e.deltaY > 0 ? 0.9 : 1.1;
-      return { ...prev, scale: Math.max(0.08, Math.min(4, prev.scale * factor)) };
-    });
-  }, []);
+  // Wheel zoom: must use native event listener with {passive:false} because React adds passive
+  useEffect(() => {
+    const el = spiralRef.current;
+    if (!el || (viewMode !== 'spiral' && viewMode !== 'circle')) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const factor = e.deltaY > 0 ? 0.92 : 1.08;
+      setSpiralTransform(prev => ({ ...prev, scale: Math.max(0.05, Math.min(5, prev.scale * factor)) }));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [viewMode]);
+
+  // Pan: track drag distance to distinguish click vs drag
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     dragRef.current = { dragging: true, lastX: e.clientX, lastY: e.clientY };
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
   }, []);
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!dragRef.current.dragging) return;
@@ -293,6 +302,12 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     setSpiralTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
   }, []);
   const handleMouseUp = useCallback(() => { dragRef.current.dragging = false; }, []);
+  // Block link navigation if user was dragging
+  const handleNodeClick = useCallback((e: React.MouseEvent) => {
+    const dx = Math.abs(e.clientX - dragStartPos.current.x);
+    const dy = Math.abs(e.clientY - dragStartPos.current.y);
+    if (dx > 5 || dy > 5) e.preventDefault(); // was a drag, not a click
+  }, []);
 
   return (
     <div className="mosaic-page animate-fade-in">
@@ -431,7 +446,6 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
       {(viewMode === 'spiral' || viewMode === 'circle') && (
         <div className="spiral-viewport"
           ref={spiralRef}
-          onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -440,14 +454,12 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
           <div className="spiral-canvas"
             style={{ transform: `translate(${spiralTransform.x}px, ${spiralTransform.y}px) scale(${spiralTransform.scale})` }}
           >
-            {/* 6 arm guide lines (spiral only) */}
             {viewMode === 'spiral' && SUPER_ARMS.map((arm, i) => (
               <div key={`arm-${i}`} className="spiral-arm-line" style={{
                 transform: `rotate(${(i / 6) * 360}deg)`,
                 background: `linear-gradient(90deg, ${arm.color}40, transparent)`,
               }} />
             ))}
-            {/* Arm labels (spiral only) */}
             {viewMode === 'spiral' && SUPER_ARMS.map((arm, i) => {
               const angle = (i / 6) * 2 * Math.PI;
               const lx = 160 * Math.cos(angle);
@@ -458,20 +470,16 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                 }}>{arm.name}</div>
               );
             })}
-            {/* Portrait nodes */}
             {(viewMode === 'spiral' ? spiralPositions : circlePositions).map(({ item, x, y }) => {
               const color = SUPER_ARMS[getArmIndex(item.topCategory)]?.color || item.catColor;
-              const isRead = readMonographs.includes(item.id);
               return (
                 <Link to={`/monograph/${item.id}`} key={item.id}
-                  className={`spiral-node ${isRead ? 'is-read' : ''}`}
+                  className="spiral-node"
+                  onClick={handleNodeClick}
                   style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)`, '--tile-color': color } as any}
                 >
                   <div className="spiral-node-img" style={{ backgroundImage: `url(${item.finalImageUrl})`, borderColor: color }} />
-                  <div className="spiral-node-label">
-                    <span>{item.cleanTitle}</span>
-                    {item.year !== 9999 && <small>{item.year}</small>}
-                  </div>
+                  <div className="spiral-node-label">{item.cleanTitle}</div>
                 </Link>
               );
             })}
