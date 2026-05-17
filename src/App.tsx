@@ -93,13 +93,25 @@ const getCatColor = (catName: string): string => {
   return '#64748b'; // slate fallback
 };
 
+type ViewMode = 'spiral' | 'circle' | 'portrait';
+
+// 6 super-category arms for spiral galaxy
+const SUPER_ARMS: { name: string; cats: string[]; color: string }[] = [
+  { name: 'Geist', cats: ['Philosophie', 'Bewusstseinsforschung'], color: '#818cf8' },
+  { name: 'Psyche', cats: ['Psychologie', 'Neurologie'], color: '#f97316' },
+  { name: 'Natur', cats: ['Wissenschaft', 'Physik_und_Mathematik', 'Physik und Mathematik'], color: '#14b8a6' },
+  { name: 'Gesellschaft', cats: ['Soziologie', 'Wirtschaft'], color: '#ef4444' },
+  { name: 'Kultur', cats: ['Kunst_und_Literatur', 'Kunst und Literatur', 'Kybernetik', 'Synthesen'], color: '#ec4899' },
+  { name: 'Tradition', cats: ['Religion_und_Spiritualitaet', 'Religion und Spiritualitaet', 'Tradition', 'Traumaforschung'], color: '#eab308' },
+];
+
 interface DashboardProps {
   data: Monograph[];
   readMonographs: string[];
   favorites: string[];
   toggleFavorite: (id: string) => void;
-  viewMode: 'mosaic' | 'spiral';
-  setViewMode: (mode: 'mosaic' | 'spiral') => void;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
 }
 
 function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, setViewMode }: DashboardProps) {
@@ -114,7 +126,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
 
   // Spiral state
   const spiralRef = useRef<HTMLDivElement>(null);
-  const [spiralTransform, setSpiralTransform] = useState({ x: 0, y: 0, scale: 0.5 });
+  const [spiralTransform, setSpiralTransform] = useState({ x: 0, y: 0, scale: 1.0 });
   const dragRef = useRef({ dragging: false, lastX: 0, lastY: 0 });
 
   // Keyboard shortcuts
@@ -197,57 +209,64 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     return groups;
   }, [filteredData]);
 
-  const ZOOM_SIZES = [60, 90, 150]; // S, M, L tile minWidth in px
+  const ZOOM_SIZES = [60, 90, 150];
   const ZOOM_LABELS = ['S', 'M', 'L'];
   const tileSize = ZOOM_SIZES[zoomLevel];
 
-  // Spiral arm positions: arrange all entries in archimedean spiral
+  // Assign each item to one of 6 super-arms
+  const getArmIndex = (cat: string): number => {
+    for (let i = 0; i < SUPER_ARMS.length; i++) {
+      if (SUPER_ARMS[i].cats.some(c => cat.includes(c) || c.includes(cat))) return i;
+    }
+    return 0;
+  };
+
+  // Spiral positions: 6 arms, items placed along archimedean spiral
   const spiralPositions = useMemo(() => {
     if (viewMode !== 'spiral') return [];
     const items = filteredData;
-    const positions: { item: typeof items[0]; x: number; y: number; arm: number }[] = [];
-    const numArms = sortedCategories.length || 1;
-    const catIndexMap: Record<string, number> = {};
-    sortedCategories.forEach((cat, i) => catIndexMap[cat] = i);
-    // Count items per arm for spacing
-    const armItems: Record<number, typeof items> = {};
-    items.forEach(item => {
-      const armIdx = catIndexMap[item.topCategory] ?? 0;
-      if (!armItems[armIdx]) armItems[armIdx] = [];
-      armItems[armIdx].push(item);
-    });
-    // Place items along each arm
-    for (let armIdx = 0; armIdx < numArms; armIdx++) {
-      const armAngle = (armIdx / numArms) * 2 * Math.PI;
-      const armEntries = armItems[armIdx] || [];
-      armEntries.forEach((item, i) => {
-        const t = (i + 1) * 0.15; // parameter along spiral
-        const r = 80 + t * 55; // radius grows
-        const angle = armAngle + t * 0.9; // rotation along arm
-        const x = r * Math.cos(angle);
-        const y = r * Math.sin(angle);
-        positions.push({ item, x, y, arm: armIdx });
+    const armBuckets: (typeof items)[] = Array.from({ length: 6 }, () => []);
+    items.forEach(item => armBuckets[getArmIndex(item.topCategory)].push(item));
+
+    const positions: { item: typeof items[0]; x: number; y: number; armIdx: number }[] = [];
+    for (let a = 0; a < 6; a++) {
+      const baseAngle = (a / 6) * 2 * Math.PI;
+      armBuckets[a].forEach((item, i) => {
+        const t = (i + 1) * 0.08;
+        const r = 40 + t * 38;
+        const angle = baseAngle + t * 0.7;
+        positions.push({ item, x: r * Math.cos(angle), y: r * Math.sin(angle), armIdx: a });
       });
     }
     return positions;
-  }, [filteredData, viewMode, sortedCategories]);
+  }, [filteredData, viewMode]);
 
-  // Spiral mouse handlers
-  const handleSpiralWheel = useCallback((e: React.WheelEvent) => {
+  // Circle positions: all items in one big circle
+  const circlePositions = useMemo(() => {
+    if (viewMode !== 'circle') return [];
+    const items = filteredData;
+    const n = items.length;
+    const radius = Math.max(200, n * 1.2);
+    return items.map((item, i) => ({
+      item,
+      x: radius * Math.cos((i / n) * 2 * Math.PI),
+      y: radius * Math.sin((i / n) * 2 * Math.PI),
+    }));
+  }, [filteredData, viewMode]);
+
+  // Pan/Zoom handlers for spiral and circle
+  const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     setSpiralTransform(prev => {
       const factor = e.deltaY > 0 ? 0.9 : 1.1;
-      const newScale = Math.max(0.1, Math.min(3, prev.scale * factor));
-      return { ...prev, scale: newScale };
+      return { ...prev, scale: Math.max(0.08, Math.min(4, prev.scale * factor)) };
     });
   }, []);
-
-  const handleSpiralMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     dragRef.current = { dragging: true, lastX: e.clientX, lastY: e.clientY };
   }, []);
-
-  const handleSpiralMouseMove = useCallback((e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!dragRef.current.dragging) return;
     const dx = e.clientX - dragRef.current.lastX;
     const dy = e.clientY - dragRef.current.lastY;
@@ -255,10 +274,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     dragRef.current.lastY = e.clientY;
     setSpiralTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
   }, []);
-
-  const handleSpiralMouseUp = useCallback(() => {
-    dragRef.current.dragging = false;
-  }, []);
+  const handleMouseUp = useCallback(() => { dragRef.current.dragging = false; }, []);
 
   return (
     <div className="mosaic-page animate-fade-in">
@@ -267,41 +283,32 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         <div className="mosaic-header-left">
           <h1 className="hud-title">SPiRAL MiND WiKi</h1>
           <div className="search-bar-hud">
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Suche im kybernetischen Netz... (drücke /)"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+            <input ref={searchRef} type="text" placeholder="Suche... (/)" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-          {/* Stats */}
           <div className="stats-panel">
-            <div className="stat-chip"><span className="stat-value">{data.length}</span> Monographien</div>
+            <div className="stat-chip"><span className="stat-value">{data.length}</span> Einträge</div>
             <div className="stat-chip"><span className="stat-value">{readMonographs.length}</span> gelesen</div>
-            <div className="stat-chip"><span className="stat-value">{favorites.length}</span> ★ Favoriten</div>
+            <div className="stat-chip"><span className="stat-value">{favorites.length}</span> ★</div>
           </div>
         </div>
         <div className="mosaic-header-right">
-          {/* Zoom Level Selector (only in mosaic mode) */}
-          {viewMode === 'mosaic' && (
+          {viewMode === 'portrait' && (
             <div className="zoom-controls">
               {ZOOM_LABELS.map((label, i) => (
-                <button
-                  key={label}
-                  className={`zoom-btn ${zoomLevel === i ? 'active' : ''}`}
-                  onClick={() => setZoomLevel(i)}
-                >{label}</button>
+                <button key={label} className={`zoom-btn ${zoomLevel === i ? 'active' : ''}`}
+                  onClick={() => setZoomLevel(i)}>{label}</button>
               ))}
             </div>
           )}
-          <button
-            className="view-toggle-btn"
-            onClick={() => setViewMode(viewMode === 'mosaic' ? 'spiral' : 'mosaic')}
-          >
-            {viewMode === 'mosaic' ? '🌀 Spiral-Galaxie' : '▦ Mosaik'}
-          </button>
-          <button className="random-btn" onClick={goToRandom}>🎲 Zufall</button>
+          <div className="view-mode-group">
+            {(['spiral', 'circle', 'portrait'] as ViewMode[]).map(m => (
+              <button key={m}
+                className={`view-toggle-btn ${viewMode === m ? 'active' : ''}`}
+                onClick={() => setViewMode(m)}
+              >{m === 'spiral' ? '🌀 Spiral' : m === 'circle' ? '⊕ Kreis' : '▦ Porträt'}</button>
+            ))}
+          </div>
+          <button className="random-btn" onClick={goToRandom}>🎲</button>
         </div>
       </header>
 
@@ -361,8 +368,8 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         <span className="filter-count">{filteredData.length} Ergebnisse</span>
       </div>
 
-      {/* --- MOSAIC or SPIRAL --- */}
-      {viewMode === 'mosaic' ? (
+      {/* === PORTRAIT VIEW === */}
+      {viewMode === 'portrait' && (
         <div className="mosaic-scroll">
           <div className="mosaic-container">
             {sortedCategories.map(cat => {
@@ -382,11 +389,8 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                       return (
                         <Link to={`/monograph/${item.id}`} key={item.id}
                           className={`mosaic-tile ${isRead ? 'is-read' : ''}`}
-                          style={{ '--tile-color': color } as any}
-                        >
-                          <div className="mosaic-portrait"
-                            style={{ backgroundImage: `url(${item.finalImageUrl})` }}
-                          />
+                          style={{ '--tile-color': color } as any}>
+                          <div className="mosaic-portrait" style={{ backgroundImage: `url(${item.finalImageUrl})` }} />
                           <div className="mosaic-tile-overlay">
                             <div className="mosaic-tile-name">{item.cleanTitle}</div>
                             {item.year !== 9999 && <div className="mosaic-tile-year">{item.year}</div>}
@@ -401,54 +405,51 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
               );
             })}
           </div>
-          {filteredData.length === 0 && (
-            <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '4rem 2rem', fontSize: '1.1rem' }}>
-              Keine Einträge gefunden.
-            </div>
-          )}
+          {filteredData.length === 0 && <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '4rem 2rem' }}>Keine Einträge.</div>}
         </div>
-      ) : (
-        /* ===== SPIRAL GALAXY VIEW ===== */
+      )}
+
+      {/* === SPIRAL or CIRCLE VIEW === */}
+      {(viewMode === 'spiral' || viewMode === 'circle') && (
         <div className="spiral-viewport"
           ref={spiralRef}
-          onWheel={handleSpiralWheel}
-          onMouseDown={handleSpiralMouseDown}
-          onMouseMove={handleSpiralMouseMove}
-          onMouseUp={handleSpiralMouseUp}
-          onMouseLeave={handleSpiralMouseUp}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
           <div className="spiral-canvas"
-            style={{
-              transform: `translate(${spiralTransform.x}px, ${spiralTransform.y}px) scale(${spiralTransform.scale})`,
-            }}
+            style={{ transform: `translate(${spiralTransform.x}px, ${spiralTransform.y}px) scale(${spiralTransform.scale})` }}
           >
-            {/* Spiral arm guide lines */}
-            {sortedCategories.map((cat, i) => {
-              const angle = (i / sortedCategories.length) * 360;
-              const color = getCatColor(cat);
+            {/* 6 arm guide lines (spiral only) */}
+            {viewMode === 'spiral' && SUPER_ARMS.map((arm, i) => (
+              <div key={`arm-${i}`} className="spiral-arm-line" style={{
+                transform: `rotate(${(i / 6) * 360}deg)`,
+                background: `linear-gradient(90deg, ${arm.color}40, transparent)`,
+              }} />
+            ))}
+            {/* Arm labels (spiral only) */}
+            {viewMode === 'spiral' && SUPER_ARMS.map((arm, i) => {
+              const angle = (i / 6) * 2 * Math.PI;
+              const lx = 160 * Math.cos(angle);
+              const ly = 160 * Math.sin(angle);
               return (
-                <div key={`arm-${cat}`} className="spiral-arm-line" style={{
-                  transform: `rotate(${angle}deg)`,
-                  background: `linear-gradient(90deg, ${color}33, transparent)`,
-                }} />
+                <div key={`lbl-${i}`} className="spiral-arm-label" style={{
+                  left: `calc(50% + ${lx}px)`, top: `calc(50% + ${ly}px)`, color: arm.color,
+                }}>{arm.name}</div>
               );
             })}
-            {/* Portrait nodes along spiral */}
-            {spiralPositions.map(({ item, x, y }) => {
-              const color = item.catColor;
+            {/* Portrait nodes */}
+            {(viewMode === 'spiral' ? spiralPositions : circlePositions).map(({ item, x, y }) => {
+              const color = SUPER_ARMS[getArmIndex(item.topCategory)]?.color || item.catColor;
               const isRead = readMonographs.includes(item.id);
               return (
                 <Link to={`/monograph/${item.id}`} key={item.id}
                   className={`spiral-node ${isRead ? 'is-read' : ''}`}
-                  style={{
-                    left: `calc(50% + ${x}px)`,
-                    top: `calc(50% + ${y}px)`,
-                    '--tile-color': color,
-                  } as any}
+                  style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)`, '--tile-color': color } as any}
                 >
-                  <div className="spiral-node-img"
-                    style={{ backgroundImage: `url(${item.finalImageUrl})`, borderColor: color }}
-                  />
+                  <div className="spiral-node-img" style={{ backgroundImage: `url(${item.finalImageUrl})`, borderColor: color }} />
                   <div className="spiral-node-label">
                     <span>{item.cleanTitle}</span>
                     {item.year !== 9999 && <small>{item.year}</small>}
@@ -456,7 +457,6 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                 </Link>
               );
             })}
-            {/* Center label */}
             <div className="spiral-center">
               <div className="spiral-center-glow" />
               <span>SPiRAL<br/>MiND</span>
@@ -669,7 +669,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [readMonographs, setReadMonographs] = useLocalStorage<string[]>('spiral-wiki-read', []);
   const [favorites, setFavorites] = useLocalStorage<string[]>('spiral-wiki-favorites', []);
-  const [viewMode, setViewMode] = useLocalStorage<'mosaic' | 'spiral'>('spiral-view-mode', 'mosaic');
+  const [viewMode, setViewMode] = useLocalStorage<ViewMode>('spiral-view-mode', 'spiral');
 
   const markAsRead = useCallback((id: string) => {
     setReadMonographs(prev => {
