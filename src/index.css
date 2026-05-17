@@ -233,6 +233,205 @@ html, body {
   color: #000;
   pointer-events: none;
 }
+
+/* === ZOOM CONTROLS === */
+.zoom-controls {
+  display: flex;
+  gap: 0;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.zoom-btn {
+  padding: 0.35rem 0.7rem;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.zoom-btn:not(:last-child) {
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+.zoom-btn:hover {
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.7);
+}
+.zoom-btn.active {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+/* View Toggle Button */
+.view-toggle-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+.view-toggle-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* === SPIRAL GALAXY === */
+.spiral-viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center, #0a0b18 0%, #020205 70%);
+  cursor: grab;
+  touch-action: none;
+}
+.spiral-viewport:active { cursor: grabbing; }
+
+/* Star field background */
+.spiral-viewport::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.25), transparent),
+    radial-gradient(1px 1px at 75% 42%, rgba(255,255,255,0.2), transparent),
+    radial-gradient(1.5px 1.5px at 45% 72%, rgba(0,220,255,0.3), transparent),
+    radial-gradient(1.5px 1.5px at 88% 88%, rgba(180,0,255,0.3), transparent);
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.spiral-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Spiral arm guide lines */
+.spiral-arm-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3000px;
+  height: 1px;
+  transform-origin: 0 0;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* Individual portrait node in spiral */
+.spiral-node {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  margin-left: -24px;
+  margin-top: -24px;
+  text-decoration: none;
+  z-index: 2;
+  transition: z-index 0s;
+}
+.spiral-node:hover {
+  z-index: 100;
+}
+
+.spiral-node-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(20,20,30,1);
+  border: 2px solid var(--tile-color, #64748b);
+  box-shadow: 0 0 8px rgba(0,0,0,0.6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-width 0.2s ease;
+}
+.spiral-node:hover .spiral-node-img {
+  transform: scale(2.2);
+  box-shadow: 0 0 20px var(--tile-color, #64748b), 0 4px 20px rgba(0,0,0,0.8);
+  border-width: 2px;
+  z-index: 100;
+}
+.spiral-node.is-read .spiral-node-img {
+  opacity: 0.5;
+  filter: grayscale(40%);
+}
+.spiral-node.is-read:hover .spiral-node-img {
+  opacity: 1;
+  filter: none;
+}
+
+/* Label shown on hover */
+.spiral-node-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(0,0,0,0.9);
+  border: 1px solid var(--tile-color, #333);
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 200;
+}
+.spiral-node:hover .spiral-node-label {
+  opacity: 1;
+}
+.spiral-node-label span {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #fff;
+}
+.spiral-node-label small {
+  display: block;
+  font-size: 0.5rem;
+  color: var(--accent-cyan);
+  text-align: center;
+}
+
+/* Center glow */
+.spiral-center {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 5;
+  pointer-events: none;
+}
+.spiral-center-glow {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,200,255,0.15) 0%, rgba(160,0,255,0.08) 40%, transparent 70%);
+  filter: blur(20px);
+}
+.spiral-center span {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
 /* --- READER VIEW --- */
 .app-layout {
   max-width: 800px;

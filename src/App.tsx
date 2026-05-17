@@ -98,8 +98,8 @@ interface DashboardProps {
   readMonographs: string[];
   favorites: string[];
   toggleFavorite: (id: string) => void;
-  viewMode: 'galaxy' | 'wiki';
-  setViewMode: (mode: 'galaxy' | 'wiki') => void;
+  viewMode: 'mosaic' | 'spiral';
+  setViewMode: (mode: 'mosaic' | 'spiral') => void;
 }
 
 function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, setViewMode }: DashboardProps) {
@@ -110,6 +110,12 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [alphaFilter, setAlphaFilter] = useState<string>('');
+  const [zoomLevel, setZoomLevel] = useState<number>(1); // 0=S, 1=M, 2=L
+
+  // Spiral state
+  const spiralRef = useRef<HTMLDivElement>(null);
+  const [spiralTransform, setSpiralTransform] = useState({ x: 0, y: 0, scale: 0.5 });
+  const dragRef = useRef({ dragging: false, lastX: 0, lastY: 0 });
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -191,7 +197,68 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     return groups;
   }, [filteredData]);
 
-  const showMosaic = viewMode === 'galaxy';
+  const ZOOM_SIZES = [60, 90, 150]; // S, M, L tile minWidth in px
+  const ZOOM_LABELS = ['S', 'M', 'L'];
+  const tileSize = ZOOM_SIZES[zoomLevel];
+
+  // Spiral arm positions: arrange all entries in archimedean spiral
+  const spiralPositions = useMemo(() => {
+    if (viewMode !== 'spiral') return [];
+    const items = filteredData;
+    const positions: { item: typeof items[0]; x: number; y: number; arm: number }[] = [];
+    const numArms = sortedCategories.length || 1;
+    const catIndexMap: Record<string, number> = {};
+    sortedCategories.forEach((cat, i) => catIndexMap[cat] = i);
+    // Count items per arm for spacing
+    const armItems: Record<number, typeof items> = {};
+    items.forEach(item => {
+      const armIdx = catIndexMap[item.topCategory] ?? 0;
+      if (!armItems[armIdx]) armItems[armIdx] = [];
+      armItems[armIdx].push(item);
+    });
+    // Place items along each arm
+    for (let armIdx = 0; armIdx < numArms; armIdx++) {
+      const armAngle = (armIdx / numArms) * 2 * Math.PI;
+      const armEntries = armItems[armIdx] || [];
+      armEntries.forEach((item, i) => {
+        const t = (i + 1) * 0.15; // parameter along spiral
+        const r = 80 + t * 55; // radius grows
+        const angle = armAngle + t * 0.9; // rotation along arm
+        const x = r * Math.cos(angle);
+        const y = r * Math.sin(angle);
+        positions.push({ item, x, y, arm: armIdx });
+      });
+    }
+    return positions;
+  }, [filteredData, viewMode, sortedCategories]);
+
+  // Spiral mouse handlers
+  const handleSpiralWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    setSpiralTransform(prev => {
+      const factor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.max(0.1, Math.min(3, prev.scale * factor));
+      return { ...prev, scale: newScale };
+    });
+  }, []);
+
+  const handleSpiralMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    dragRef.current = { dragging: true, lastX: e.clientX, lastY: e.clientY };
+  }, []);
+
+  const handleSpiralMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!dragRef.current.dragging) return;
+    const dx = e.clientX - dragRef.current.lastX;
+    const dy = e.clientY - dragRef.current.lastY;
+    dragRef.current.lastX = e.clientX;
+    dragRef.current.lastY = e.clientY;
+    setSpiralTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+  }, []);
+
+  const handleSpiralMouseUp = useCallback(() => {
+    dragRef.current.dragging = false;
+  }, []);
 
   return (
     <div className="mosaic-page animate-fade-in">
@@ -216,14 +283,25 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
           </div>
         </div>
         <div className="mosaic-header-right">
+          {/* Zoom Level Selector (only in mosaic mode) */}
+          {viewMode === 'mosaic' && (
+            <div className="zoom-controls">
+              {ZOOM_LABELS.map((label, i) => (
+                <button
+                  key={label}
+                  className={`zoom-btn ${zoomLevel === i ? 'active' : ''}`}
+                  onClick={() => setZoomLevel(i)}
+                >{label}</button>
+              ))}
+            </div>
+          )}
           <button
-            className="glass"
-            style={{ padding: '0.6rem 1.2rem', color: '#fff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600, boxShadow: '0 4px 15px rgba(0,0,0,0.3)', backdropFilter: 'blur(12px)', transition: 'all 0.2s ease' }}
-            onClick={() => setViewMode(viewMode === 'galaxy' ? 'wiki' : 'galaxy')}
+            className="view-toggle-btn"
+            onClick={() => setViewMode(viewMode === 'mosaic' ? 'spiral' : 'mosaic')}
           >
-            {showMosaic ? '→ Listenansicht' : '→ Porträtansicht'}
+            {viewMode === 'mosaic' ? '🌀 Spiral-Galaxie' : '▦ Mosaik'}
           </button>
-          <button className="random-btn" onClick={goToRandom}>🎲 Zufällige Monographie</button>
+          <button className="random-btn" onClick={goToRandom}>🎲 Zufall</button>
         </div>
       </header>
 
@@ -283,10 +361,9 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         <span className="filter-count">{filteredData.length} Ergebnisse</span>
       </div>
 
-      {/* --- PORTRAIT MOSAIC or WIKI LIST --- */}
-      <div className="mosaic-scroll">
-        {showMosaic ? (
-          /* ===== MOSAIC VIEW ===== */
+      {/* --- MOSAIC or SPIRAL --- */}
+      {viewMode === 'mosaic' ? (
+        <div className="mosaic-scroll">
           <div className="mosaic-container">
             {sortedCategories.map(cat => {
               const items = groupedByCategory[cat];
@@ -298,27 +375,18 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                     <span className="cat-dot" style={{ background: color, width: '8px', height: '8px' }} />
                     {cat.replace(/_/g, ' ')} ({items.length})
                   </div>
-                  <div className="mosaic-grid">
+                  <div className="mosaic-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${tileSize}px, 1fr))` }}>
                     {items.map(item => {
                       const isRead = readMonographs.includes(item.id);
                       const isFav = favorites.includes(item.id);
                       return (
-                        <Link
-                          to={`/monograph/${item.id}`}
-                          key={item.id}
+                        <Link to={`/monograph/${item.id}`} key={item.id}
                           className={`mosaic-tile ${isRead ? 'is-read' : ''}`}
                           style={{ '--tile-color': color } as any}
                         >
-                          {item.hasRealImage ? (
-                            <div
-                              className="mosaic-portrait"
-                              style={{ backgroundImage: `url(${item.finalImageUrl})` }}
-                            />
-                          ) : (
-                            <div className="mosaic-portrait mosaic-initial" style={{ background: `linear-gradient(135deg, ${color}44, ${color}22)` }}>
-                              <span className="initial-letter" style={{ color }}>{item.cleanTitle.charAt(0).toUpperCase()}</span>
-                            </div>
-                          )}
+                          <div className="mosaic-portrait"
+                            style={{ backgroundImage: `url(${item.finalImageUrl})` }}
+                          />
                           <div className="mosaic-tile-overlay">
                             <div className="mosaic-tile-name">{item.cleanTitle}</div>
                             {item.year !== 9999 && <div className="mosaic-tile-year">{item.year}</div>}
@@ -333,59 +401,69 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
               );
             })}
           </div>
-        ) : (
-          /* ===== WIKI LIST VIEW ===== */
-          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1.5rem' }}>
-            {sortedCategories.map(cat => {
-              const catItems = filteredData.filter(d => d.topCategory === cat);
-              if (catItems.length === 0) return null;
+          {filteredData.length === 0 && (
+            <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '4rem 2rem', fontSize: '1.1rem' }}>
+              Keine Einträge gefunden.
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ===== SPIRAL GALAXY VIEW ===== */
+        <div className="spiral-viewport"
+          ref={spiralRef}
+          onWheel={handleSpiralWheel}
+          onMouseDown={handleSpiralMouseDown}
+          onMouseMove={handleSpiralMouseMove}
+          onMouseUp={handleSpiralMouseUp}
+          onMouseLeave={handleSpiralMouseUp}
+        >
+          <div className="spiral-canvas"
+            style={{
+              transform: `translate(${spiralTransform.x}px, ${spiralTransform.y}px) scale(${spiralTransform.scale})`,
+            }}
+          >
+            {/* Spiral arm guide lines */}
+            {sortedCategories.map((cat, i) => {
+              const angle = (i / sortedCategories.length) * 360;
               const color = getCatColor(cat);
-              const readCount = catItems.filter(item => readMonographs.includes(item.id)).length;
-              const progress = catItems.length > 0 ? Math.round((readCount / catItems.length) * 100) : 0;
-
               return (
-                <div key={cat} style={{ marginBottom: '2.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '0.8rem', borderBottom: `1px solid ${color}33` }}>
-                    <span className="cat-dot" style={{ background: color, width: '12px', height: '12px', flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
-                      <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff', margin: 0 }}>{cat.replace(/_/g, ' ')}</h2>
-                      <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{catItems.length} Einträge · {progress}% gelesen</div>
-                    </div>
-                    <div style={{ width: '120px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden', flexShrink: 0 }}>
-                      <div style={{ width: `${progress}%`, height: '100%', background: color, borderRadius: '2px', transition: 'width 0.5s ease' }} />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.8rem' }}>
-                    {catItems.sort((a, b) => a.cleanTitle.localeCompare(b.cleanTitle)).map(item => {
-                      const isRead = readMonographs.includes(item.id);
-                      return (
-                        <Link to={`/monograph/${item.id}`} key={item.id} className={`mosaic-tile ${isRead ? 'is-read' : ''}`} style={{ '--tile-color': color, borderRadius: '12px', textDecoration: 'none', color: '#fff' } as any}>
-                          {item.hasRealImage ? (
-                            <div className="mosaic-portrait" style={{ backgroundImage: `url(${item.finalImageUrl})`, borderRadius: '12px 12px 0 0' }} />
-                          ) : (
-                            <div className="mosaic-portrait mosaic-initial" style={{ background: `linear-gradient(135deg, ${color}44, ${color}22)`, borderRadius: '12px 12px 0 0' }}>
-                              <span className="initial-letter" style={{ color }}>{item.cleanTitle.charAt(0).toUpperCase()}</span>
-                            </div>
-                          )}
-                          <div style={{ padding: '0.5rem 0.6rem' }}>
-                            <div style={{ fontSize: '0.82rem', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{item.cleanTitle}</div>
-                            {item.year !== 9999 && <div style={{ fontSize: '0.7rem', color, marginTop: '2px' }}>{item.year}</div>}
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
+                <div key={`arm-${cat}`} className="spiral-arm-line" style={{
+                  transform: `rotate(${angle}deg)`,
+                  background: `linear-gradient(90deg, ${color}33, transparent)`,
+                }} />
               );
             })}
+            {/* Portrait nodes along spiral */}
+            {spiralPositions.map(({ item, x, y }) => {
+              const color = item.catColor;
+              const isRead = readMonographs.includes(item.id);
+              return (
+                <Link to={`/monograph/${item.id}`} key={item.id}
+                  className={`spiral-node ${isRead ? 'is-read' : ''}`}
+                  style={{
+                    left: `calc(50% + ${x}px)`,
+                    top: `calc(50% + ${y}px)`,
+                    '--tile-color': color,
+                  } as any}
+                >
+                  <div className="spiral-node-img"
+                    style={{ backgroundImage: `url(${item.finalImageUrl})`, borderColor: color }}
+                  />
+                  <div className="spiral-node-label">
+                    <span>{item.cleanTitle}</span>
+                    {item.year !== 9999 && <small>{item.year}</small>}
+                  </div>
+                </Link>
+              );
+            })}
+            {/* Center label */}
+            <div className="spiral-center">
+              <div className="spiral-center-glow" />
+              <span>SPiRAL<br/>MiND</span>
+            </div>
           </div>
-        )}
-        {filteredData.length === 0 && (
-          <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '4rem 2rem', fontSize: '1.1rem' }}>
-            Keine Einträge gefunden.
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -591,7 +669,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [readMonographs, setReadMonographs] = useLocalStorage<string[]>('spiral-wiki-read', []);
   const [favorites, setFavorites] = useLocalStorage<string[]>('spiral-wiki-favorites', []);
-  const [viewMode, setViewMode] = useLocalStorage<'galaxy' | 'wiki'>('spiral-view-mode', 'galaxy');
+  const [viewMode, setViewMode] = useLocalStorage<'mosaic' | 'spiral'>('spiral-view-mode', 'mosaic');
 
   const markAsRead = useCallback((id: string) => {
     setReadMonographs(prev => {
