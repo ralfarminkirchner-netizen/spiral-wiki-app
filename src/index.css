@@ -40,15 +40,16 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 1.5rem 2rem 0.5rem;
+  padding: 1.2rem 2rem 0.3rem;
   flex-shrink: 0;
+  gap: 1rem;
 }
-.mosaic-header-left { max-width: 600px; }
+.mosaic-header-left { flex: 1; min-width: 0; }
 .mosaic-header-right {
   display: flex;
-  flex-direction: column;
   gap: 0.5rem;
-  align-items: flex-end;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 /* Category Legend Bar */
@@ -96,17 +97,15 @@ html, body {
 .mosaic-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 0 3rem;
+  padding: 0.5rem 0 3rem;
 }
 
 /* Mosaic Container */
 .mosaic-container {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 0.5rem;
 }
 .mosaic-category-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.8rem;
 }
 .mosaic-cat-label {
   display: flex;
@@ -123,8 +122,8 @@ html, body {
 /* The tight portrait grid */
 .mosaic-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 3px;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 2px;
 }
 
 /* Individual portrait tile */
@@ -164,31 +163,46 @@ html, body {
   background-color: rgba(30,30,40,1);
 }
 
-/* Name overlay (shown on hover) */
+/* Fallback tile for entries without an image */
+.mosaic-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.initial-letter {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  opacity: 0.6;
+}
+
+/* Name label — ALWAYS visible */
 .mosaic-tile-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0.3rem 0.35rem;
-  background: linear-gradient(transparent, rgba(0,0,0,0.9));
-  opacity: 0;
-  transition: opacity 0.15s ease;
+  padding: 3px 4px;
+  background: rgba(0,0,0,0.75);
   pointer-events: none;
 }
 .mosaic-tile:hover .mosaic-tile-overlay {
-  opacity: 1;
+  background: rgba(0,0,0,0.9);
 }
 .mosaic-tile-name {
-  font-size: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.55rem;
   font-weight: 600;
-  line-height: 1.2;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  line-height: 1.15;
+  color: #fff;
+  letter-spacing: 0.01em;
 }
 .mosaic-tile-year {
-  font-size: 0.5rem;
-  color: var(--accent-cyan);
+  font-size: 0.48rem;
+  font-weight: 500;
+  color: #7dd3fc;
   margin-top: 1px;
+  font-family: var(--font-sans);
 }
 
 /* Favorite star badge */

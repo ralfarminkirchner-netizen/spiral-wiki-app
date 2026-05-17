@@ -144,14 +144,16 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         const imgMatch = item.content.match(/!\[.*?\]\((.*?)\)/);
         if (imgMatch?.[1]) finalImageUrl = imgMatch[1];
       }
-      // Category fallback
-      if (!finalImageUrl) finalImageUrl = getCatImage(topCategory);
+      const hasRealImage = !!finalImageUrl;
+      // Category fallback only used for actual background if no real image
+      if (!finalImageUrl) finalImageUrl = null; // We'll show an initial tile instead
 
       return {
         ...item,
         topCategory,
         year,
         finalImageUrl,
+        hasRealImage,
         cleanTitle: cleanTitleText(item.title),
         catColor: getCatColor(topCategory),
       };
@@ -307,10 +309,16 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                           className={`mosaic-tile ${isRead ? 'is-read' : ''}`}
                           style={{ '--tile-color': color } as any}
                         >
-                          <div
-                            className="mosaic-portrait"
-                            style={{ backgroundImage: `url(${item.finalImageUrl})` }}
-                          />
+                          {item.hasRealImage ? (
+                            <div
+                              className="mosaic-portrait"
+                              style={{ backgroundImage: `url(${item.finalImageUrl})` }}
+                            />
+                          ) : (
+                            <div className="mosaic-portrait mosaic-initial" style={{ background: `linear-gradient(135deg, ${color}44, ${color}22)` }}>
+                              <span className="initial-letter" style={{ color }}>{item.cleanTitle.charAt(0).toUpperCase()}</span>
+                            </div>
+                          )}
                           <div className="mosaic-tile-overlay">
                             <div className="mosaic-tile-name">{item.cleanTitle}</div>
                             {item.year !== 9999 && <div className="mosaic-tile-year">{item.year}</div>}
@@ -352,7 +360,13 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                       const isRead = readMonographs.includes(item.id);
                       return (
                         <Link to={`/monograph/${item.id}`} key={item.id} className={`mosaic-tile ${isRead ? 'is-read' : ''}`} style={{ '--tile-color': color, borderRadius: '12px', textDecoration: 'none', color: '#fff' } as any}>
-                          <div className="mosaic-portrait" style={{ backgroundImage: `url(${item.finalImageUrl})`, borderRadius: '12px 12px 0 0' }} />
+                          {item.hasRealImage ? (
+                            <div className="mosaic-portrait" style={{ backgroundImage: `url(${item.finalImageUrl})`, borderRadius: '12px 12px 0 0' }} />
+                          ) : (
+                            <div className="mosaic-portrait mosaic-initial" style={{ background: `linear-gradient(135deg, ${color}44, ${color}22)`, borderRadius: '12px 12px 0 0' }}>
+                              <span className="initial-letter" style={{ color }}>{item.cleanTitle.charAt(0).toUpperCase()}</span>
+                            </div>
+                          )}
                           <div style={{ padding: '0.5rem 0.6rem' }}>
                             <div style={{ fontSize: '0.82rem', fontWeight: 600, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{item.cleanTitle}</div>
                             {item.year !== 9999 && <div style={{ fontSize: '0.7rem', color, marginTop: '2px' }}>{item.year}</div>}
