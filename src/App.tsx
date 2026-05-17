@@ -247,7 +247,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     const items = filteredData;
     const n = items.length;
     if (n === 0) return [];
-    const nodeSize = 26; // half the node diameter (48/2 + gap)
+    const nodeDiam = 54; // 48px node + 2px border + 4px gap
     const positions: { item: typeof items[0]; x: number; y: number }[] = [];
     let placed = 0;
     // Center item
@@ -258,9 +258,9 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     // Concentric rings outward
     let ring = 1;
     while (placed < n) {
-      const r = ring * nodeSize * 1.15;
+      const r = ring * nodeDiam;
       const circumference = 2 * Math.PI * r;
-      const maxInRing = Math.max(1, Math.floor(circumference / (nodeSize * 1.1)));
+      const maxInRing = Math.max(1, Math.floor(circumference / nodeDiam));
       const count = Math.min(maxInRing, n - placed);
       for (let j = 0; j < count; j++) {
         const angle = (j / count) * 2 * Math.PI - Math.PI / 2;
