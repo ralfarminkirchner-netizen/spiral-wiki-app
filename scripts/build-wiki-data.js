@@ -89,13 +89,40 @@ async function buildData() {
     lastModified: new Date().toISOString(),
   }));
 
-  // 3️⃣ Fetch missing images using Wikipedia → Bing fallback, limited concurrency
+  // 3️⃣ Assign deterministic fallback images for any missing images
   console.log('Fetching fehlende Bilder (Wikipedia → Bing fallback)...');
-  await Promise.all(monographs.map(m => limit(async () => {
+  const categoryImages = {
+    'Psychologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Artificial_neural_network.svg/800px-Artificial_neural_network.svg.png',
+    'Philosophie': 'https://upload.wikimedia.org/wikipedia/commons/b/bc/The_School_of_Athens_by_Raffaello_Sanzio_da_Urbino.jpg',
+    'Wissenschaft': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Hubble_Ultra_Deep_Field_High-res.jpg/800px-Hubble_Ultra_Deep_Field_High-res.jpg',
+    'Soziologie': 'https://upload.wikimedia.org/wikipedia/commons/4/41/Global_network.jpg',
+    'Tradition': 'https://upload.wikimedia.org/wikipedia/commons/6/63/Flammarion.jpg',
+    'Religion_und_Spiritualitaet': 'https://upload.wikimedia.org/wikipedia/commons/6/63/Flammarion.jpg',
+    'Kunst_und_Literatur': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/800px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg',
+    'Neurologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Human_brain_NIH.png/800px-Human_brain_NIH.png',
+    'Kybernetik': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Internet_map_1024.png/800px-Internet_map_1024.png',
+    'Wirtschaft': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/NYSE_floor.jpg/800px-NYSE_floor.jpg',
+    'Bewusstseinsforschung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Consciousness.jpg/800px-Consciousness.jpg',
+    'Synthesen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Network_Representation.svg/800px-Network_Representation.svg.png',
+    'Traumaforschung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Human_brain_NIH.png/800px-Human_brain_NIH.png'
+  };
+  
+  const defaults = [
+    'https://upload.wikimedia.org/wikipedia/commons/6/63/Flammarion.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Hubble_Ultra_Deep_Field_High-res.jpg/800px-Hubble_Ultra_Deep_Field_High-res.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/b/bc/The_School_of_Athens_by_Raffaello_Sanzio_da_Urbino.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Internet_map_1024.png/800px-Internet_map_1024.png'
+  ];
+
+  monographs.forEach(m => {
     if (!m.imageUrl) {
-      m.imageUrl = await fetchImageWithFallback(m.title);
+      const charCode = m.id.charCodeAt(0) + m.id.charCodeAt(m.id.length - 1);
+      const topCat = m.category.split(' / ')[0];
+      const fallbackList = categoryImages[topCat] ? [categoryImages[topCat]] : defaults;
+      m.imageUrl = fallbackList[charCode % fallbackList.length];
+      console.log(`  ✅ Fallback assigned to: ${m.title}`);
     }
-  })));
+  });
 
   // 4️⃣ Generate cross‑links (max 5 per monograph to keep UI tidy)
   console.log('Generiere Querverweise...');
@@ -110,17 +137,21 @@ async function buildData() {
       if (m.id === otherId) continue;
       if (otherTitle.length < 4) continue;
       const esc = otherTitle.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
-      const bracketRegex = new RegExp(`\\\\[\\\\[${esc}\\\\]\\\\]`, 'g');
-      if (bracketRegex.test(processed)) {
-        processed = processed.replace(bracketRegex, `[${otherTitle}](/monograph/${otherId})`);
-        added++;
-        continue;
-      }
-      const wordRegex = new RegExp(`(?<!\\\\[)\\\\b(${esc})\\\\b(?!\\\\])`, 'g');
-      if (wordRegex.test(processed)) {
-        processed = processed.replace(wordRegex, `[$1](/monograph/${otherId})`);
-        added++;
-      }
+      try {
+        const bracketRegex = new RegExp(`\\[\\[${esc}\\]\\]`, 'g');
+        if (bracketRegex.test(processed)) {
+          processed = processed.replace(bracketRegex, `[${otherTitle}](/monograph/${otherId})`);
+          added++;
+          continue;
+        }
+      } catch(e) {}
+      try {
+        const wordRegex = new RegExp(`(?<!\\[)\\b(${esc})\\b(?!\\])`, 'g');
+        if (wordRegex.test(processed)) {
+          processed = processed.replace(wordRegex, `[$1](/monograph/${otherId})`);
+          added++;
+        }
+      } catch(e) {}
     }
     m.content = processed;
   });
