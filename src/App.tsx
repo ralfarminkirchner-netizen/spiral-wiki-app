@@ -95,14 +95,22 @@ const getCatColor = (catName: string): string => {
 
 type ViewMode = 'spiral' | 'circle' | 'portrait';
 
-// 6 super-category arms for spiral galaxy
-const SUPER_ARMS: { name: string; cats: string[]; color: string }[] = [
-  { name: 'Geist', cats: ['Philosophie', 'Bewusstseinsforschung'], color: '#818cf8' },
-  { name: 'Psyche', cats: ['Psychologie', 'Neurologie'], color: '#f97316' },
-  { name: 'Natur', cats: ['Wissenschaft', 'Physik_und_Mathematik', 'Physik und Mathematik'], color: '#14b8a6' },
-  { name: 'Gesellschaft', cats: ['Soziologie', 'Wirtschaft'], color: '#ef4444' },
-  { name: 'Kultur', cats: ['Kunst_und_Literatur', 'Kunst und Literatur', 'Kybernetik', 'Synthesen'], color: '#ec4899' },
-  { name: 'Tradition', cats: ['Religion_und_Spiritualitaet', 'Religion und Spiritualitaet', 'Tradition', 'Traumaforschung'], color: '#eab308' },
+// 13 balanced arms: large categories split, small ones merged → ~48 entries/arm
+// This ensures a uniform, beautiful spiral with equal-length arms.
+const SUPER_ARMS: { name: string; cats: string[]; color: string; splitIndex?: number; splitCount?: number }[] = [
+  { name: 'Philosophie I', cats: ['Philosophie'], color: '#818cf8', splitIndex: 0, splitCount: 3 },
+  { name: 'Philosophie II', cats: ['Philosophie'], color: '#6366f1', splitIndex: 1, splitCount: 3 },
+  { name: 'Philosophie III', cats: ['Philosophie'], color: '#4f46e5', splitIndex: 2, splitCount: 3 },
+  { name: 'Wissenschaft I', cats: ['Wissenschaft'], color: '#14b8a6', splitIndex: 0, splitCount: 3 },
+  { name: 'Wissenschaft II', cats: ['Wissenschaft'], color: '#0d9488', splitIndex: 1, splitCount: 3 },
+  { name: 'Wissenschaft III', cats: ['Wissenschaft'], color: '#0f766e', splitIndex: 2, splitCount: 3 },
+  { name: 'Psychologie I', cats: ['Psychologie'], color: '#f97316', splitIndex: 0, splitCount: 2 },
+  { name: 'Psychologie II', cats: ['Psychologie'], color: '#ea580c', splitIndex: 1, splitCount: 2 },
+  { name: 'Soziologie', cats: ['Soziologie'], color: '#ef4444' },
+  { name: 'Tradition', cats: ['Tradition'], color: '#78716c' },
+  { name: 'Geist & Seele', cats: ['Religion_und_Spiritualitaet', 'Religion und Spiritualitaet', 'Bewusstseinsforschung'], color: '#eab308' },
+  { name: 'Kunst & Natur', cats: ['Kunst_und_Literatur', 'Kunst und Literatur', 'Physik_und_Mathematik', 'Physik und Mathematik', 'Synthesen', 'Traumaforschung'], color: '#ec4899' },
+  { name: 'Neuro & System', cats: ['Neurologie', 'Kybernetik', 'Wirtschaft'], color: '#10b981' },
 ];
 
 interface DashboardProps {
@@ -126,7 +134,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
 
   // Spiral/Circle state
   const spiralRef = useRef<HTMLDivElement>(null);
-  const [spiralTransform, setSpiralTransform] = useState({ x: 0, y: 0, scale: 0.6 });
+  const [spiralTransform, setSpiralTransform] = useState({ x: 0, y: 0, scale: 0.22 });
   const dragStartPos = useRef({ x: 0, y: 0 });
   const dragRef = useRef({ dragging: false, lastX: 0, lastY: 0 });
 
@@ -164,8 +172,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         if (imgMatch?.[1]) finalImageUrl = imgMatch[1];
       }
       const hasRealImage = !!finalImageUrl;
-      // Category fallback only used for actual background if no real image
-      if (!finalImageUrl) finalImageUrl = null; // We'll show an initial tile instead
+      // All entries now have real HTTP images — no null fallback needed
 
       return {
         ...item,
@@ -214,41 +221,141 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
   const ZOOM_LABELS = ['S', 'M', 'L'];
   const tileSize = ZOOM_SIZES[zoomLevel];
 
-  // Assign each item to one of 6 super-arms
+  // Assign each item to one of 13 balanced arms
+  // For split arms (e.g. Philosophie I/II/III), items are distributed evenly
   const getArmIndex = (cat: string): number => {
+    const topCat = cat.split('/')[0].trim();
+    // Find first matching arm (for non-split arms and display purposes)
     for (let i = 0; i < SUPER_ARMS.length; i++) {
-      if (SUPER_ARMS[i].cats.some(c => cat.includes(c) || c.includes(cat))) return i;
+      if (SUPER_ARMS[i].cats.some(c => topCat.includes(c) || c.includes(topCat))) return i;
     }
     return 0;
   };
 
-  // Spiral positions: 6 arms, items placed along archimedean spiral
+  // Spiral positions: 13 BALANCED arms, ~48 entries each
   const spiralPositions = useMemo(() => {
     if (viewMode !== 'spiral') return [];
     const items = filteredData;
-    const armBuckets: (typeof items)[] = Array.from({ length: 6 }, () => []);
-    items.forEach(item => armBuckets[getArmIndex(item.topCategory)].push(item));
+    const armCount = SUPER_ARMS.length;
 
+    // Step 1: Collect all items by their matching category group
+    // Group by the base category (ignoring splits)
+    const catGroups: Map<string, typeof items> = new Map();
+    items.forEach(item => {
+      const topCat = item.topCategory.split('/')[0].trim();
+      let matched = false;
+      for (const arm of SUPER_ARMS) {
+        if (arm.cats.some(c => topCat.includes(c) || c.includes(topCat))) {
+          // Use the primary cat name as key
+          const key = arm.cats[0];
+          if (!catGroups.has(key)) catGroups.set(key, []);
+          catGroups.get(key)!.push(item);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) {
+        if (!catGroups.has('Philosophie')) catGroups.set('Philosophie', []);
+        catGroups.get('Philosophie')!.push(item);
+      }
+    });
+
+    // Step 2: Distribute into arm buckets, respecting splits
+    const armBuckets: (typeof items)[] = Array.from({ length: armCount }, () => []);
+    for (let a = 0; a < armCount; a++) {
+      const arm = SUPER_ARMS[a];
+      const primaryCat = arm.cats[0];
+      const allItems = catGroups.get(primaryCat) || [];
+
+      if (arm.splitCount && arm.splitCount > 1) {
+        // This arm is a split: take the appropriate chunk
+        const chunkSize = Math.ceil(allItems.length / arm.splitCount);
+        const start = (arm.splitIndex || 0) * chunkSize;
+        const end = Math.min(start + chunkSize, allItems.length);
+        armBuckets[a] = allItems.slice(start, end);
+      } else {
+        // Non-split arm: takes all items from its categories
+        arm.cats.forEach(catName => {
+          const catItems = catGroups.get(catName);
+          if (catItems) {
+            armBuckets[a].push(...catItems);
+            catGroups.delete(catName); // prevent double-counting
+          }
+        });
+      }
+    }
+
+    // Step 3: Layout — all arms start at same radius, uniform spacing
+    const nodeDiam = 58;
+    const minDist = nodeDiam;
     const positions: { item: typeof items[0]; x: number; y: number; armIdx: number }[] = [];
-    for (let a = 0; a < 6; a++) {
-      const baseAngle = (a / 6) * 2 * Math.PI;
+    const startR = nodeDiam * 2.5; // Same start radius for ALL arms
+
+    for (let a = 0; a < armCount; a++) {
+      const baseAngle = (a / armCount) * 2 * Math.PI;
+      let prevX = 0, prevY = 0;
+
+      // True Archimedean spiral: r = a + b*θ
+      // Constant angular advance per node → curved arms
+      const spiralTightness = 0.18; // radians per node (~10°) — controls curvature
+      const radialGrowth = nodeDiam * 0.52; // how fast radius grows per node
+
       armBuckets[a].forEach((item, i) => {
-        const t = (i + 1) * 0.08;
-        const r = 40 + t * 38;
-        const angle = baseAngle + t * 0.7;
-        positions.push({ item, x: r * Math.cos(angle), y: r * Math.sin(angle), armIdx: a });
+        const theta = i * spiralTightness; // cumulative angle from arm base
+        const r = startR + i * radialGrowth;
+        const angle = baseAngle + theta;
+        let x = r * Math.cos(angle);
+        let y = r * Math.sin(angle);
+
+        if (i > 0) {
+          const dx = x - prevX, dy = y - prevY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < minDist && dist > 0) {
+            const s = minDist / dist;
+            x = prevX + dx * s;
+            y = prevY + dy * s;
+          }
+        }
+        prevX = x; prevY = y;
+        positions.push({ item, x, y, armIdx: a });
       });
     }
+
+    // Post-layout collision resolution
+    for (let pass = 0; pass < 3; pass++) {
+      for (let i = 0; i < positions.length; i++) {
+        for (let j = i + 1; j < positions.length; j++) {
+          const dx = positions[j].x - positions[i].x;
+          const dy = positions[j].y - positions[i].y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < minDist && d > 0) {
+            const overlap = (minDist - d) / 2;
+            const nx = dx / d, ny = dy / d;
+            positions[i].x -= nx * overlap;
+            positions[i].y -= ny * overlap;
+            positions[j].x += nx * overlap;
+            positions[j].y += ny * overlap;
+          }
+        }
+      }
+    }
+
     return positions;
   }, [filteredData, viewMode]);
 
-  // Circle positions: fill a disc with concentric rings of portraits
+  // Circle positions: fill a disc with concentric rings, grouped by category
   const circlePositions = useMemo(() => {
     if (viewMode !== 'circle') return [];
-    const items = filteredData;
+    // Sort by category so same-category items sit together
+    const items = [...filteredData].sort((a, b) => {
+      const ai = SUPER_ARMS.findIndex(arm => arm.cats.some(c => a.topCategory.includes(c) || c.includes(a.topCategory)));
+      const bi = SUPER_ARMS.findIndex(arm => arm.cats.some(c => b.topCategory.includes(c) || c.includes(b.topCategory)));
+      if (ai !== bi) return ai - bi;
+      return a.topCategory.localeCompare(b.topCategory);
+    });
     const n = items.length;
     if (n === 0) return [];
-    const nodeDiam = 54; // 48px node + 2px border + 4px gap
+    const nodeDiam = 58; // 48px node + 3px border × 2 + 4px guaranteed gap
     const positions: { item: typeof items[0]; x: number; y: number }[] = [];
     let placed = 0;
     // Center item
@@ -273,6 +380,18 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     return positions;
   }, [filteredData, viewMode]);
 
+  // Refs for direct DOM manipulation (avoids React re-renders during pan/zoom)
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const transformRef = useRef(spiralTransform);
+  transformRef.current = spiralTransform;
+
+  const applyTransformDirect = useCallback(() => {
+    if (canvasRef.current) {
+      const { x, y, scale } = transformRef.current;
+      canvasRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    }
+  }, []);
+
   // Wheel zoom: must use native event listener with {passive:false} because React adds passive
   useEffect(() => {
     const el = spiralRef.current;
@@ -281,11 +400,18 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
       e.preventDefault();
       e.stopPropagation();
       const factor = e.deltaY > 0 ? 0.92 : 1.08;
-      setSpiralTransform(prev => ({ ...prev, scale: Math.max(0.05, Math.min(5, prev.scale * factor)) }));
+      const newScale = Math.max(0.05, Math.min(5, transformRef.current.scale * factor));
+      transformRef.current = { ...transformRef.current, scale: newScale };
+      applyTransformDirect();
+      // Debounced state sync for culling update
+      clearTimeout((el as any)._zoomTimer);
+      (el as any)._zoomTimer = setTimeout(() => {
+        setSpiralTransform({ ...transformRef.current });
+      }, 150);
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
-  }, [viewMode]);
+  }, [viewMode, applyTransformDirect]);
 
   // Pan: track drag distance to distinguish click vs drag
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -299,9 +425,17 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     const dy = e.clientY - dragRef.current.lastY;
     dragRef.current.lastX = e.clientX;
     dragRef.current.lastY = e.clientY;
-    setSpiralTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+    // Direct DOM update — no React re-render!
+    transformRef.current = { ...transformRef.current, x: transformRef.current.x + dx, y: transformRef.current.y + dy };
+    applyTransformDirect();
+  }, [applyTransformDirect]);
+  const handleMouseUp = useCallback(() => {
+    if (dragRef.current.dragging) {
+      dragRef.current.dragging = false;
+      // Sync state for culling update
+      setSpiralTransform({ ...transformRef.current });
+    }
   }, []);
-  const handleMouseUp = useCallback(() => { dragRef.current.dragging = false; }, []);
   // Block link navigation if user was dragging
   const handleNodeClick = useCallback((e: React.MouseEvent) => {
     const dx = Math.abs(e.clientX - dragStartPos.current.x);
@@ -423,7 +557,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                         <Link to={`/monograph/${item.id}`} key={item.id}
                           className={`mosaic-tile ${isRead ? 'is-read' : ''}`}
                           style={{ '--tile-color': color } as any}>
-                          <div className="mosaic-portrait" style={{ backgroundImage: `url(${item.finalImageUrl})` }} />
+                          <img className="mosaic-portrait" src={item.finalImageUrl || ''} alt={item.cleanTitle} loading="lazy" decoding="async" />
                           <div className="mosaic-tile-overlay">
                             <div className="mosaic-tile-name">{item.cleanTitle}</div>
                             {item.year !== 9999 && <div className="mosaic-tile-year">{item.year}</div>}
@@ -442,57 +576,310 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         </div>
       )}
 
-      {/* === SPIRAL or CIRCLE VIEW === */}
-      {(viewMode === 'spiral' || viewMode === 'circle') && (
-        <div className="spiral-viewport"
-          ref={spiralRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-        >
-          <div className="spiral-canvas"
-            style={{ transform: `translate(${spiralTransform.x}px, ${spiralTransform.y}px) scale(${spiralTransform.scale})` }}
-          >
-            {viewMode === 'spiral' && SUPER_ARMS.map((arm, i) => (
-              <div key={`arm-${i}`} className="spiral-arm-line" style={{
-                transform: `rotate(${(i / 6) * 360}deg)`,
-                background: `linear-gradient(90deg, ${arm.color}40, transparent)`,
-              }} />
-            ))}
-            {viewMode === 'spiral' && SUPER_ARMS.map((arm, i) => {
-              const angle = (i / 6) * 2 * Math.PI;
-              const lx = 160 * Math.cos(angle);
-              const ly = 160 * Math.sin(angle);
-              return (
-                <div key={`lbl-${i}`} className="spiral-arm-label" style={{
-                  left: `calc(50% + ${lx}px)`, top: `calc(50% + ${ly}px)`, color: arm.color,
-                }}>{arm.name}</div>
-              );
-            })}
-            {(viewMode === 'spiral' ? spiralPositions : circlePositions).map(({ item, x, y }) => {
-              const color = SUPER_ARMS[getArmIndex(item.topCategory)]?.color || item.catColor;
-              return (
-                <Link to={`/monograph/${item.id}`} key={item.id}
-                  className="spiral-node"
-                  onClick={handleNodeClick}
-                  style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)`, '--tile-color': color } as any}
-                >
-                  <div className="spiral-node-img" style={{ backgroundImage: `url(${item.finalImageUrl})`, borderColor: color }} />
-                  <div className="spiral-node-label">{item.cleanTitle}</div>
-                </Link>
-              );
-            })}
-            <div className="spiral-center">
-              <div className="spiral-center-glow" />
-              <span>SPiRAL<br/>MiND</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* === SPIRAL or CIRCLE VIEW (Canvas-based for 60fps) === */}
+      {(viewMode === 'spiral' || viewMode === 'circle') && (() => {
+        return <CanvasSpiral
+          positions={viewMode === 'spiral' ? spiralPositions : circlePositions}
+          viewMode={viewMode}
+          spiralRef={spiralRef}
+          canvasRef={canvasRef}
+          spiralTransform={spiralTransform}
+          setSpiralTransform={setSpiralTransform}
+          transformRef={transformRef}
+          applyTransformDirect={applyTransformDirect}
+          handleMouseDown={handleMouseDown}
+          handleMouseMove={handleMouseMove}
+          handleMouseUp={handleMouseUp}
+          handleNodeClick={handleNodeClick}
+          superArms={SUPER_ARMS}
+          getArmIndex={getArmIndex}
+        />;
+      })()}
     </div>
   );
 }
+
+// ==================== CANVAS-BASED SPIRAL (60fps) ====================
+interface CanvasSpiralProps {
+  positions: { item: any; x: number; y: number; armIdx: number }[];
+  viewMode: ViewMode;
+  spiralRef: React.RefObject<HTMLDivElement>;
+  canvasRef: React.RefObject<HTMLDivElement>;
+  spiralTransform: { x: number; y: number; scale: number };
+  setSpiralTransform: (t: { x: number; y: number; scale: number }) => void;
+  transformRef: React.MutableRefObject<{ x: number; y: number; scale: number }>;
+  applyTransformDirect: () => void;
+  handleMouseDown: (e: React.MouseEvent) => void;
+  handleMouseMove: (e: React.MouseEvent) => void;
+  handleMouseUp: () => void;
+  handleNodeClick: (e: React.MouseEvent) => void;
+  superArms: { name: string; cats: string[]; color: string }[];
+  getArmIndex: (cat: string) => number;
+}
+
+function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform, transformRef, superArms, getArmIndex }: CanvasSpiralProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasElRef = useRef<HTMLCanvasElement>(null);
+  const imgCache = useRef<Map<string, HTMLImageElement>>(new Map());
+  const rafRef = useRef<number>(0);
+  const dragState = useRef({ dragging: false, lastX: 0, lastY: 0, startX: 0, startY: 0 });
+  const hoverNode = useRef<{ item: any; sx: number; sy: number } | null>(null);
+  const [hoveredItem, setHoveredItem] = useState<{ item: any; sx: number; sy: number } | null>(null);
+  const navigate = useNavigate();
+  const localTransform = useRef(spiralTransform);
+  localTransform.current = spiralTransform;
+
+  // Pre-load images
+  useEffect(() => {
+    const cache = imgCache.current;
+    positions.forEach(({ item }) => {
+      if (item.finalImageUrl && !cache.has(item.finalImageUrl)) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = item.finalImageUrl;
+        cache.set(item.finalImageUrl, img);
+      }
+    });
+  }, [positions]);
+
+  // Draw loop
+  const draw = useCallback(() => {
+    const canvas = canvasElRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+    }
+
+    const ctx = canvas.getContext('2d')!;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const { x: tx, y: ty, scale } = localTransform.current;
+    const cx = w / 2;
+    const cy = h / 2;
+
+    ctx.save();
+    ctx.translate(cx + tx, cy + ty);
+    ctx.scale(scale, scale);
+
+    // Draw arm guide curves (spiral mode only) — true Archimedean spirals
+    if (viewMode === 'spiral') {
+      const guideStartR = 58 * 2.5; // must match startR in layout
+      const guideTightness = 0.18;   // must match spiralTightness
+      const guideGrowth = 58 * 0.52; // must match radialGrowth
+      const guideSteps = 55;         // enough points to cover longest arm
+
+      superArms.forEach((arm, i) => {
+        const baseAngle = (i / superArms.length) * 2 * Math.PI;
+        ctx.beginPath();
+        for (let s = 0; s <= guideSteps; s++) {
+          const theta = s * guideTightness;
+          const rr = guideStartR + s * guideGrowth;
+          const angle = baseAngle + theta;
+          const px = rr * Math.cos(angle);
+          const py = rr * Math.sin(angle);
+          if (s === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.strokeStyle = arm.color + '18';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+    }
+
+    // Draw nodes
+    const r = 22; // node radius
+    const cache = imgCache.current;
+    positions.forEach(({ item, x, y }) => {
+      const color = superArms[getArmIndex(item.topCategory)]?.color || '#64748b';
+      const img = cache.get(item.finalImageUrl);
+
+      // Draw border circle
+      ctx.beginPath();
+      ctx.arc(x, y, r + 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Draw image circle
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.clip();
+      if (img && img.complete && img.naturalWidth > 0) {
+        ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
+      } else {
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Draw tiny label
+      if (scale > 0.6) {
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.font = '4px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        const label = item.cleanTitle.length > 12 ? item.cleanTitle.slice(0, 11) + '…' : item.cleanTitle;
+        ctx.fillText(label, x, y + r + 6);
+      }
+    });
+
+    // Draw center
+    ctx.fillStyle = 'rgba(0,200,255,0.06)';
+    ctx.beginPath();
+    ctx.arc(0, 0, 60, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = 'bold 10px Outfit, Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SPiRAL', 0, -4);
+    ctx.fillText('MiND', 0, 8);
+
+    ctx.restore();
+  }, [positions, viewMode, superArms, getArmIndex]);
+
+  // Animation frame loop
+  useEffect(() => {
+    let running = true;
+    const loop = () => {
+      if (!running) return;
+      draw();
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => { running = false; cancelAnimationFrame(rafRef.current); };
+  }, [draw]);
+
+  // Mouse handlers (direct, no React state during drag)
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    dragState.current = { dragging: true, lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY };
+  }, []);
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    const ds = dragState.current;
+    if (ds.dragging) {
+      const dx = e.clientX - ds.lastX;
+      const dy = e.clientY - ds.lastY;
+      ds.lastX = e.clientX;
+      ds.lastY = e.clientY;
+      localTransform.current = { ...localTransform.current, x: localTransform.current.x + dx, y: localTransform.current.y + dy };
+    } else {
+      // Hit test for hover
+      const canvas = canvasElRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const { x: tx, y: ty, scale } = localTransform.current;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      // Convert mouse to world coords
+      const wx = (mx - cx - tx) / scale;
+      const wy = (my - cy - ty) / scale;
+
+      let found: typeof hoverNode.current = null;
+      for (const pos of positions) {
+        const dx = pos.x - wx;
+        const dy = pos.y - wy;
+        if (dx * dx + dy * dy < 24 * 24) {
+          found = { item: pos.item, sx: e.clientX, sy: e.clientY };
+          break;
+        }
+      }
+      if (found?.item?.id !== hoverNode.current?.item?.id) {
+        hoverNode.current = found;
+        setHoveredItem(found);
+      }
+    }
+  }, [positions]);
+
+  const onMouseUp = useCallback(() => {
+    const ds = dragState.current;
+    if (ds.dragging) {
+      ds.dragging = false;
+      setSpiralTransform({ ...localTransform.current });
+    }
+  }, [setSpiralTransform]);
+
+  const onClick = useCallback((e: React.MouseEvent) => {
+    const ds = dragState.current;
+    const dx = Math.abs(e.clientX - ds.startX);
+    const dy = Math.abs(e.clientY - ds.startY);
+    if (dx > 5 || dy > 5) return; // was a drag
+
+    // Hit test
+    const canvas = canvasElRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const { x: tx, y: ty, scale } = localTransform.current;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const wx = (mx - cx - tx) / scale;
+    const wy = (my - cy - ty) / scale;
+
+    for (const pos of positions) {
+      const ddx = pos.x - wx;
+      const ddy = pos.y - wy;
+      if (ddx * ddx + ddy * ddy < 24 * 24) {
+        navigate(`/monograph/${pos.item.id}`);
+        return;
+      }
+    }
+  }, [positions, navigate]);
+
+  // Wheel zoom
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 0.92 : 1.08;
+      localTransform.current = { ...localTransform.current, scale: Math.max(0.05, Math.min(5, localTransform.current.scale * factor)) };
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="spiral-viewport"
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+      onClick={onClick}
+      style={{ cursor: dragState.current.dragging ? 'grabbing' : 'grab' }}
+    >
+      <canvas ref={canvasElRef} style={{ display: 'block', width: '100%', height: '100%' }} />
+      {hoveredItem && (
+        <div className="canvas-tooltip" style={{
+          position: 'fixed', left: hoveredItem.sx + 12, top: hoveredItem.sy - 30,
+          background: 'rgba(0,0,0,0.9)', color: '#fff', padding: '4px 10px',
+          borderRadius: '6px', fontSize: '0.75rem', fontFamily: 'var(--font-sans)',
+          pointerEvents: 'none', zIndex: 9999, whiteSpace: 'nowrap',
+          border: `1px solid ${superArms[getArmIndex(hoveredItem.item.topCategory)]?.color || '#64748b'}`,
+        }}>
+          {hoveredItem.item.cleanTitle}
+        </div>
+      )}
+      <div className="spiral-stats">
+        {positions.length} Einträge
+      </div>
+    </div>
+  );
+}
+
 interface ReaderProps {
   data: Monograph[];
   markAsRead: (id: string) => void;
@@ -735,7 +1122,7 @@ export default function App() {
     if ((window as any).__WIKI_DATA__) {
       processJson((window as any).__WIKI_DATA__);
     } else {
-      fetch('/data.json')
+      fetch(`/data.json?_=${Date.now()}`)
         .then(res => res.json())
         .then(processJson)
         .catch(err => {

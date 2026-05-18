@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Fix Missing Images</title>
+<style>
+body { font: 13px monospace; background: #111; color: #0f0; padding: 1em; }
+#log { white-space: pre-wrap; max-height: 70vh; overflow-y: auto; }
+button { font-size: 16px; padding: 8px 20px; margin: 8px; cursor: pointer; }
+.found { color: #0f0; } .notfound { color: #f80; } .err { color: #f00; }
+textarea { width: 100%; height: 200px; background: #222; color: #0f0; font: 12px monospace; }
+</style>
+</head><body>
+<h2>🔍 Fix Missing Images (57 SVG Placeholders)</h2>
+<button id="startBtn" onclick="startFetch()">▶ Start Fetching</button>
+<button onclick="downloadJSON()">💾 Download Updated data.json</button>
+<div>Found: <span id="foundCount">0</span>/57 | Remaining: <span id="remainCount">57</span></div>
+<div id="log"></div>
+<h3>Updated JSON (copy to public/data.json):</h3>
+<textarea id="output"></textarea>
+
+<script>
+let data = [];
+let found = 0;
+
+const log = (msg, cls='') => {
+  const el = document.getElementById('log');
+  el.innerHTML += `<span class="${cls}">${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+};
+
+async function fetchWikiImage(name) {
+  // Try multiple sources
+  const sources = [
+    // 1. English Wikipedia
+    async () => {
+      const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`);
+      if (!r.ok) return null;
+      const j = await r.json();
+      return j.thumbnail?.source || j.originalimage?.source || null;
+    },
+    // 2. German Wikipedia
+    async () => {
+      const r = await fetch(`https://de.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`);
+      if (!r.ok) return null;
+      const j = await r.json();
+      return j.thumbnail?.source || j.originalimage?.source || null;
+    },
+    // 3. Wikidata search
+    async () => {
+      const r = await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(name)}&language=de&format=json&origin=*`);
+      if (!r.ok) return null;
+      const j = await r.json();
+      const id = j.search?.[0]?.id;
+      if (!id) return null;
+      const r2 = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${id}&property=P18&format=json&origin=*`);
+      if (!r2.ok) return null;
+      const j2 = await r2.json();
+      const fn = j2.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+      if (!fn) return null;
+      const md5 = await crypto.subtle.digest('MD5', new TextEncoder().encode(fn.replace(/ /g,'_')));
+      // Use commons thumb URL directly
+      return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fn.replace(/ /g,'_'))}?width=300`;
+    },
+    // 4. Commons search
+    async () => {
+      const r = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(name + ' portrait')}&gsrlimit=1&prop=imageinfo&iiprop=url&iiurlwidth=300&format=json&origin=*`);
+      if (!r.ok) return null;
+      const j = await r.json();
+      const pages = j.query?.pages;
+      if (!pages) return null;
+      const page = Object.values(pages)[0];
+      return page?.imageinfo?.[0]?.thumburl || null;
+    }
+  ];
+
+  for (const src of sources) {
+    try {
+      const url = await src();
+      if (url && !url.includes('svg') && !url.includes('logo')) return url;
+    } catch(e) {}
+  }
+  return null;
+}
+
+async function startFetch() {
+  document.getElementById('startBtn').disabled = true;
+  const r = await fetch('/data.json');
+  data = await r.json();
+  
+  const missing = data.filter(d => d.imageUrl && d.imageUrl.startsWith('data:image/svg'));
+  log(`Found ${missing.length} entries with SVG placeholders. Starting...`);
+  
+  found = 0;
+  for (let i = 0; i < missing.length; i++) {
+    const entry = missing[i];
+    const name = entry.title.replace(/^(Monographie: |Primärquellen: )/i, '').replace(/\s*\(.*?\)/, '').trim();
+    log(`[${i+1}/${missing.length}] Searching: ${name}...`);
+    
+    try {
+      const url = await fetchWikiImage(name);
+      if (url) {
+        entry.imageUrl = url;
+        found++;
+        log(`  ✅ Found: ${url.substring(0, 80)}...`, 'found');
+      } else {
+        log(`  ❌ Not found`, 'notfound');
+      }
+    } catch(e) {
+      log(`  ⚠ Error: ${e.message}`, 'err');
+    }
+    
+    document.getElementById('foundCount').textContent = found;
+    document.getElementById('remainCount').textContent = missing.length - found - (i+1 - found > 0 ? 0 : 0);
+    
+    // Small delay to not hammer APIs
+    await new Promise(r => setTimeout(r, 300));
+  }
+  
+  log(`\n=== DONE: Found ${found}/${missing.length} images ===`, 'found');
+  document.getElementById('output').value = JSON.stringify(data, null, 2);
+  document.getElementById('startBtn').disabled = false;
+}
+
+function downloadJSON() {
+  if (data.length === 0) { alert('Run fetch first!'); return; }
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'data.json'; a.click();
+}
+</script>
+</body></html>
