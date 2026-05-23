@@ -35,13 +35,14 @@ interface Monograph {
   content: string;
   imageUrl?: string | null;
   wordCount?: number;
+  topCategory: string;
+  year: number;
+  finalImageUrl: string | null;
+  hasRealImage: boolean;
+  cleanTitle: string;
 }
 
-// interface ProcessedMonograph removed
-
-const cleanTitleText = (title: string) => {
-  return title.replace(/^(Monographie: |Primärquellen: |Masterclass |Monographie )/i, '').replace(/\s*\(.*?\)/, '').trim();
-};
+// category cleaning function moved to build script
 
 const CATEGORY_IMAGES: Record<string, string> = {
   "Wirtschaft": "https://upload.wikimedia.org/wikipedia/commons/e/e0/New_York_Stock_Exchange_1908.jpg",
@@ -125,8 +126,13 @@ interface DashboardProps {
 function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, setViewMode }: DashboardProps) {
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [activeCategory, setActiveCategory] = useState<string>('Alle');
+  const [visibleCount, setVisibleCount] = useState(40);
+
+  // Reset infinite scroll when filters change
+  useEffect(() => {
+    setVisibleCount(40);
+  }, [search, activeCategory, viewMode]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [alphaFilter, setAlphaFilter] = useState<string>('');
@@ -150,6 +156,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  const navigate = useNavigate();
   const goToRandom = useCallback(() => {
     if (data.length === 0) return;
     const item = data[Math.floor(Math.random() * data.length)];
@@ -158,32 +165,10 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
 
   // Data Processing
   const processedData = useMemo(() => {
-    return data.map(item => {
-      const parts = item.category ? item.category.split(' / ') : ['Uncategorized'];
-      const topCategory = parts[0];
-
-      let year = 9999;
-      const yearMatch = item.content.match(/\(\*?\s*(\d{4})/);
-      if (yearMatch?.[1]) year = parseInt(yearMatch[1], 10);
-
-      let finalImageUrl = item.imageUrl || null;
-      if (!finalImageUrl) {
-        const imgMatch = item.content.match(/!\[.*?\]\((.*?)\)/);
-        if (imgMatch?.[1]) finalImageUrl = imgMatch[1];
-      }
-      const hasRealImage = !!finalImageUrl;
-      // All entries now have real HTTP images — no null fallback needed
-
-      return {
-        ...item,
-        topCategory,
-        year,
-        finalImageUrl,
-        hasRealImage,
-        cleanTitle: cleanTitleText(item.title),
-        catColor: getCatColor(topCategory),
-      };
-    });
+    return data.map(item => ({
+      ...item,
+      catColor: getCatColor(item.topCategory),
+    }));
   }, [data]);
 
   const sortedCategories = useMemo(() => {
@@ -195,18 +180,33 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
   const filteredData = useMemo(() => {
     return processedData.filter(d => {
       if (search && !d.title.toLowerCase().includes(search.toLowerCase()) && !d.category.toLowerCase().includes(search.toLowerCase())) return false;
-      if (selectedCategory !== 'all' && d.topCategory !== selectedCategory) return false;
+      if (activeCategory !== 'Alle' && d.topCategory !== activeCategory) return false;
       if (showFavoritesOnly && !favorites.includes(d.id)) return false;
       if (showUnreadOnly && readMonographs.includes(d.id)) return false;
       if (alphaFilter && !d.cleanTitle.toUpperCase().startsWith(alphaFilter)) return false;
       return true;
     });
-  }, [processedData, search, selectedCategory, showFavoritesOnly, showUnreadOnly, favorites, readMonographs, alphaFilter]);
+  }, [processedData, search, activeCategory, showFavoritesOnly, showUnreadOnly, favorites, readMonographs, alphaFilter]);
+
+  // Infinite Scroll Observer
+  const loaderRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (viewMode !== 'portrait') return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        setVisibleCount(prev => Math.min(prev + 40, filteredData.length));
+      }
+    }, { threshold: 0.1 });
+    
+    if (loaderRef.current) observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [viewMode, filteredData.length]);
 
   // Group by category for mosaic view
   const groupedByCategory = useMemo(() => {
+    const sliced = filteredData.slice(0, visibleCount);
     const groups: Record<string, typeof filteredData> = {};
-    filteredData.forEach(d => {
+    sliced.forEach(d => {
       if (!groups[d.topCategory]) groups[d.topCategory] = [];
       groups[d.topCategory].push(d);
     });
@@ -215,7 +215,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
       groups[key].sort((a, b) => a.cleanTitle.localeCompare(b.cleanTitle));
     }
     return groups;
-  }, [filteredData]);
+  }, [filteredData, visibleCount]);
 
   const ZOOM_SIZES = [60, 90, 150];
   const ZOOM_LABELS = ['S', 'M', 'L'];
@@ -486,8 +486,8 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
       {/* --- CATEGORY LEGEND --- */}
       <div className="cat-legend">
         <button
-          className={`cat-legend-item ${selectedCategory === 'all' ? 'active' : ''}`}
-          onClick={() => setSelectedCategory('all')}
+          className={`cat-legend-item ${activeCategory === 'Alle' ? 'active' : ''}`}
+          onClick={() => setActiveCategory('Alle')}
         >
           <span className="cat-dot" style={{ background: 'linear-gradient(135deg, #3b82f6, #a855f7, #ec4899)' }} />
           Alle ({filteredData.length})
@@ -498,8 +498,8 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
           return (
             <button
               key={cat}
-              className={`cat-legend-item ${selectedCategory === cat ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(selectedCategory === cat ? 'all' : cat)}
+              className={`cat-legend-item ${activeCategory === cat ? 'active' : ''}`}
+              onClick={() => setActiveCategory(activeCategory === cat ? 'Alle' : cat)}
               style={{ '--cat-color': color } as any}
             >
               <span className="cat-dot" style={{ background: color }} />
@@ -551,9 +551,9 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                 <div key={cat} className="mosaic-category-group">
                   <div className="mosaic-cat-label" style={{ color }}>
                     <span className="cat-dot" style={{ background: color, width: '8px', height: '8px' }} />
-                    {cat.replace(/_/g, ' ')} ({items.length})
+                    {cat.replace(/_/g, ' ')} ({filteredData.filter(d => d.topCategory === cat).length})
                   </div>
-                  <div className="mosaic-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${tileSize}px, 1fr))` }}>
+                  <div className="mosaic-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(200px, 1fr))` }}>
                     {items.map(item => {
                       const isRead = readMonographs.includes(item.id);
                       const isFav = favorites.includes(item.id);
@@ -575,8 +575,13 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                 </div>
               );
             })}
+            {visibleCount < filteredData.length && (
+              <div ref={loaderRef} style={{ height: '50px', margin: '2rem 0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <div className="spinner" style={{ width: '30px', height: '30px', borderTopColor: 'var(--accent-cyan)' }}></div>
+              </div>
+            )}
+            {filteredData.length === 0 && <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '4rem 2rem' }}>Keine Einträge.</div>}
           </div>
-          {filteredData.length === 0 && <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '4rem 2rem' }}>Keine Einträge.</div>}
         </div>
       )}
 
@@ -632,6 +637,7 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
   const navigate = useNavigate();
   const localTransform = useRef(spiralTransform);
   localTransform.current = spiralTransform;
+  const needsDraw = useRef(true);
 
   // Pre-load images
   useEffect(() => {
@@ -774,9 +780,13 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
   // Animation frame loop
   useEffect(() => {
     let running = true;
+    needsDraw.current = true;
     const loop = () => {
       if (!running) return;
-      draw();
+      if (needsDraw.current) {
+        draw();
+        needsDraw.current = false;
+      }
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
@@ -797,6 +807,7 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
       ds.lastX = e.clientX;
       ds.lastY = e.clientY;
       localTransform.current = { ...localTransform.current, x: localTransform.current.x + dx, y: localTransform.current.y + dy };
+      needsDraw.current = true;
     } else {
       // Hit test for hover
       const canvas = canvasElRef.current;
@@ -823,6 +834,7 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
       if (found?.item?.id !== hoverNode.current?.item?.id) {
         hoverNode.current = found;
         setHoveredItem(found);
+        needsDraw.current = true;
       }
     }
   }, [positions]);
@@ -871,6 +883,7 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
       e.preventDefault();
       const factor = e.deltaY > 0 ? 0.92 : 1.08;
       localTransform.current = { ...localTransform.current, scale: Math.max(0.05, Math.min(5, localTransform.current.scale * factor)) };
+      needsDraw.current = true;
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
@@ -1064,7 +1077,7 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
                     <Link to={`/monograph/${rm.id}`} key={rm.id} className="related-card">
                       <div className="related-card-img" style={{ backgroundImage: `url(${rm.imageUrl || ''})` }} />
                       <div className="related-card-info">
-                        <div className="related-card-title">{cleanTitleText(rm.title)}</div>
+                        <div className="related-card-title">{rm.cleanTitle}</div>
                       </div>
                     </Link>
                   ))}
@@ -1126,21 +1139,7 @@ export default function App() {
 
   useEffect(() => {
     const processJson = (json: any[]) => {
-      // Smart Deduplication: Keep the version with an image if possible
-      const uniqueDataMap = new Map();
-      for (const item of json) {
-        if (uniqueDataMap.has(item.id)) {
-          const existing = uniqueDataMap.get(item.id);
-          const hasImg = !!item.imageUrl || (item.content && item.content.includes("!["));
-          const existingHasImg = !!existing.imageUrl || (existing.content && existing.content.includes("!["));
-          if ((hasImg && !existingHasImg) || (!existingHasImg && item.content?.length > existing.content?.length)) {
-            uniqueDataMap.set(item.id, item);
-          }
-        } else {
-          uniqueDataMap.set(item.id, item);
-        }
-      }
-      setData(Array.from(uniqueDataMap.values()));
+      setData(json);
       setLoading(false);
     };
 

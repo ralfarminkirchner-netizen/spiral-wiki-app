@@ -82,12 +82,31 @@ async function buildData() {
     }
   })));
 
-  // 2️⃣ Convert map to enriched array (metadata, word count, timestamp)
-  const monographs = Array.from(monographMap.values()).map(m => ({
-    ...m,
-    wordCount: m.content.split(/\s+/).filter(Boolean).length,
-    lastModified: new Date().toISOString(),
-  }));
+  // 2️⃣ Convert map to enriched array (metadata, word count, timestamp, precomputed frontend fields)
+  const monographs = Array.from(monographMap.values()).map(m => {
+    // Determine topCategory
+    const parts = m.category ? m.category.split(' / ') : ['Uncategorized'];
+    const topCategory = parts[0];
+
+    // Determine year
+    let year = 9999;
+    const yearMatch = m.content.match(/\(\*?\s*(\d{4})/);
+    if (yearMatch?.[1]) year = parseInt(yearMatch[1], 10);
+
+    // Final Image URL will be finalized in step 3, but initialize it here
+    const finalImageUrl = m.imageUrl || null;
+
+    return {
+      ...m,
+      wordCount: m.content.split(/\s+/).filter(Boolean).length,
+      lastModified: new Date().toISOString(),
+      topCategory,
+      year,
+      finalImageUrl,
+      hasRealImage: !!finalImageUrl,
+      cleanTitle: m.title
+    };
+  });
 
   // 3️⃣ Assign deterministic fallback images for any missing images
   console.log('Fetching fehlende Bilder (Wikipedia → Bing fallback)...');
@@ -115,11 +134,11 @@ async function buildData() {
   ];
 
   monographs.forEach(m => {
-    if (!m.imageUrl) {
+    if (!m.finalImageUrl) {
       const charCode = m.id.charCodeAt(0) + m.id.charCodeAt(m.id.length - 1);
       const topCat = m.category.split(' / ')[0];
       const fallbackList = categoryImages[topCat] ? [categoryImages[topCat]] : defaults;
-      m.imageUrl = fallbackList[charCode % fallbackList.length];
+      m.finalImageUrl = fallbackList[charCode % fallbackList.length];
       console.log(`  ✅ Fallback assigned to: ${m.title}`);
     }
   });
