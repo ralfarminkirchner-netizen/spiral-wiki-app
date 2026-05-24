@@ -1,14 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0d1117" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Preload the tiny index file for instant startup -->
+    <link rel="preload" href="/data-index.json" as="fetch" crossorigin>
     
     <!-- iOS Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,14 +24,7 @@
   </head>
   <body>
     <div id="root"></div>
-    <script src="/appData.js"></script>
-    <script>
-      // Bridge windowWikiData to __WIKI_DATA__ for the React app
-      if (typeof windowWikiData !== 'undefined') {
-        window.__WIKI_DATA__ = windowWikiData;
-        console.log('[WIKI] Loaded', window.__WIKI_DATA__.length, 'entries');
-      }
-    </script>
+    <!-- NO more synchronous 5.9MB appData.js! Data is now fetched async by React. -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

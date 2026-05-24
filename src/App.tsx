@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-// Utility: navigate is used by Dashboard via useNavigate import above
+// ─── Utilities ───
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -28,76 +28,79 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
   return [storedValue, setValue];
 }
 
-interface Monograph {
+// ─── Types ───
+
+/** Lightweight metadata for the gallery views — NO content field! */
+interface MonographMeta {
   id: string;
   title: string;
   category: string;
-  content: string;
-  imageUrl?: string | null;
-  wordCount?: number;
   topCategory: string;
   year: number;
   finalImageUrl: string | null;
   hasRealImage: boolean;
+  wordCount?: number;
   cleanTitle: string;
 }
 
-// category cleaning function moved to build script
+/** Full monograph with content — loaded on demand */
+interface MonographFull extends MonographMeta {
+  content: string;
+}
 
-const CATEGORY_IMAGES: Record<string, string> = {
-  "Wirtschaft": "https://upload.wikimedia.org/wikipedia/commons/e/e0/New_York_Stock_Exchange_1908.jpg",
-  "Soziologie": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Crowd_outside_the_Stock_Exchange%2C_New_York%2C_1900.jpg",
-  "Kybernetik": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Cybernetics.jpg/800px-Cybernetics.jpg",
-  "Philosophie": "https://upload.wikimedia.org/wikipedia/commons/8/8c/David_-_The_Death_of_Socrates.jpg",
-  "Neurologie": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Cajal_cortex_drawings.png/800px-Cajal_cortex_drawings.png",
-  "Psychologie": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Rorschach_blot_01.jpg",
-  "Religion und Spiritualitaet": "https://upload.wikimedia.org/wikipedia/commons/7/74/The_Creation_of_Adam.jpg",
-  "Wissenschaft": "https://upload.wikimedia.org/wikipedia/commons/3/39/GodfreyKneller-IsaacNewton-1689.jpg",
-  "Bewusstseinsforschung": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Flammarion_Woodcut_1888.jpg/800px-Flammarion_Woodcut_1888.jpg",
-  "Kunst und Literatur": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg",
-  "Physik und Mathematik": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/800px-Andromeda_Galaxy_%28with_h-alpha%29.jpg",
-  "Synthesen": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Alchemical_scroll_by_George_Ripley_%28Wellcome%29.jpg",
-  "Tradition": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Bayeux_Tapestry_scene57.jpg/800px-Bayeux_Tapestry_scene57.jpg",
-  "Traumaforschung": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/The_Scream.jpg/800px-The_Scream.jpg",
-  "default": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg"
-};
+type ViewMode = 'spiral' | 'circle' | 'portrait';
 
-const getCatImage = (catName: string) => {
-  for (const key of Object.keys(CATEGORY_IMAGES)) {
-    if (catName.includes(key)) return CATEGORY_IMAGES[key];
-  }
-  return CATEGORY_IMAGES.default;
-};
+// ─── Constants ───
 
-// Distinct border colors per category for the portrait mosaic
 const CATEGORY_COLORS: Record<string, string> = {
-  'Bewusstseinsforschung': '#a855f7',    // violet
-  'Kunst_und_Literatur': '#ec4899',       // pink
-  'Kybernetik': '#06b6d4',                // cyan
-  'Neurologie': '#10b981',                // emerald
-  'Philosophie': '#3b82f6',               // blue
-  'Physik_und_Mathematik': '#f59e0b',     // amber
-  'Psychologie': '#f97316',               // orange
-  'Religion_und_Spiritualitaet': '#eab308', // yellow
-  'Soziologie': '#ef4444',                // red
-  'Synthesen': '#8b5cf6',                 // purple
-  'Tradition': '#78716c',                 // stone
-  'Traumaforschung': '#dc2626',           // crimson
-  'Wirtschaft': '#22c55e',                // green
-  'Wissenschaft': '#14b8a6',              // teal
+  'Bewusstseinsforschung': '#a855f7',
+  'Kunst_und_Literatur': '#ec4899',
+  'Kybernetik': '#06b6d4',
+  'Neurologie': '#10b981',
+  'Philosophie': '#3b82f6',
+  'Physik_und_Mathematik': '#f59e0b',
+  'Psychologie': '#f97316',
+  'Religion_und_Spiritualitaet': '#eab308',
+  'Soziologie': '#ef4444',
+  'Synthesen': '#8b5cf6',
+  'Tradition': '#78716c',
+  'Traumaforschung': '#dc2626',
+  'Wirtschaft': '#22c55e',
+  'Wissenschaft': '#14b8a6',
 };
 
 const getCatColor = (catName: string): string => {
   for (const [key, color] of Object.entries(CATEGORY_COLORS)) {
     if (catName.includes(key)) return color;
   }
-  return '#64748b'; // slate fallback
+  return '#64748b';
 };
 
-type ViewMode = 'spiral' | 'circle' | 'portrait';
+const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
+  'Bewusstseinsforschung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Flammarion_Woodcut_1888.jpg/800px-Flammarion_Woodcut_1888.jpg',
+  'Kunst_und_Literatur': 'https://upload.wikimedia.org/wikipedia/commons/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg',
+  'Kybernetik': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Cybernetics.jpg/800px-Cybernetics.jpg',
+  'Neurologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Cajal_cortex_drawings.png/800px-Cajal_cortex_drawings.png',
+  'Philosophie': 'https://upload.wikimedia.org/wikipedia/commons/8/8c/David_-_The_Death_of_Socrates.jpg',
+  'Physik_und_Mathematik': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/800px-Andromeda_Galaxy_%28with_h-alpha%29.jpg',
+  'Psychologie': 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Rorschach_blot_01.jpg',
+  'Religion_und_Spiritualitaet': 'https://upload.wikimedia.org/wikipedia/commons/7/74/The_Creation_of_Adam.jpg',
+  'Soziologie': 'https://upload.wikimedia.org/wikipedia/commons/6/6c/Crowd_outside_the_Stock_Exchange%2C_New_York%2C_1900.jpg',
+  'Synthesen': 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Alchemical_scroll_by_George_Ripley_%28Wellcome%29.jpg',
+  'Tradition': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Bayeux_Tapestry_scene57.jpg/800px-Bayeux_Tapestry_scene57.jpg',
+  'Traumaforschung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/The_Scream.jpg/800px-The_Scream.jpg',
+  'Wirtschaft': 'https://upload.wikimedia.org/wikipedia/commons/e/e0/New_York_Stock_Exchange_1908.jpg',
+  'Wissenschaft': 'https://upload.wikimedia.org/wikipedia/commons/3/39/GodfreyKneller-IsaacNewton-1689.jpg',
+};
 
-// 13 balanced arms: large categories split, small ones merged → ~48 entries/arm
-// This ensures a uniform, beautiful spiral with equal-length arms.
+const getFallbackImage = (topCategory: string): string => {
+  for (const [key, url] of Object.entries(CATEGORY_FALLBACK_IMAGES)) {
+    if (topCategory.includes(key)) return url;
+  }
+  return 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg';
+};
+
+// 13 balanced spiral arms
 const SUPER_ARMS: { name: string; cats: string[]; color: string; splitIndex?: number; splitCount?: number }[] = [
   { name: 'Philosophie I', cats: ['Philosophie'], color: '#818cf8', splitIndex: 0, splitCount: 3 },
   { name: 'Philosophie II', cats: ['Philosophie'], color: '#6366f1', splitIndex: 1, splitCount: 3 },
@@ -114,8 +117,29 @@ const SUPER_ARMS: { name: string; cats: string[]; color: string; splitIndex?: nu
   { name: 'Neuro & System', cats: ['Neurologie', 'Kybernetik', 'Wirtschaft'], color: '#10b981' },
 ];
 
+const getArmIndex = (cat: string): number => {
+  const topCat = cat.split('/')[0].trim();
+  for (let i = 0; i < SUPER_ARMS.length; i++) {
+    if (SUPER_ARMS[i].cats.some(c => topCat.includes(c) || c.includes(topCat))) return i;
+  }
+  return 0;
+};
+
+// ─── Image Error Handler (inline fallback) ───
+const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>, topCategory: string) => {
+  const img = e.currentTarget;
+  const fallback = getFallbackImage(topCategory);
+  if (img.src !== fallback) {
+    img.src = fallback;
+  }
+};
+
+// ════════════════════════════════════════════════
+//  DASHBOARD (Gallery Views)
+// ════════════════════════════════════════════════
+
 interface DashboardProps {
-  data: Monograph[];
+  data: MonographMeta[];
   readMonographs: string[];
   favorites: string[];
   toggleFavorite: (id: string) => void;
@@ -127,24 +151,16 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const [activeCategory, setActiveCategory] = useState<string>('Alle');
-  const [visibleCount, setVisibleCount] = useState(40);
-
-  // Reset infinite scroll when filters change
-  useEffect(() => {
-    setVisibleCount(40);
-  }, [search, activeCategory, viewMode]);
+  const [visibleCount, setVisibleCount] = useState(60);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [alphaFilter, setAlphaFilter] = useState<string>('');
-  const [zoomLevel, setZoomLevel] = useState<number>(1); // 0=S, 1=M, 2=L
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
 
-  // Spiral/Circle state
-  const spiralRef = useRef<HTMLDivElement>(null);
-  const [spiralTransform, setSpiralTransform] = useState({ x: 0, y: 0, scale: 0.22 });
-  const dragStartPos = useRef({ x: 0, y: 0 });
-  const dragRef = useRef({ dragging: false, lastX: 0, lastY: 0 });
+  // Reset infinite scroll on filter changes
+  useEffect(() => { setVisibleCount(60); }, [search, activeCategory, viewMode]);
 
-  // Keyboard shortcuts
+  // Keyboard: "/" to focus search
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
@@ -163,12 +179,9 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     navigate(`/monograph/${item.id}`);
   }, [data, navigate]);
 
-  // Data Processing
+  // ── Data Processing (no content = instant) ──
   const processedData = useMemo(() => {
-    return data.map(item => ({
-      ...item,
-      catColor: getCatColor(item.topCategory),
-    }));
+    return data.map(item => ({ ...item, catColor: getCatColor(item.topCategory) }));
   }, [data]);
 
   const sortedCategories = useMemo(() => {
@@ -177,76 +190,75 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     return Array.from(cats).sort();
   }, [processedData]);
 
+  // Create Sets for O(1) lookups instead of .includes() on arrays
+  const readSet = useMemo(() => new Set(readMonographs), [readMonographs]);
+  const favSet = useMemo(() => new Set(favorites), [favorites]);
+
   const filteredData = useMemo(() => {
     return processedData.filter(d => {
-      if (search && !d.title.toLowerCase().includes(search.toLowerCase()) && !d.category.toLowerCase().includes(search.toLowerCase())) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (!d.title.toLowerCase().includes(q) && !d.category.toLowerCase().includes(q)) return false;
+      }
       if (activeCategory !== 'Alle' && d.topCategory !== activeCategory) return false;
-      if (showFavoritesOnly && !favorites.includes(d.id)) return false;
-      if (showUnreadOnly && readMonographs.includes(d.id)) return false;
+      if (showFavoritesOnly && !favSet.has(d.id)) return false;
+      if (showUnreadOnly && readSet.has(d.id)) return false;
       if (alphaFilter && !d.cleanTitle.toUpperCase().startsWith(alphaFilter)) return false;
       return true;
     });
-  }, [processedData, search, activeCategory, showFavoritesOnly, showUnreadOnly, favorites, readMonographs, alphaFilter]);
+  }, [processedData, search, activeCategory, showFavoritesOnly, showUnreadOnly, favSet, readSet, alphaFilter]);
 
-  // Infinite Scroll Observer
+  // ── Category counts (computed from filteredData, not groupedByCategory) ──
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filteredData.forEach(d => { counts[d.topCategory] = (counts[d.topCategory] || 0) + 1; });
+    return counts;
+  }, [filteredData]);
+
+  // ── Infinite Scroll Observer ──
   const loaderRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (viewMode !== 'portrait') return;
     const observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
-        setVisibleCount(prev => Math.min(prev + 40, filteredData.length));
+        setVisibleCount(prev => Math.min(prev + 60, filteredData.length));
       }
     }, { threshold: 0.1 });
-    
     if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
   }, [viewMode, filteredData.length]);
 
-  // Group by category for mosaic view
+  // ── Portrait: Group only sliced data ──
+  const ZOOM_SIZES = [60, 90, 150];
+  const ZOOM_LABELS = ['S', 'M', 'L'];
+  const tileSize = ZOOM_SIZES[zoomLevel];
+
   const groupedByCategory = useMemo(() => {
+    if (viewMode !== 'portrait') return {};
     const sliced = filteredData.slice(0, visibleCount);
     const groups: Record<string, typeof filteredData> = {};
     sliced.forEach(d => {
       if (!groups[d.topCategory]) groups[d.topCategory] = [];
       groups[d.topCategory].push(d);
     });
-    // Sort items within each group by title
     for (const key of Object.keys(groups)) {
       groups[key].sort((a, b) => a.cleanTitle.localeCompare(b.cleanTitle));
     }
     return groups;
-  }, [filteredData, visibleCount]);
+  }, [filteredData, visibleCount, viewMode]);
 
-  const ZOOM_SIZES = [60, 90, 150];
-  const ZOOM_LABELS = ['S', 'M', 'L'];
-  const tileSize = ZOOM_SIZES[zoomLevel];
-
-  // Assign each item to one of 13 balanced arms
-  // For split arms (e.g. Philosophie I/II/III), items are distributed evenly
-  const getArmIndex = (cat: string): number => {
-    const topCat = cat.split('/')[0].trim();
-    // Find first matching arm (for non-split arms and display purposes)
-    for (let i = 0; i < SUPER_ARMS.length; i++) {
-      if (SUPER_ARMS[i].cats.some(c => topCat.includes(c) || c.includes(topCat))) return i;
-    }
-    return 0;
-  };
-
-  // Spiral positions: 13 BALANCED arms, ~48 entries each
+  // ── Spiral positions ──
   const spiralPositions = useMemo(() => {
     if (viewMode !== 'spiral') return [];
     const items = filteredData;
     const armCount = SUPER_ARMS.length;
-
-    // Step 1: Collect all items by their matching category group
-    // Group by the base category (ignoring splits)
     const catGroups: Map<string, typeof items> = new Map();
+
     items.forEach(item => {
       const topCat = item.topCategory.split('/')[0].trim();
       let matched = false;
       for (const arm of SUPER_ARMS) {
         if (arm.cats.some(c => topCat.includes(c) || c.includes(topCat))) {
-          // Use the primary cat name as key
           const key = arm.cats[0];
           if (!catGroups.has(key)) catGroups.set(key, []);
           catGroups.get(key)!.push(item);
@@ -260,53 +272,42 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
       }
     });
 
-    // Step 2: Distribute into arm buckets, respecting splits
     const armBuckets: (typeof items)[] = Array.from({ length: armCount }, () => []);
     for (let a = 0; a < armCount; a++) {
       const arm = SUPER_ARMS[a];
       const primaryCat = arm.cats[0];
       const allItems = catGroups.get(primaryCat) || [];
-
       if (arm.splitCount && arm.splitCount > 1) {
-        // This arm is a split: take the appropriate chunk
         const chunkSize = Math.ceil(allItems.length / arm.splitCount);
         const start = (arm.splitIndex || 0) * chunkSize;
-        const end = Math.min(start + chunkSize, allItems.length);
-        armBuckets[a] = allItems.slice(start, end);
+        armBuckets[a] = allItems.slice(start, Math.min(start + chunkSize, allItems.length));
       } else {
-        // Non-split arm: takes all items from its categories
         arm.cats.forEach(catName => {
           const catItems = catGroups.get(catName);
           if (catItems) {
             armBuckets[a].push(...catItems);
-            catGroups.delete(catName); // prevent double-counting
+            catGroups.delete(catName);
           }
         });
       }
     }
 
-    // Step 3: Layout — all arms start at same radius, uniform spacing
     const nodeDiam = 58;
     const minDist = nodeDiam;
     const positions: { item: typeof items[0]; x: number; y: number; armIdx: number }[] = [];
-    const startR = nodeDiam * 2.5; // Same start radius for ALL arms
+    const startR = nodeDiam * 2.5;
+    const spiralTightness = 0.18;
+    const radialGrowth = nodeDiam * 0.52;
 
     for (let a = 0; a < armCount; a++) {
       const baseAngle = (a / armCount) * 2 * Math.PI;
       let prevX = 0, prevY = 0;
-
-      // True Archimedean spiral: r = a + b*θ
-      // Constant angular advance per node → curved arms
-      const spiralTightness = 0.18; // radians per node (~10°) — controls curvature
-      const radialGrowth = nodeDiam * 0.52; // how fast radius grows per node
-
       armBuckets[a].forEach((item, i) => {
-        const theta = i * spiralTightness; // cumulative angle from arm base
+        const theta = i * spiralTightness;
         const r = startR + i * radialGrowth;
         const angle = baseAngle + theta;
         let x = r * Math.cos(angle);
         let y = r * Math.sin(angle);
-
         if (i > 0) {
           const dx = x - prevX, dy = y - prevY;
           const dist = Math.sqrt(dx * dx + dy * dy);
@@ -320,37 +321,12 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         positions.push({ item, x, y, armIdx: a });
       });
     }
-
-    // Post-layout collision resolution (Optimiert: Nur 1 Pass, oder weglassen, da Spirale eh geordnet ist)
-    // Da wir 1200+ Nodes haben, ist O(N^2) extrem langsam (verursacht Lags).
-    // Ein Pass reicht meistens für kosmetische Korrekturen.
-    for (let pass = 0; pass < 1; pass++) {
-      for (let i = 0; i < positions.length; i++) {
-        // Nur benachbarte Arm-Elemente prüfen, um O(N^2) zu vermeiden
-        const maxJ = Math.min(positions.length, i + 50); 
-        for (let j = i + 1; j < maxJ; j++) {
-          const dx = positions[j].x - positions[i].x;
-          const dy = positions[j].y - positions[i].y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < minDist && d > 0) {
-            const overlap = (minDist - d) / 2;
-            const nx = dx / d, ny = dy / d;
-            positions[i].x -= nx * overlap;
-            positions[i].y -= ny * overlap;
-            positions[j].x += nx * overlap;
-            positions[j].y += ny * overlap;
-          }
-        }
-      }
-    }
-
     return positions;
   }, [filteredData, viewMode]);
 
-  // Circle positions: fill a disc with concentric rings, grouped by category
+  // ── Circle positions ──
   const circlePositions = useMemo(() => {
     if (viewMode !== 'circle') return [];
-    // Sort by category so same-category items sit together
     const items = [...filteredData].sort((a, b) => {
       const ai = SUPER_ARMS.findIndex(arm => arm.cats.some(c => a.topCategory.includes(c) || c.includes(a.topCategory)));
       const bi = SUPER_ARMS.findIndex(arm => arm.cats.some(c => b.topCategory.includes(c) || c.includes(b.topCategory)));
@@ -359,15 +335,13 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     });
     const n = items.length;
     if (n === 0) return [];
-    const nodeDiam = 58; // 48px node + 3px border × 2 + 4px guaranteed gap
-    const positions: { item: typeof items[0]; x: number; y: number }[] = [];
+    const nodeDiam = 58;
+    const positions: { item: typeof items[0]; x: number; y: number; armIdx: number }[] = [];
     let placed = 0;
-    // Center item
     if (placed < n) {
-      positions.push({ item: items[placed], x: 0, y: 0 });
+      positions.push({ item: items[placed], x: 0, y: 0, armIdx: getArmIndex(items[placed].topCategory) });
       placed++;
     }
-    // Concentric rings outward
     let ring = 1;
     while (placed < n) {
       const r = ring * nodeDiam;
@@ -376,76 +350,18 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
       const count = Math.min(maxInRing, n - placed);
       for (let j = 0; j < count; j++) {
         const angle = (j / count) * 2 * Math.PI - Math.PI / 2;
-        positions.push({ item: items[placed], x: r * Math.cos(angle), y: r * Math.sin(angle) });
+        positions.push({
+          item: items[placed],
+          x: r * Math.cos(angle),
+          y: r * Math.sin(angle),
+          armIdx: getArmIndex(items[placed].topCategory),
+        });
         placed++;
       }
       ring++;
     }
     return positions;
   }, [filteredData, viewMode]);
-
-  // Refs for direct DOM manipulation (avoids React re-renders during pan/zoom)
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const transformRef = useRef(spiralTransform);
-  transformRef.current = spiralTransform;
-
-  const applyTransformDirect = useCallback(() => {
-    if (canvasRef.current) {
-      const { x, y, scale } = transformRef.current;
-      canvasRef.current.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-    }
-  }, []);
-
-  // Wheel zoom: must use native event listener with {passive:false} because React adds passive
-  useEffect(() => {
-    const el = spiralRef.current;
-    if (!el || (viewMode !== 'spiral' && viewMode !== 'circle')) return;
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const factor = e.deltaY > 0 ? 0.92 : 1.08;
-      const newScale = Math.max(0.05, Math.min(5, transformRef.current.scale * factor));
-      transformRef.current = { ...transformRef.current, scale: newScale };
-      applyTransformDirect();
-      // Debounced state sync for culling update
-      clearTimeout((el as any)._zoomTimer);
-      (el as any)._zoomTimer = setTimeout(() => {
-        setSpiralTransform({ ...transformRef.current });
-      }, 150);
-    };
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, [viewMode, applyTransformDirect]);
-
-  // Pan: track drag distance to distinguish click vs drag
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    dragRef.current = { dragging: true, lastX: e.clientX, lastY: e.clientY };
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
-  }, []);
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragRef.current.dragging) return;
-    const dx = e.clientX - dragRef.current.lastX;
-    const dy = e.clientY - dragRef.current.lastY;
-    dragRef.current.lastX = e.clientX;
-    dragRef.current.lastY = e.clientY;
-    // Direct DOM update — no React re-render!
-    transformRef.current = { ...transformRef.current, x: transformRef.current.x + dx, y: transformRef.current.y + dy };
-    applyTransformDirect();
-  }, [applyTransformDirect]);
-  const handleMouseUp = useCallback(() => {
-    if (dragRef.current.dragging) {
-      dragRef.current.dragging = false;
-      // Sync state for culling update
-      setSpiralTransform({ ...transformRef.current });
-    }
-  }, []);
-  // Block link navigation if user was dragging
-  const handleNodeClick = useCallback((e: React.MouseEvent) => {
-    const dx = Math.abs(e.clientX - dragStartPos.current.x);
-    const dy = Math.abs(e.clientY - dragStartPos.current.y);
-    if (dx > 5 || dy > 5) e.preventDefault(); // was a drag, not a click
-  }, []);
 
   return (
     <div className="mosaic-page animate-fade-in">
@@ -494,7 +410,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         </button>
         {sortedCategories.map(cat => {
           const color = getCatColor(cat);
-          const count = groupedByCategory[cat]?.length || 0;
+          const count = categoryCounts[cat] || 0;
           return (
             <button
               key={cat}
@@ -519,7 +435,6 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
           className={`filter-toggle ${showUnreadOnly ? 'active' : ''}`}
           onClick={() => setShowUnreadOnly(!showUnreadOnly)}
         >◯ Ungelesen</button>
-        {/* Alphabet Quick-Jump */}
         <div className="alpha-index" style={{ flex: 1, marginBottom: 0, padding: '0.3rem 0.4rem' }}>
           {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => {
             const hasItems = filteredData.some(d => d.cleanTitle.toUpperCase().startsWith(letter));
@@ -551,17 +466,24 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                 <div key={cat} className="mosaic-category-group">
                   <div className="mosaic-cat-label" style={{ color }}>
                     <span className="cat-dot" style={{ background: color, width: '8px', height: '8px' }} />
-                    {cat.replace(/_/g, ' ')} ({filteredData.filter(d => d.topCategory === cat).length})
+                    {cat.replace(/_/g, ' ')} ({categoryCounts[cat] || 0})
                   </div>
                   <div className="mosaic-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${tileSize}px, 1fr))` }}>
                     {items.map(item => {
-                      const isRead = readMonographs.includes(item.id);
-                      const isFav = favorites.includes(item.id);
+                      const isRead = readSet.has(item.id);
+                      const isFav = favSet.has(item.id);
                       return (
                         <Link to={`/monograph/${item.id}`} key={item.id}
                           className={`mosaic-tile ${isRead ? 'is-read' : ''}`}
                           style={{ '--tile-color': color } as any}>
-                          <img className="mosaic-portrait" src={item.finalImageUrl || ''} alt={item.cleanTitle} loading="lazy" decoding="async" />
+                          <img
+                            className="mosaic-portrait"
+                            src={item.finalImageUrl || getFallbackImage(item.topCategory)}
+                            alt={item.cleanTitle}
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => handleImgError(e, item.topCategory)}
+                          />
                           <div className="mosaic-tile-overlay">
                             <div className="mosaic-tile-name">{item.cleanTitle}</div>
                             {item.year !== 9999 && <div className="mosaic-tile-year">{item.year}</div>}
@@ -585,74 +507,69 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         </div>
       )}
 
-      {/* === SPIRAL or CIRCLE VIEW (Canvas-based for 60fps) === */}
-      {(viewMode === 'spiral' || viewMode === 'circle') && (() => {
-        return <CanvasSpiral
+      {/* === SPIRAL / CIRCLE VIEW (Canvas) === */}
+      {(viewMode === 'spiral' || viewMode === 'circle') && (
+        <CanvasSpiral
           positions={viewMode === 'spiral' ? spiralPositions : circlePositions}
           viewMode={viewMode}
-          spiralRef={spiralRef}
-          canvasRef={canvasRef}
-          spiralTransform={spiralTransform}
-          setSpiralTransform={setSpiralTransform}
-          transformRef={transformRef}
-          applyTransformDirect={applyTransformDirect}
-          handleMouseDown={handleMouseDown}
-          handleMouseMove={handleMouseMove}
-          handleMouseUp={handleMouseUp}
-          handleNodeClick={handleNodeClick}
           superArms={SUPER_ARMS}
           getArmIndex={getArmIndex}
-        />;
-      })()}
+        />
+      )}
     </div>
   );
 }
 
-// ==================== CANVAS-BASED SPIRAL (60fps) ====================
+// ════════════════════════════════════════════════
+//  CANVAS-BASED SPIRAL/CIRCLE (60fps)
+// ════════════════════════════════════════════════
+
 interface CanvasSpiralProps {
   positions: { item: any; x: number; y: number; armIdx: number }[];
   viewMode: ViewMode;
-  spiralRef: React.RefObject<HTMLDivElement>;
-  canvasRef: React.RefObject<HTMLDivElement>;
-  spiralTransform: { x: number; y: number; scale: number };
-  setSpiralTransform: (t: { x: number; y: number; scale: number }) => void;
-  transformRef: React.MutableRefObject<{ x: number; y: number; scale: number }>;
-  applyTransformDirect: () => void;
-  handleMouseDown: (e: React.MouseEvent) => void;
-  handleMouseMove: (e: React.MouseEvent) => void;
-  handleMouseUp: () => void;
-  handleNodeClick: (e: React.MouseEvent) => void;
   superArms: { name: string; cats: string[]; color: string }[];
   getArmIndex: (cat: string) => number;
 }
 
-function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform, transformRef, superArms, getArmIndex }: CanvasSpiralProps) {
+function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpiralProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasElRef = useRef<HTMLCanvasElement>(null);
   const imgCache = useRef<Map<string, HTMLImageElement>>(new Map());
   const rafRef = useRef<number>(0);
   const dragState = useRef({ dragging: false, lastX: 0, lastY: 0, startX: 0, startY: 0 });
-  const hoverNode = useRef<{ item: any; sx: number; sy: number } | null>(null);
   const [hoveredItem, setHoveredItem] = useState<{ item: any; sx: number; sy: number } | null>(null);
   const navigate = useNavigate();
-  const localTransform = useRef(spiralTransform);
-  localTransform.current = spiralTransform;
+  const localTransform = useRef({ x: 0, y: 0, scale: 0.22 });
   const needsDraw = useRef(true);
+  const hoverRef = useRef<any>(null);
 
-  // Pre-load images
+  // Pre-load images in batches (don't flood the browser)
   useEffect(() => {
     const cache = imgCache.current;
-    positions.forEach(({ item }) => {
-      if (item.finalImageUrl && !cache.has(item.finalImageUrl)) {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = item.finalImageUrl;
-        cache.set(item.finalImageUrl, img);
+    let loadIdx = 0;
+    const BATCH_SIZE = 20;
+
+    const loadBatch = () => {
+      const end = Math.min(loadIdx + BATCH_SIZE, positions.length);
+      for (let i = loadIdx; i < end; i++) {
+        const { item } = positions[i];
+        if (item.finalImageUrl && !cache.has(item.finalImageUrl)) {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => { needsDraw.current = true; };
+          img.src = item.finalImageUrl;
+          cache.set(item.finalImageUrl, img);
+        }
       }
-    });
+      loadIdx = end;
+      if (loadIdx < positions.length) {
+        setTimeout(loadBatch, 100); // stagger loading
+      }
+    };
+    loadBatch();
   }, [positions]);
 
-  // Draw loop
+  // Draw
   const draw = useCallback(() => {
     const canvas = canvasElRef.current;
     const container = containerRef.current;
@@ -680,13 +597,12 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
     ctx.translate(cx + tx, cy + ty);
     ctx.scale(scale, scale);
 
-    // Draw arm guide curves (spiral mode only) — true Archimedean spirals
+    // Arm guide curves (spiral only)
     if (viewMode === 'spiral') {
-      const guideStartR = 58 * 2.5; // must match startR in layout
-      const guideTightness = 0.18;   // must match spiralTightness
-      const guideGrowth = 58 * 0.52; // must match radialGrowth
-      const guideSteps = 55;         // enough points to cover longest arm
-
+      const guideStartR = 58 * 2.5;
+      const guideTightness = 0.18;
+      const guideGrowth = 58 * 0.52;
+      const guideSteps = 55;
       superArms.forEach((arm, i) => {
         const baseAngle = (i / superArms.length) * 2 * Math.PI;
         ctx.beginPath();
@@ -705,46 +621,45 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
       });
     }
 
-    // Draw nodes mit Frustum Culling & LOD
-    const r = 22; // node radius
+    // Draw nodes with frustum culling + LOD
+    const r = 22;
     const cache = imgCache.current;
-    
-    positions.forEach(({ item, x, y }) => {
-      // Culling: Berechne Bildschirmposition
+
+    for (let i = 0; i < positions.length; i++) {
+      const { item, x, y } = positions[i];
       const screenX = cx + tx + x * scale;
       const screenY = cy + ty + y * scale;
       const screenR = r * scale;
 
-      // Wenn der Node komplett außerhalb des sichtbaren Canvas ist, überspringen! (Performance Boost)
-      if (screenX + screenR < 0 || screenX - screenR > w || screenY + screenR < 0 || screenY - screenR > h) {
-        return;
+      // Frustum culling
+      if (screenX + screenR < -50 || screenX - screenR > w + 50 || screenY + screenR < -50 || screenY - screenR > h + 50) {
+        continue;
       }
 
       const color = superArms[getArmIndex(item.topCategory)]?.color || '#64748b';
-      const img = cache.get(item.finalImageUrl);
 
-      // LOD (Level of Detail): Wenn extrem rausgezoomt, zeichne nur kleine Punkte statt komplexer Clipping-Masken
+      // LOD: ultra-small dots when zoomed out
       if (scale < 0.1) {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
-        return;
+        continue;
       }
 
-      // Draw border circle
+      // Border circle
       ctx.beginPath();
       ctx.arc(x, y, r + 1.5, 0, Math.PI * 2);
       ctx.fillStyle = color;
       ctx.fill();
 
-      // Draw image circle
+      // Image circle
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.clip();
-      
-      // Nur Bilder zeichnen, wenn nicht zu klein
+
+      const img = cache.get(item.finalImageUrl);
       if (scale >= 0.15 && img && img.complete && img.naturalWidth > 0) {
         ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
       } else {
@@ -753,7 +668,7 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
       }
       ctx.restore();
 
-      // Draw tiny label
+      // Label (only when zoomed in enough)
       if (scale > 0.6) {
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.font = '4px Inter, sans-serif';
@@ -761,9 +676,9 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
         const label = item.cleanTitle.length > 12 ? item.cleanTitle.slice(0, 11) + '…' : item.cleanTitle;
         ctx.fillText(label, x, y + r + 6);
       }
-    });
+    }
 
-    // Draw center
+    // Center glow
     ctx.fillStyle = 'rgba(0,200,255,0.06)';
     ctx.beginPath();
     ctx.arc(0, 0, 60, 0, Math.PI * 2);
@@ -777,7 +692,7 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
     ctx.restore();
   }, [positions, viewMode, superArms, getArmIndex]);
 
-  // Animation frame loop
+  // Animation frame loop — only draws when needed
   useEffect(() => {
     let running = true;
     needsDraw.current = true;
@@ -793,7 +708,7 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
     return () => { running = false; cancelAnimationFrame(rafRef.current); };
   }, [draw]);
 
-  // Mouse handlers (direct, no React state during drag)
+  // Pan
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     dragState.current = { dragging: true, lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY };
@@ -809,20 +724,19 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
       localTransform.current = { ...localTransform.current, x: localTransform.current.x + dx, y: localTransform.current.y + dy };
       needsDraw.current = true;
     } else {
-      // Hit test for hover
+      // Hover hit test
       const canvas = canvasElRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       const { x: tx, y: ty, scale } = localTransform.current;
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-      // Convert mouse to world coords
-      const wx = (mx - cx - tx) / scale;
-      const wy = (my - cy - ty) / scale;
+      const cxp = rect.width / 2;
+      const cyp = rect.height / 2;
+      const wx = (mx - cxp - tx) / scale;
+      const wy = (my - cyp - ty) / scale;
 
-      let found: typeof hoverNode.current = null;
+      let found: any = null;
       for (const pos of positions) {
         const dx = pos.x - wx;
         const dy = pos.y - wy;
@@ -831,44 +745,34 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
           break;
         }
       }
-      if (found?.item?.id !== hoverNode.current?.item?.id) {
-        hoverNode.current = found;
+      if (found?.item?.id !== hoverRef.current?.item?.id) {
+        hoverRef.current = found;
         setHoveredItem(found);
-        needsDraw.current = true;
       }
     }
   }, [positions]);
 
   const onMouseUp = useCallback(() => {
-    const ds = dragState.current;
-    if (ds.dragging) {
-      ds.dragging = false;
-      setSpiralTransform({ ...localTransform.current });
-    }
-  }, [setSpiralTransform]);
+    dragState.current.dragging = false;
+  }, []);
 
   const onClick = useCallback((e: React.MouseEvent) => {
     const ds = dragState.current;
-    const dx = Math.abs(e.clientX - ds.startX);
-    const dy = Math.abs(e.clientY - ds.startY);
-    if (dx > 5 || dy > 5) return; // was a drag
-
-    // Hit test
+    if (Math.abs(e.clientX - ds.startX) > 5 || Math.abs(e.clientY - ds.startY) > 5) return;
     const canvas = canvasElRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
     const { x: tx, y: ty, scale } = localTransform.current;
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    const wx = (mx - cx - tx) / scale;
-    const wy = (my - cy - ty) / scale;
-
+    const cxp = rect.width / 2;
+    const cyp = rect.height / 2;
+    const wx = (mx - cxp - tx) / scale;
+    const wy = (my - cyp - ty) / scale;
     for (const pos of positions) {
-      const ddx = pos.x - wx;
-      const ddy = pos.y - wy;
-      if (ddx * ddx + ddy * ddy < 24 * 24) {
+      const dx = pos.x - wx;
+      const dy = pos.y - wy;
+      if (dx * dx + dy * dy < 24 * 24) {
         navigate(`/monograph/${pos.item.id}`);
         return;
       }
@@ -898,7 +802,7 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
       onClick={onClick}
-      style={{ cursor: dragState.current.dragging ? 'grabbing' : 'grab' }}
+      style={{ cursor: 'grab' }}
     >
       <canvas ref={canvasElRef} style={{ display: 'block', width: '100%', height: '100%' }} />
       {hoveredItem && (
@@ -919,8 +823,12 @@ function CanvasSpiral({ positions, viewMode, spiralTransform, setSpiralTransform
   );
 }
 
+// ════════════════════════════════════════════════
+//  MONOGRAPH READER (Content loaded on demand!)
+// ════════════════════════════════════════════════
+
 interface ReaderProps {
-  data: Monograph[];
+  data: MonographMeta[];
   markAsRead: (id: string) => void;
   favorites: string[];
   toggleFavorite: (id: string) => void;
@@ -929,17 +837,52 @@ interface ReaderProps {
 function MonographReader({ data, markAsRead, favorites, toggleFavorite }: ReaderProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const monograph = data.find(d => d.id === id);
+  const meta = data.find(d => d.id === id);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [readProgress, setReadProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showToc, setShowToc] = useState(false);
   const headingIndexRef = useRef(0);
 
-  // Parse headings for Table of Contents
+  // ── Lazy-load content on demand ──
+  const [content, setContent] = useState<string | null>(null);
+  const [loadingContent, setLoadingContent] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoadingContent(true);
+    setContent(null);
+
+    // Try individual content file first, fall back to legacy data.json
+    fetch(`/data-content/${id}.json`)
+      .then(res => {
+        if (!res.ok) throw new Error('Content file not found');
+        return res.json();
+      })
+      .then(data => {
+        setContent(data.content);
+        setLoadingContent(false);
+      })
+      .catch(() => {
+        // Fallback: fetch from legacy monolithic data.json
+        fetch(`/data.json?_=${Date.now()}`)
+          .then(res => res.json())
+          .then(all => {
+            const found = all.find((m: any) => m.id === id);
+            setContent(found?.content || 'Inhalt konnte nicht geladen werden.');
+            setLoadingContent(false);
+          })
+          .catch(() => {
+            setContent('Inhalt konnte nicht geladen werden.');
+            setLoadingContent(false);
+          });
+      });
+  }, [id]);
+
+  // Parse headings for ToC
   const headings = useMemo(() => {
-    if (!monograph) return [];
-    return monograph.content.split('\n')
+    if (!content) return [];
+    return content.split('\n')
       .filter(l => /^#{2,3}\s/.test(l))
       .map((l, i) => {
         const level = l.startsWith('### ') ? 3 : 2;
@@ -947,7 +890,7 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
         const slug = `toc-${i}-${text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 40)}`;
         return { level, text, slug };
       });
-  }, [monograph]);
+  }, [content]);
 
   const scrollToHeading = useCallback((slug: string) => {
     const el = scrollContainerRef.current?.querySelector(`[id="${slug}"]`);
@@ -955,19 +898,19 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
     setShowToc(false);
   }, []);
 
-  // Related monographs from same top-level category
+  // Related monographs
   const relatedMonographs = useMemo(() => {
-    if (!monograph) return [];
-    const myCat = monograph.category.split(' / ')[0];
+    if (!meta) return [];
+    const myCat = meta.category.split(' / ')[0];
     return data
-      .filter(d => d.id !== monograph.id && d.category.split(' / ')[0] === myCat)
+      .filter(d => d.id !== meta.id && d.category.split(' / ')[0] === myCat)
       .sort((a, b) => a.title.localeCompare(b.title))
       .slice(0, 4);
-  }, [monograph, data]);
+  }, [meta, data]);
 
   useEffect(() => {
-    if (id && monograph) markAsRead(id);
-  }, [id, monograph, markAsRead]);
+    if (id && meta) markAsRead(id);
+  }, [id, meta, markAsRead]);
 
   useEffect(() => {
     const el = scrollContainerRef.current;
@@ -976,7 +919,7 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
     setShowScrollTop(false);
   }, [id]);
 
-  // Scroll progress + scroll-to-top visibility
+  // Scroll progress
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -988,18 +931,16 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
     };
     el.addEventListener('scroll', handler, { passive: true });
     return () => el.removeEventListener('scroll', handler);
-  }, [monograph]);
+  }, [content]);
 
-  // Keyboard: Escape to go back
+  // Escape to go back
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') navigate(-1);
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') navigate(-1); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [navigate]);
 
-  if (!monograph) {
+  if (!meta) {
     return (
       <div className="app-layout">
         <div className="reader-content glass" style={{ textAlign: 'center' }}>
@@ -1011,12 +952,11 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
   }
 
   const isFav = id ? favorites.includes(id) : false;
-  const wordCount = monograph.wordCount || monograph.content.split(/\s+/).filter(Boolean).length;
+  const wordCount = meta.wordCount || 0;
   const readTimeMin = Math.max(1, Math.round(wordCount / 200));
 
   return (
     <div ref={scrollContainerRef} style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', overflowY: 'auto', background: 'var(--bg-dark)' }}>
-      {/* Reading Progress Bar */}
       <div className="reading-progress-bar" style={{ width: `${readProgress}%` }} />
 
       <div className="app-layout">
@@ -1036,46 +976,55 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
                 title={isFav ? 'Favorit entfernen' : 'Als Favorit markieren'}
                 style={{ fontSize: '1.3rem' }}
               >★</button>
-              <span className="category-badge">{monograph.category.split(' / ').pop()?.replace(/_/g, ' ')}</span>
+              <span className="category-badge">{meta.category.split(' / ').pop()?.replace(/_/g, ' ')}</span>
             </div>
           </nav>
-          
+
           <article className="reader-content glass">
-            <ReactMarkdown 
-              remarkPlugins={[remarkGfm]}
-              components={{
-                a: ({node, ...props}) => {
-                  const href = props.href || '';
-                  if (href.startsWith('/monograph/')) {
-                    return <Link to={href} className="wiki-link">{props.children}</Link>;
+            {loadingContent ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 0' }}>
+                <div className="spinner" style={{ width: '40px', height: '40px' }}></div>
+                <p style={{ color: 'var(--text-muted)', marginTop: '1rem', fontSize: '0.85rem' }}>Monographie wird geladen...</p>
+              </div>
+            ) : content ? (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({node, ...props}) => {
+                    const href = props.href || '';
+                    if (href.startsWith('/monograph/')) {
+                      return <Link to={href} className="wiki-link">{props.children}</Link>;
+                    }
+                    return <a target="_blank" rel="noopener noreferrer" className="external-link" {...props}>{props.children}</a>;
+                  },
+                  h2: ({node, children, ...props}: any) => {
+                    const idx = headingIndexRef.current++;
+                    const heading = headings.find((h, i) => h.level === 2 && i === idx);
+                    const slug = heading ? heading.slug : `h2-${idx}`;
+                    return <h2 id={slug} {...props}>{children}</h2>;
+                  },
+                  h3: ({node, children, ...props}: any) => {
+                    const idx = headingIndexRef.current++;
+                    const heading = headings.find((h, i) => h.level === 3 && i === idx);
+                    const slug = heading ? heading.slug : `h3-${idx}`;
+                    return <h3 id={slug} {...props}>{children}</h3>;
                   }
-                  return <a target="_blank" rel="noopener noreferrer" className="external-link" {...props}>{props.children}</a>;
-                },
-                h2: ({node, children, ...props}: any) => {
-                  const idx = headingIndexRef.current++;
-                  const heading = headings.find((h, i) => h.level === 2 && i === idx);
-                  const slug = heading ? heading.slug : `h2-${idx}`;
-                  return <h2 id={slug} {...props}>{children}</h2>;
-                },
-                h3: ({node, children, ...props}: any) => {
-                  const idx = headingIndexRef.current++;
-                  const heading = headings.find((h, i) => h.level === 3 && i === idx);
-                  const slug = heading ? heading.slug : `h3-${idx}`;
-                  return <h3 id={slug} {...props}>{children}</h3>;
-                }
-              }}
-            >
-              {(() => { headingIndexRef.current = 0; return monograph.content; })()}
-            </ReactMarkdown>
+                }}
+              >
+                {(() => { headingIndexRef.current = 0; return content; })()}
+              </ReactMarkdown>
+            ) : null}
 
             {/* Related Monographs */}
-            {relatedMonographs.length > 0 && (
+            {!loadingContent && relatedMonographs.length > 0 && (
               <div className="related-section">
                 <div className="related-title">Verwandte Monographien</div>
                 <div className="related-grid">
                   {relatedMonographs.map(rm => (
                     <Link to={`/monograph/${rm.id}`} key={rm.id} className="related-card">
-                      <div className="related-card-img" style={{ backgroundImage: `url(${rm.imageUrl || ''})` }} />
+                      <div className="related-card-img" style={{
+                        backgroundImage: `url(${rm.finalImageUrl || getFallbackImage(rm.topCategory)})`,
+                      }} />
                       <div className="related-card-info">
                         <div className="related-card-title">{rm.cleanTitle}</div>
                       </div>
@@ -1106,7 +1055,7 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
         </div>
       </div>
 
-      {/* Scroll to Top Button */}
+      {/* Scroll to Top */}
       <button
         className={`scroll-to-top ${showScrollTop ? 'visible' : ''}`}
         onClick={() => scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -1116,8 +1065,12 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
   );
 }
 
+// ════════════════════════════════════════════════
+//  APP ROOT
+// ════════════════════════════════════════════════
+
 export default function App() {
-  const [data, setData] = useState<Monograph[]>([]);
+  const [data, setData] = useState<MonographMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [readMonographs, setReadMonographs] = useLocalStorage<string[]>('spiral-wiki-read', []);
   const [favorites, setFavorites] = useLocalStorage<string[]>('spiral-wiki-favorites', []);
@@ -1138,23 +1091,41 @@ export default function App() {
   }, [setFavorites]);
 
   useEffect(() => {
-    const processJson = (json: any[]) => {
-      setData(json);
-      setLoading(false);
-    };
-
-    // Try window.__WIKI_DATA__ first (standalone mode), then fetch
-    if ((window as any).__WIKI_DATA__) {
-      processJson((window as any).__WIKI_DATA__);
-    } else {
-      fetch(`/data.json?_=${Date.now()}`)
-        .then(res => res.json())
-        .then(processJson)
-        .catch(err => {
-          console.error("Failed to load wiki data", err);
-          setLoading(false);
-        });
-    }
+    // Load the TINY index file (~50KB) instead of the monolithic 5.9MB data.json
+    fetch(`/data-index.json?_=${Date.now()}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Index not found, falling back to legacy');
+        return res.json();
+      })
+      .then(json => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Fallback: legacy data.json (if data-index.json not yet built)
+        fetch(`/data.json?_=${Date.now()}`)
+          .then(res => res.json())
+          .then(json => {
+            // Strip content from legacy data to keep memory low
+            const stripped = json.map((m: any) => ({
+              id: m.id,
+              title: m.title,
+              cleanTitle: m.cleanTitle,
+              category: m.category,
+              topCategory: m.topCategory,
+              year: m.year,
+              finalImageUrl: m.finalImageUrl,
+              hasRealImage: m.hasRealImage,
+              wordCount: m.wordCount,
+            }));
+            setData(stripped);
+            setLoading(false);
+          })
+          .catch(err => {
+            console.error('Failed to load wiki data', err);
+            setLoading(false);
+          });
+      });
   }, []);
 
   if (loading) {
