@@ -553,7 +553,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
                     <span className="cat-dot" style={{ background: color, width: '8px', height: '8px' }} />
                     {cat.replace(/_/g, ' ')} ({filteredData.filter(d => d.topCategory === cat).length})
                   </div>
-                  <div className="mosaic-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(200px, 1fr))` }}>
+                  <div className="mosaic-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${tileSize}px, 1fr))` }}>
                     {items.map(item => {
                       const isRead = readMonographs.includes(item.id);
                       const isFav = favorites.includes(item.id);
