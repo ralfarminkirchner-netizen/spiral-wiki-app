@@ -71,13 +71,38 @@ const IMAGE_OVERRIDES = {
   'Andreas Knöpken': 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Riga_Peter_church.jpg',
   'Andreas Poach': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
   'Andreas Wilms': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
+  'Anton Anger': 'https://upload.wikimedia.org/wikipedia/commons/1/13/Lutherbibel.jpg',
+  'Anton Corvinus': 'https://upload.wikimedia.org/wikipedia/commons/8/88/Anton_Corvinus_1501-1553.jpg',
+  'Antoine Froment': 'https://upload.wikimedia.org/wikipedia/commons/a/a2/ReformationWallGeneva.JPG',
+  'Antoine Yvan': 'https://upload.wikimedia.org/wikipedia/commons/8/88/Cours_Mirabeau_2.jpg',
+  'Andreas Eössi': 'https://upload.wikimedia.org/wikipedia/commons/8/88/Biserica_Unitarian%C4%83_din_Cluj.jpg',
+  'Anna Vetter': 'https://upload.wikimedia.org/wikipedia/commons/0/03/Gottfried_Arnold_-_Identity.jpg',
   // ── Soziologie ──
   'Alfred Richter': 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Bundesarchiv_Bild_102-04062A%2C_N%C3%BCrnberg%2C_Reichsparteitag%2C_SA-_und_SS-Appell.jpg',
-  // ── Spiritualität ──
+  'Aly Mazahéri': 'https://upload.wikimedia.org/wikipedia/commons/1/10/Opening_page_from_the_manuscript_of_%22Hikmat_al-%CA%BFIshraq%22_by_al-Suhrawardi.jpg',
+  'André Bleicher': 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Hochschule_Biberach_-_Geb%C3%A4ude_B.jpg',
+  'André Gunder Frank': 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Dependency_theory.svg',
+  'Andreas von Meyendorff': 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Burg_Ummendorf.JPG',
+  'Angelika Ebbinghaus': 'https://upload.wikimedia.org/wikipedia/commons/d/dd/Doctors%27_trial%2C_Nuremberg%2C_1946%E2%80%931947.jpg',
+  'Annette Spellerberg': 'https://upload.wikimedia.org/wikipedia/commons/b/b2/RPTU_Kaiserslautern_Geb%C3%A4ude_42.jpg',
+  'Aram Ziai': 'https://upload.wikimedia.org/wikipedia/commons/0/0e/Kassel_University.jpg',
+  // ── Spiritualität & Tradition ──
   'Dschalal ad-Din Rumi': 'https://upload.wikimedia.org/wikipedia/commons/5/55/Maulana_Jalaluddin_Mohammad_Balkhi_by_Hossein_Behzad_-_1957.png',
   'Sri Aurobindo Ghose': 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Sri_Aurobindo.jpg',
-  // ── Wissenschaft ──
+  'Alfons Rosenberg': 'https://upload.wikimedia.org/wikipedia/commons/6/60/Eranos_meeting_1938.jpg',
+  'Alfonso Paleotti': 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Basilica_di_San_Petronio_-_Bologna.jpg',
+  'Ali ibn Sahl Isfahani': 'https://upload.wikimedia.org/wikipedia/commons/2/21/Naghshe_Jahan_Square_Isfahan_modified.jpg',
+  'Gnosis': 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Abraxas3.jpg',
+  'Valentinianische Gnosis': 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Valentinianpleroma-Matter.png',
+  'Suhrawardi': 'https://upload.wikimedia.org/wikipedia/commons/1/10/Opening_page_from_the_manuscript_of_%22Hikmat_al-%CA%BFIshraq%22_by_al-Suhrawardi.jpg',
+  // ── Wissenschaft & Konzepte ──
   'Archimedes von Syrakus': 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Domenico-Fetti_Archimedes_1620.jpg',
+  'Holographisches Prinzip und Quantengravitation': 'https://upload.wikimedia.org/wikipedia/commons/e/e5/AdS_CFT.png',
+  'Kybernetik 2.0': 'https://upload.wikimedia.org/wikipedia/commons/b/b8/SOCyberntics.png',
+  'Systemtheorie und Kybernetik': 'https://upload.wikimedia.org/wikipedia/commons/2/2b/Feedback_loop_with_descriptions.svg',
+  'Crossover-Dossier': 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Venn_A_intersect_B.svg',
+  // ── Arbeitspsychologie ──
+  'Antje Ducki': 'https://upload.wikimedia.org/wikipedia/commons/b/b6/Beuth_Hochschule_Haus_Grashof.jpg',
 };
 
 function sanitizeImageUrl(url, title, topCategory) {
