@@ -3,11 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta name="theme-color" content="#0d1117" />
     <link rel="manifest" href="/manifest.json">
+    
+    <!-- DNS Prefetch & Preconnect for faster image + font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://upload.wikimedia.org" crossorigin>
+    <link rel="dns-prefetch" href="https://upload.wikimedia.org">
+    
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
     
     <!-- Preload the tiny index file for instant startup -->
@@ -19,12 +25,17 @@
     <meta name="apple-mobile-web-app-title" content="SPiRAL MiND">
     <meta name="application-name" content="SPiRAL MiND">
     
-    <meta name="description" content="Eine kybernetische Erkundung von Geist, Welt und Systemen.">
+    <!-- SEO -->
+    <meta name="description" content="SPiRAL MiND WiKi — Eine kybernetische Erkundung von Geist, Welt und Systemen. 712+ Monographien über Philosophie, Psychologie, Wissenschaft, Spiritualität und Bewusstseinsforschung.">
+    <meta name="keywords" content="Spiral Mind, Wiki, Bewusstseinsforschung, Philosophie, Psychologie, Kybernetik, Spiritualität, Wissenschaft">
+    <meta property="og:title" content="SPiRAL MiND WiKi">
+    <meta property="og:description" content="712+ Monographien über Geist, Welt und Systeme — von Philosophie über Neurowissenschaften bis Spiritualität.">
+    <meta property="og:type" content="website">
+    
     <title>SPiRAL MiND WiKi</title>
   </head>
   <body>
     <div id="root"></div>
-    <!-- NO more synchronous 5.9MB appData.js! Data is now fetched async by React. -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
