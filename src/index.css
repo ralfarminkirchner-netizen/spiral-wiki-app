@@ -72,7 +72,7 @@ html, body {
   font-size: 0.68rem;
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
   white-space: nowrap;
 }
 .cat-legend-item:hover {
@@ -252,7 +252,7 @@ html, body {
   font-weight: 700;
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 .zoom-btn:not(:last-child) {
   border-right: 1px solid rgba(255,255,255,0.1);
@@ -283,7 +283,7 @@ html, body {
   font-weight: 600;
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 .view-toggle-btn:not(:last-child) {
   border-right: 1px solid rgba(255,255,255,0.1);
@@ -570,7 +570,7 @@ html, body {
   font-weight: 500;
   border-bottom: 1px dashed rgba(0, 240, 255, 0.4);
   padding-bottom: 2px;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease, text-shadow 0.2s ease;
 }
 
 .wiki-link:hover {
@@ -652,8 +652,7 @@ html, body {
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.8rem;
-  background: rgba(15, 17, 26, 0.6);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 17, 26, 0.85);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 20px;
   font-size: 0.75rem;
@@ -702,7 +701,7 @@ html, body {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   opacity: 0;
   transform: translateY(20px);
   pointer-events: none;
@@ -728,7 +727,7 @@ html, body {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   font-family: var(--font-sans);
 }
 .random-btn:hover {
@@ -803,8 +802,7 @@ html, body {
 }
 .filter-select {
   padding: 0.4rem 0.8rem;
-  background: rgba(15, 17, 26, 0.7);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 17, 26, 0.88);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 20px;
   color: var(--text-main);
@@ -812,7 +810,7 @@ html, body {
   font-family: var(--font-sans);
   cursor: pointer;
   outline: none;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   appearance: none;
   -webkit-appearance: none;
   padding-right: 1.8rem;
@@ -830,15 +828,14 @@ html, body {
 }
 .filter-toggle {
   padding: 0.35rem 0.8rem;
-  background: rgba(15, 17, 26, 0.6);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 17, 26, 0.85);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 20px;
   color: rgba(255,255,255,0.5);
   font-size: 0.78rem;
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .filter-toggle:hover {
   border-color: rgba(255,255,255,0.2);
@@ -859,15 +856,14 @@ html, body {
 
 /* === TABLE OF CONTENTS === */
 .toc-toggle {
-  background: rgba(15,17,26,0.8);
-  backdrop-filter: blur(10px);
+  background: rgba(15,17,26,0.9);
   border: 1px solid rgba(0,240,255,0.2);
   border-radius: 8px;
   color: var(--accent-cyan);
   font-size: 0.75rem;
   padding: 0.3rem 0.7rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
   font-family: var(--font-sans);
   white-space: nowrap;
 }
@@ -933,7 +929,7 @@ html, body {
   font-size: 0.82rem;
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease, border-left-color 0.15s ease;
   line-height: 1.4;
   border-left: 2px solid transparent;
 }
@@ -977,7 +973,7 @@ html, body {
   overflow: hidden;
   text-decoration: none;
   color: #fff;
-  transition: all 0.25s ease;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .related-card:hover {
   transform: translateY(-3px);
@@ -1012,8 +1008,7 @@ html, body {
   gap: 0.3rem;
   margin-bottom: 1.5rem;
   padding: 0.6rem;
-  background: rgba(15,17,26,0.5);
-  backdrop-filter: blur(10px);
+  background: rgba(15,17,26,0.8);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 16px;
 }
@@ -1031,7 +1026,7 @@ html, body {
   font-weight: 600;
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 .alpha-letter:hover {
   background: rgba(189,0,255,0.15);
@@ -1082,7 +1077,7 @@ html, body {
   color: #a78bfa;
   text-decoration: none;
   border-bottom: 1px dotted rgba(167,139,250,0.4);
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 .external-link:hover {
   color: #c4b5fd;

@@ -180,22 +180,18 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
   }, [data, navigate]);
 
   // ── Data Processing (no content = instant) ──
-  const processedData = useMemo(() => {
-    return data.map(item => ({ ...item, catColor: getCatColor(item.topCategory) }));
-  }, [data]);
-
   const sortedCategories = useMemo(() => {
     const cats = new Set<string>();
-    processedData.forEach(d => cats.add(d.topCategory));
+    data.forEach(d => cats.add(d.topCategory));
     return Array.from(cats).sort();
-  }, [processedData]);
+  }, [data]);
 
   // Create Sets for O(1) lookups instead of .includes() on arrays
   const readSet = useMemo(() => new Set(readMonographs), [readMonographs]);
   const favSet = useMemo(() => new Set(favorites), [favorites]);
 
   const filteredData = useMemo(() => {
-    return processedData.filter(d => {
+    return data.filter(d => {
       if (search) {
         const q = search.toLowerCase();
         if (!d.title.toLowerCase().includes(q) && !d.category.toLowerCase().includes(q)) return false;
@@ -206,13 +202,23 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
       if (alphaFilter && !d.cleanTitle.toUpperCase().startsWith(alphaFilter)) return false;
       return true;
     });
-  }, [processedData, search, activeCategory, showFavoritesOnly, showUnreadOnly, favSet, readSet, alphaFilter]);
+  }, [data, search, activeCategory, showFavoritesOnly, showUnreadOnly, favSet, readSet, alphaFilter]);
 
   // ── Category counts (computed from filteredData, not groupedByCategory) ──
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     filteredData.forEach(d => { counts[d.topCategory] = (counts[d.topCategory] || 0) + 1; });
     return counts;
+  }, [filteredData]);
+
+  // ── Memoized alpha-letter availability (was 26x O(n) per render!) ──
+  const availableLetters = useMemo(() => {
+    const letters = new Set<string>();
+    filteredData.forEach(d => {
+      const first = d.cleanTitle.charAt(0).toUpperCase();
+      if (first) letters.add(first);
+    });
+    return letters;
   }, [filteredData]);
 
   // ── Infinite Scroll Observer ──
@@ -437,7 +443,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
         >◯ Ungelesen</button>
         <div className="alpha-index" style={{ flex: 1, marginBottom: 0, padding: '0.3rem 0.4rem' }}>
           {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => {
-            const hasItems = filteredData.some(d => d.cleanTitle.toUpperCase().startsWith(letter));
+            const hasItems = availableLetters.has(letter);
             return (
               <button
                 key={letter}
@@ -837,7 +843,9 @@ interface ReaderProps {
 function MonographReader({ data, markAsRead, favorites, toggleFavorite }: ReaderProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const meta = data.find(d => d.id === id);
+  // O(1) lookup via Map instead of O(n) Array.find()
+  const dataMap = useMemo(() => new Map(data.map(d => [d.id, d])), [data]);
+  const meta = id ? dataMap.get(id) : undefined;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [readProgress, setReadProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
