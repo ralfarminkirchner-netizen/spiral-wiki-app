@@ -48,7 +48,43 @@ const BROKEN_IMAGE_FIXES = {
   'Arthur B. Chatelain': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/GodfreyKneller-IsaacNewton-1689.jpg/440px-GodfreyKneller-IsaacNewton-1689.jpg',
 };
 
+// Curated image overrides: replaces generic category fallbacks with
+// specific portraits, artworks, or thematic images for individual entries
+const IMAGE_OVERRIDES = {
+  // ── Psychologie (echte Portraits!) ──
+  'C.G. Jung': 'https://upload.wikimedia.org/wikipedia/commons/0/00/CGJung.jpg',
+  'R.D. Laing': 'https://upload.wikimedia.org/wikipedia/commons/3/35/Ronald_D._Laing.jpg',
+  'August Dvorak': 'https://upload.wikimedia.org/wikipedia/commons/2/25/KB_United_States_Dvorak.svg',
+  'Arthur Aron': 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Heart_coraz%C3%B3n.svg',
+  'Arndt Bröder': 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Cognitive_science_heptagram.svg',
+  'Arnold Sherwood Tannenbaum': 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Organization_chart.svg',
+  'Anne Böckler-Raettig': 'https://upload.wikimedia.org/wikipedia/commons/5/56/Eye_contact.jpg',
+  'Annemarie Buchholz-Kaiser': 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Zurich_Grossm%C3%BCnster.jpg',
+  'Alexander von Eye': 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Spaghetti_plot_-_Monte_Carlo.png',
+  'Andreas Beelmann': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Jena_Panorama.jpg/800px-Jena_Panorama.jpg',
+  // ── Philosophie ──
+  'Dialektik der Aufklärung': 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Adorno-horkheimer.jpg',
+  // ── Reformation (thematische Bilder) ──
+  'Ambrosius Feierabend': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Elbing_Marienkirche.jpg/800px-Elbing_Marienkirche.jpg',
+  'Anarg zu Wildenfels': 'https://upload.wikimedia.org/wikipedia/commons/a/a1/Wappen_Wildenfels.png',
+  'Andreas Kauxdorf': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
+  'Andreas Knöpken': 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Riga_Peter_church.jpg',
+  'Andreas Poach': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
+  'Andreas Wilms': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
+  // ── Soziologie ──
+  'Alfred Richter': 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Bundesarchiv_Bild_102-04062A%2C_N%C3%BCrnberg%2C_Reichsparteitag%2C_SA-_und_SS-Appell.jpg',
+  // ── Spiritualität ──
+  'Dschalal ad-Din Rumi': 'https://upload.wikimedia.org/wikipedia/commons/5/55/Maulana_Jalaluddin_Mohammad_Balkhi_by_Hossein_Behzad_-_1957.png',
+  'Sri Aurobindo Ghose': 'https://upload.wikimedia.org/wikipedia/commons/4/4a/Sri_Aurobindo.jpg',
+  // ── Wissenschaft ──
+  'Archimedes von Syrakus': 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Domenico-Fetti_Archimedes_1620.jpg',
+};
+
 function sanitizeImageUrl(url, title, topCategory) {
+  // Check curated overrides first (highest priority)
+  if (IMAGE_OVERRIDES[title]) {
+    return IMAGE_OVERRIDES[title];
+  }
   if (!url) return null;
   // Fix local file paths (will 404 in production)
   if (url.startsWith('/Users/') || url.startsWith('/home/') || url.startsWith('/tmp/')) {
