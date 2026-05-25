@@ -2,6 +2,7 @@ import { Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import * as PIXI from 'pixi.js';
 
 // ─── Utilities ───
 
@@ -539,227 +540,220 @@ interface CanvasSpiralProps {
 
 function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpiralProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasElRef = useRef<HTMLCanvasElement>(null);
-  const imgCache = useRef<Map<string, HTMLImageElement>>(new Map());
-  const rafRef = useRef<number>(0);
-  const dragState = useRef({ dragging: false, lastX: 0, lastY: 0, startX: 0, startY: 0 });
-  const [hoveredItem, setHoveredItem] = useState<{ item: any; sx: number; sy: number } | null>(null);
-  const navigate = useNavigate();
-  
-  // NEW: targetTransform for physics-based lerping, currentTransform for actual drawing
+  const appRef = useRef<PIXI.Application | null>(null);
   const targetTransform = useRef({ x: 0, y: 0, scale: 0.22 });
   const currentTransform = useRef({ x: 0, y: 0, scale: 0.22 });
-  const hoverRef = useRef<any>(null);
+  const [hoveredItem, setHoveredItem] = useState<{ item: any; sx: number; sy: number } | null>(null);
+  const navigate = useNavigate();
+  const dragState = useRef({ dragging: false, lastX: 0, lastY: 0, startX: 0, startY: 0 });
 
-  // Lazy Loading Queue State
-  const loadingQueue = useRef<Set<string>>(new Set());
-
-  // Auto-Fit Initial-Scale depending on positions-Layout
+  // PixiJS Initialization & Scene Graph
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container || positions.length === 0) return;
-    let maxR = 0;
-    for (const p of positions) {
-      const d = Math.hypot(p.x, p.y);
-      if (d > maxR) maxR = d;
-    }
-    if (maxR <= 0) return;
-    const w = container.clientWidth || 1000;
-    const h = container.clientHeight || 800;
-    const fitScale = Math.max(0.08, Math.min(0.6, (Math.min(w, h) * 0.42) / maxR));
+    const el = containerRef.current;
+    if (!el) return;
+
+    let isDestroyed = false;
+    const app = new PIXI.Application();
     
-    // Jump instantly on mount or mode change
-    targetTransform.current = { x: 0, y: 0, scale: fitScale };
-  }, [positions, viewMode]);
+    app.init({
+      resizeTo: el,
+      backgroundAlpha: 0,
+      resolution: window.devicePixelRatio || 1,
+      autoDensity: true,
+      antialias: true
+    }).then(() => {
+      if (isDestroyed) {
+        app.destroy(true);
+        return;
+      }
+      el.appendChild(app.canvas);
+      appRef.current = app;
 
-  // Main Draw / Physics Loop
-  const tick = useCallback(() => {
-    const canvas = canvasElRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
+      const world = new PIXI.Container();
+      app.stage.addChild(world);
 
-    // Physics Lerp (Interpolation)
-    const dt = 0.15; // Speed of lerp
-    const cur = currentTransform.current;
-    const tar = targetTransform.current;
-    
-    // Calculate difference
-    const diffX = tar.x - cur.x;
-    const diffY = tar.y - cur.y;
-    const diffScale = tar.scale - cur.scale;
-    
-    // Update current with dampening
-    cur.x += diffX * dt;
-    cur.y += diffY * dt;
-    cur.scale += diffScale * dt;
+      const r = 22;
+      const nodeMap = new Map();
+      const loadQueue = new Set<string>();
+      const cache = new Set<string>();
 
-    const dpr = window.devicePixelRatio || 1;
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      canvas.style.width = w + 'px';
-      canvas.style.height = h + 'px';
-    }
+      // Center Glow
+      const glow = new PIXI.Graphics();
+      glow.circle(0, 0, 60).fill({ color: 0x00c8ff, alpha: 0.06 });
+      world.addChild(glow);
 
-    const ctx = canvas.getContext('2d')!;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-
-    const cx = w / 2;
-    const cy = h / 2;
-
-    ctx.save();
-    ctx.translate(cx + cur.x, cy + cur.y);
-    ctx.scale(cur.scale, cur.scale);
-
-    // Arm guide curves (spiral only)
-    if (viewMode === 'spiral') {
-      const guideStartR = 58 * 2.5;
-      const guideTightness = 0.18;
-      const guideGrowth = 58 * 0.52;
-      const guideSteps = 55;
-      superArms.forEach((arm, i) => {
-        const baseAngle = (i / superArms.length) * 2 * Math.PI;
-        ctx.beginPath();
-        for (let s = 0; s <= guideSteps; s++) {
-          const theta = s * guideTightness;
-          const rr = guideStartR + s * guideGrowth;
-          const angle = baseAngle + theta;
-          const px = rr * Math.cos(angle);
-          const py = rr * Math.sin(angle);
-          if (s === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
-        ctx.strokeStyle = arm.color + '18';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+      const textTitle = new PIXI.Text({
+        text: 'SPiRAL\nMiND',
+        style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: 10, fill: 0xffffff, alpha: 0.2, fontWeight: 'bold', align: 'center' }
       });
-    }
+      textTitle.anchor.set(0.5);
+      world.addChild(textTitle);
 
-    // Draw nodes with strict frustum culling + lazy loading
-    const r = 22;
-    const cache = imgCache.current;
-    const queue = loadingQueue.current;
-
-    for (let i = 0; i < positions.length; i++) {
-      const { item, x, y } = positions[i];
-      const screenX = cx + cur.x + x * cur.scale;
-      const screenY = cy + cur.y + y * cur.scale;
-      const screenR = r * cur.scale;
-
-      // 1. Frustum culling (Off-screen skip)
-      if (screenX + screenR < -50 || screenX - screenR > w + 50 || screenY + screenR < -50 || screenY - screenR > h + 50) {
-        continue;
-      }
-
-      const color = superArms[getArmIndex(item.topCategory)]?.color || '#64748b';
-
-      // 2. LOD: ultra-small dots when zoomed out
-      if (cur.scale < 0.12) {
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-        continue;
-      }
-
-      // Border circle
-      ctx.beginPath();
-      ctx.arc(x, y, r + 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-
-      // True Lazy Loading: Only load if it's visible, large enough, and not already loading/loaded
-      if (cur.scale >= 0.12 && item.finalImageUrl && !cache.has(item.finalImageUrl) && !queue.has(item.finalImageUrl)) {
-        // Prevent 1000 simultaneous requests. Limit queue size to 20.
-        if (queue.size < 20) {
-          queue.add(item.finalImageUrl);
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => {
-            cache.set(item.finalImageUrl!, img);
-            queue.delete(item.finalImageUrl!);
-          };
-          img.onerror = () => {
-            img.naturalWidth = 0;
-            cache.set(item.finalImageUrl!, img);
-            queue.delete(item.finalImageUrl!);
-          };
-          img.src = item.finalImageUrl;
+      // Spiral Arms Guide
+      const armsGraphics = new PIXI.Graphics();
+      world.addChild(armsGraphics);
+      const drawArms = () => {
+        armsGraphics.clear();
+        if (viewMode === 'spiral') {
+          const guideStartR = 58 * 2.5;
+          const guideTightness = 0.18;
+          const guideGrowth = 58 * 0.52;
+          const guideSteps = 55;
+          superArms.forEach((arm, i) => {
+            const baseAngle = (i / superArms.length) * 2 * Math.PI;
+            armsGraphics.moveTo(guideStartR * Math.cos(baseAngle), guideStartR * Math.sin(baseAngle));
+            for (let s = 1; s <= guideSteps; s++) {
+              const theta = s * guideTightness;
+              const rr = guideStartR + s * guideGrowth;
+              const angle = baseAngle + theta;
+              armsGraphics.lineTo(rr * Math.cos(angle), rr * Math.sin(angle));
+            }
+            armsGraphics.stroke({ color: arm.color, alpha: 0.18, width: 1 });
+          });
         }
+      };
+
+      const nodesContainer = new PIXI.Container();
+      world.addChild(nodesContainer);
+
+      // Create GPU Nodes
+      positions.forEach(pos => {
+        const node = new PIXI.Container();
+        node.position.set(pos.x, pos.y);
+        node.eventMode = 'none';
+
+        const colorHex = superArms[getArmIndex(pos.item.topCategory)]?.color.replace('#', '0x') || '0x64748b';
+        
+        const base = new PIXI.Graphics();
+        base.circle(0, 0, r + 1.5).fill({ color: Number(colorHex) });
+        node.addChild(base);
+
+        const inner = new PIXI.Graphics();
+        inner.circle(0, 0, r).fill({ color: 0x1a1a2e });
+        node.addChild(inner);
+
+        const sprite = new PIXI.Sprite();
+        sprite.anchor.set(0.5);
+        sprite.width = r * 2;
+        sprite.height = r * 2;
+        sprite.visible = false;
+        node.addChild(sprite);
+
+        const mask = new PIXI.Graphics();
+        mask.circle(0, 0, r).fill({ color: 0xffffff });
+        node.addChild(mask);
+        sprite.mask = mask;
+
+        const letter = new PIXI.Text({
+          text: (pos.item.cleanTitle || '?').charAt(0).toUpperCase(),
+          style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: Math.round(r * 0.85), fill: 0xffffff, alpha: 0.9, fontWeight: 'bold' }
+        });
+        letter.anchor.set(0.5);
+        node.addChild(letter);
+
+        const label = new PIXI.Text({
+          text: pos.item.cleanTitle.length > 12 ? pos.item.cleanTitle.slice(0, 11) + '…' : pos.item.cleanTitle,
+          style: { fontFamily: 'Inter, sans-serif', fontSize: 4, fill: 0xffffff, alpha: 0.4 }
+        });
+        label.anchor.set(0.5, 0);
+        label.position.set(0, r + 6);
+        label.visible = false;
+        node.addChild(label);
+
+        nodesContainer.addChild(node);
+        nodeMap.set(pos.item.id, { node, sprite, inner, letter, label, pos });
+      });
+
+      drawArms();
+
+      // Fit Initial Scale
+      let maxR = 0;
+      positions.forEach(p => { const d = Math.hypot(p.x, p.y); if (d > maxR) maxR = d; });
+      if (maxR > 0) {
+        const w = el.clientWidth || 1000;
+        const h = el.clientHeight || 800;
+        targetTransform.current = { x: 0, y: 0, scale: Math.max(0.08, Math.min(0.6, (Math.min(w, h) * 0.42) / maxR)) };
+        currentTransform.current = { ...targetTransform.current };
       }
 
-      const img = cache.get(item.finalImageUrl);
-      const imgLoaded = !!(img && img.complete && img.naturalWidth > 0);
-      const imgFailed = !!(img && img.complete && img.naturalWidth === 0);
+      // Physics / Camera Loop
+      app.ticker.add((ticker) => {
+        const dt = ticker.deltaTime * 0.15;
+        const cur = currentTransform.current;
+        const tar = targetTransform.current;
+        
+        cur.x += (tar.x - cur.x) * dt;
+        cur.y += (tar.y - cur.y) * dt;
+        cur.scale += (tar.scale - cur.scale) * dt;
+        
+        const cx = app.screen.width / 2;
+        const cy = app.screen.height / 2;
+        
+        world.position.set(cx + cur.x, cy + cur.y);
+        world.scale.set(cur.scale);
+        
+        const boundsR = r * cur.scale;
+        
+        // Frustum & LOD
+        nodeMap.forEach((data) => {
+          const { node, sprite, inner, letter, label, pos } = data;
+          const screenX = cx + cur.x + pos.x * cur.scale;
+          const screenY = cy + cur.y + pos.y * cur.scale;
+          
+          if (screenX + boundsR < -50 || screenX - boundsR > app.screen.width + 50 || 
+              screenY + boundsR < -50 || screenY - boundsR > app.screen.height + 50) {
+              node.visible = false;
+              return;
+          }
+          
+          node.visible = true;
+          
+          if (cur.scale < 0.12) {
+              inner.visible = false;
+              sprite.visible = false;
+              letter.visible = false;
+              label.visible = false;
+          } else {
+              inner.visible = true;
+              label.visible = cur.scale > 0.6;
+              
+              if (pos.item.finalImageUrl && !cache.has(pos.item.finalImageUrl) && !loadQueue.has(pos.item.finalImageUrl) && loadQueue.size < 15) {
+                  loadQueue.add(pos.item.finalImageUrl);
+                  PIXI.Assets.load(pos.item.finalImageUrl).then((tex) => {
+                      if (tex && sprite) {
+                          sprite.texture = tex;
+                          sprite.visible = true;
+                          letter.visible = false;
+                      }
+                      cache.add(pos.item.finalImageUrl);
+                      loadQueue.delete(pos.item.finalImageUrl);
+                  }).catch(() => {
+                      cache.add(pos.item.finalImageUrl);
+                      loadQueue.delete(pos.item.finalImageUrl);
+                  });
+              }
+              
+              if (sprite.texture !== PIXI.Texture.EMPTY) {
+                  sprite.visible = true;
+                  letter.visible = false;
+              } else {
+                  sprite.visible = false;
+                  letter.visible = true;
+              }
+          }
+        });
+      });
+    });
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.clip();
-
-      if (imgLoaded) {
-        ctx.drawImage(img!, x - r, y - r, r * 2, r * 2);
-      } else if (imgFailed) {
-        ctx.fillStyle = color;
-        ctx.fill();
-      } else {
-        ctx.fillStyle = '#1a1a2e';
-        ctx.fill();
+    return () => {
+      isDestroyed = true;
+      if (appRef.current) {
+        appRef.current.destroy(true, { children: true, texture: false, baseTexture: false });
       }
-      ctx.restore();
-
-      // Initial-Letter fallback or when still loading
-      if (cur.scale >= 0.25 && (!imgLoaded)) {
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.font = `bold ${Math.round(r * 0.85)}px Outfit, Inter, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const letter = (item.cleanTitle || '?').charAt(0).toUpperCase();
-        ctx.fillText(letter, x, y);
-        ctx.textBaseline = 'alphabetic';
-      }
-
-      // Label (only when zoomed in enough)
-      if (cur.scale > 0.6) {
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
-        ctx.font = '4px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        const label = item.cleanTitle.length > 12 ? item.cleanTitle.slice(0, 11) + '…' : item.cleanTitle;
-        ctx.fillText(label, x, y + r + 6);
-      }
-    }
-
-    // Center glow
-    ctx.fillStyle = 'rgba(0,200,255,0.06)';
-    ctx.beginPath();
-    ctx.arc(0, 0, 60, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.font = 'bold 10px Outfit, Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('SPiRAL', 0, -4);
-    ctx.fillText('MiND', 0, 8);
-
-    ctx.restore();
-
+    };
   }, [positions, viewMode, superArms, getArmIndex]);
 
-  // Always run requestAnimationFrame (60fps lerp engine)
-  useEffect(() => {
-    let running = true;
-    const loop = () => {
-      if (!running) return;
-      tick();
-      rafRef.current = requestAnimationFrame(loop);
-    };
-    rafRef.current = requestAnimationFrame(loop);
-    return () => { running = false; cancelAnimationFrame(rafRef.current); };
-  }, [tick]);
-
-  // Pan (Smooth Drag)
+  // Viewport Events
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     dragState.current = { dragging: true, lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY };
@@ -768,18 +762,14 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     const ds = dragState.current;
     if (ds.dragging) {
-      const dx = e.clientX - ds.lastX;
-      const dy = e.clientY - ds.lastY;
+      targetTransform.current.x += (e.clientX - ds.lastX);
+      targetTransform.current.y += (e.clientY - ds.lastY);
       ds.lastX = e.clientX;
       ds.lastY = e.clientY;
-      // Update targetTransform (NOT currentTransform) for physics dragging
-      targetTransform.current.x += dx;
-      targetTransform.current.y += dy;
     } else {
-      // Hover hit test
-      const canvas = canvasElRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       const { x: tx, y: ty, scale } = currentTransform.current;
@@ -797,10 +787,7 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
           break;
         }
       }
-      if (found?.item?.id !== hoverRef.current?.item?.id) {
-        hoverRef.current = found;
-        setHoveredItem(found);
-      }
+      setHoveredItem(prev => (prev?.item?.id === found?.item?.id ? prev : found));
     }
   }, [positions]);
 
@@ -811,9 +798,9 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
   const onClick = useCallback((e: React.MouseEvent) => {
     const ds = dragState.current;
     if (Math.abs(e.clientX - ds.startX) > 5 || Math.abs(e.clientY - ds.startY) > 5) return;
-    const canvas = canvasElRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
     const { x: tx, y: ty, scale } = currentTransform.current;
@@ -831,23 +818,19 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
     }
   }, [positions, navigate]);
 
-  // Smooth Wheel Zoom (updates target scale)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const factor = e.deltaY > 0 ? 0.8 : 1.25;
-      
       const rect = el.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
       const cx = rect.width / 2;
       const cy = rect.height / 2;
-
       const tar = targetTransform.current;
       const newScale = Math.max(0.05, Math.min(5, tar.scale * factor));
-      
       const ratio = newScale / tar.scale;
       tar.x = (tar.x - mx + cx) * ratio + mx - cx;
       tar.y = (tar.y - my + cy) * ratio + my - cy;
@@ -866,22 +849,21 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
       onClick={onClick}
-      style={{ cursor: 'grab' }}
+      style={{ cursor: 'grab', position: 'relative', overflow: 'hidden' }}
     >
-      <canvas ref={canvasElRef} style={{ display: 'block', width: '100%', height: '100%' }} />
       {hoveredItem && (
         <div className="canvas-tooltip" style={{
           position: 'fixed', left: hoveredItem.sx + 12, top: hoveredItem.sy - 30,
           background: 'rgba(0,0,0,0.9)', color: '#fff', padding: '4px 10px',
           borderRadius: '6px', fontSize: '0.75rem', fontFamily: 'var(--font-sans)',
           pointerEvents: 'none', zIndex: 9999, whiteSpace: 'nowrap',
-          border: `1px solid ${superArms[getArmIndex(hoveredItem.item.topCategory)]?.color || '#64748b'}`,
+          border: `1px solid ${superArms[getArmIndex(hoveredItem.item.topCategory)]?.color || '#64748b'}`
         }}>
           {hoveredItem.item.cleanTitle}
         </div>
       )}
       <div className="spiral-stats">
-        {positions.length} Einträge
+        {positions.length} Einträge (WebGL)
       </div>
     </div>
   );

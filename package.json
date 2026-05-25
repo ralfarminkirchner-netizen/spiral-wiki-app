@@ -14,6 +14,7 @@
     "@types/three": "^0.184.1",
     "express": "^4.18.2",
     "framer-motion": "^12.40.0",
+    "pixi.js": "^8.18.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.1",
