@@ -549,30 +549,62 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
   const needsDraw = useRef(true);
   const hoverRef = useRef<any>(null);
 
-  // Pre-load images in batches (don't flood the browser)
+  // Pre-load images in batches (don't flood the browser).
+  // FIX: Cleanup beim Wechsel — vorher lief die alte Kette weiter, und der
+  // Spiral→Kreis-Switch hat zwei parallele Lade-Ketten produziert (1400+
+  // gleichzeitige Wikimedia-Requests → Browser-Pool tot → Kreis-Ansicht fror ein).
   useEffect(() => {
     const cache = imgCache.current;
+    let cancelled = false;
     let loadIdx = 0;
+    let timer: any = null;
     const BATCH_SIZE = 20;
 
     const loadBatch = () => {
+      if (cancelled) return;
       const end = Math.min(loadIdx + BATCH_SIZE, positions.length);
       for (let i = loadIdx; i < end; i++) {
         const { item } = positions[i];
         if (item.finalImageUrl && !cache.has(item.finalImageUrl)) {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.onload = () => { needsDraw.current = true; };
+          img.onload = () => { if (!cancelled) needsDraw.current = true; };
+          img.onerror = () => { if (!cancelled) needsDraw.current = true; };
           img.src = item.finalImageUrl;
           cache.set(item.finalImageUrl, img);
         }
       }
       loadIdx = end;
-      if (loadIdx < positions.length) {
-        setTimeout(loadBatch, 100); // stagger loading
+      if (loadIdx < positions.length && !cancelled) {
+        timer = setTimeout(loadBatch, 100); // stagger loading
       }
     };
     loadBatch();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [positions]);
+
+  // FIX: Auto-Fit Initial-Scale je nach positions-Layout.
+  // Spiral spreizt sich auf Radius ~1600, Kreis bleibt kompakt bei ~800 — ein
+  // fix verdrahtetes 0.22 ließ den Kreis als winzigen Klumpen am Zentrum
+  // erscheinen ("Kreis-Ansicht geht überhaupt nicht"). Jetzt skaliert es
+  // auf ~84% Containerdurchmesser bei jedem positions-Wechsel.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || positions.length === 0) return;
+    let maxR = 0;
+    for (const p of positions) {
+      const d = Math.hypot(p.x, p.y);
+      if (d > maxR) maxR = d;
+    }
+    if (maxR <= 0) return;
+    const w = container.clientWidth || 1000;
+    const h = container.clientHeight || 800;
+    const fitScale = Math.max(0.08, Math.min(0.6, (Math.min(w, h) * 0.42) / maxR));
+    localTransform.current = { x: 0, y: 0, scale: fitScale };
+    needsDraw.current = true;
   }, [positions]);
 
   // Draw
@@ -660,19 +692,38 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       ctx.fill();
 
       // Image circle
+      const img = cache.get(item.finalImageUrl);
+      const imgLoaded = !!(img && img.complete && img.naturalWidth > 0);
+      const imgFailed = !!(img && img.complete && img.naturalWidth === 0);
+
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.clip();
 
-      const img = cache.get(item.finalImageUrl);
-      if (scale >= 0.15 && img && img.complete && img.naturalWidth > 0) {
-        ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
+      if (scale >= 0.15 && imgLoaded) {
+        ctx.drawImage(img!, x - r, y - r, r * 2, r * 2);
+      } else if (imgFailed) {
+        // FIX: Bild-Fehler bekommt jetzt Kategorie-Farbe statt dauerhaft schwarzer Lücke
+        ctx.fillStyle = color;
+        ctx.fill();
       } else {
+        // Noch nicht geladen → dunkles Placeholder
         ctx.fillStyle = '#1a1a2e';
         ctx.fill();
       }
       ctx.restore();
+
+      // FIX: Initial-Letter als Ersatz-Identität, wenn das Bild fehlgeschlagen ist
+      if (scale >= 0.25 && imgFailed) {
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.font = `bold ${Math.round(r * 0.85)}px Outfit, Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const letter = (item.cleanTitle || '?').charAt(0).toUpperCase();
+        ctx.fillText(letter, x, y);
+        ctx.textBaseline = 'alphabetic';
+      }
 
       // Label (only when zoomed in enough)
       if (scale > 0.6) {
@@ -830,6 +881,75 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
 }
 
 // ════════════════════════════════════════════════
+//  WIKIPEDIA MODAL (REST API Reader)
+// ════════════════════════════════════════════════
+
+interface WikipediaModalProps {
+  url: string;
+  onClose: () => void;
+}
+
+function WikipediaModal({ url, onClose }: WikipediaModalProps) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const match = url.match(/\/wiki\/(.+)/);
+    if (!match) {
+      setLoading(false);
+      return;
+    }
+    const title = match[1].split('#')[0];
+    fetch(`https://de.wikipedia.org/api/rest_v1/page/summary/${title}`)
+      .then(res => res.json())
+      .then(json => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [url]);
+
+  // Press ESC to close modal
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return (
+    <div className="wiki-modal-backdrop open" onClick={onClose}>
+      <div className="wiki-modal-window" onClick={e => e.stopPropagation()}>
+        <div className="wiki-modal-header">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            Wikipedia
+          </h3>
+          <button className="wiki-modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="wiki-modal-content">
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem 0' }}>
+              <div className="spinner" style={{ width: '40px', height: '40px' }}></div>
+            </div>
+          ) : data && data.type !== 'https://mediawiki.org/wiki/HyperSwitch/errors/not_found' ? (
+            <>
+              <h2 style={{ fontSize: '1.8rem', color: '#fff', marginBottom: '1rem', fontFamily: 'var(--font-display)' }}>{data.title}</h2>
+              {data.thumbnail && <img src={data.thumbnail.source} className="wiki-modal-thumbnail" alt={data.title} />}
+              <div dangerouslySetInnerHTML={{ __html: data.extract_html || data.extract }} />
+            </>
+          ) : (
+            <p style={{ color: 'var(--accent-gold)' }}>Der Artikel konnte nicht direkt über die Wikipedia-API geladen werden.</p>
+          )}
+        </div>
+        <div className="wiki-modal-footer">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="wiki-modal-btn">Den ganzen Artikel auf Wikipedia lesen ↗</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════
 //  MONOGRAPH READER (Content loaded on demand!)
 // ════════════════════════════════════════════════
 
@@ -850,6 +970,7 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
   const [readProgress, setReadProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showToc, setShowToc] = useState(false);
+  const [wikiUrl, setWikiUrl] = useState<string | null>(null);
   const headingIndexRef = useRef(0);
 
   // ── Lazy-load content on demand ──
@@ -999,9 +1120,12 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
                 remarkPlugins={[remarkGfm]}
                 components={{
                   a: ({node, ...props}) => {
-                    const href = props.href || '';
+                    const href = String(props.href || '');
                     if (href.startsWith('/monograph/')) {
                       return <Link to={href} className="wiki-link">{props.children}</Link>;
+                    }
+                    if (href.includes('wikipedia.org/wiki/')) {
+                      return <button className="wiki-inline-link" onClick={() => setWikiUrl(href)}>{props.children}</button>;
                     }
                     return <a target="_blank" rel="noopener noreferrer" className="external-link" {...props}>{props.children}</a>;
                   },
@@ -1062,6 +1186,9 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
           ))}
         </div>
       </div>
+
+      {/* Wikipedia Modal overlay */}
+      {wikiUrl && <WikipediaModal url={wikiUrl} onClose={() => setWikiUrl(null)} />}
 
       {/* Scroll to Top */}
       <button

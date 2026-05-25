@@ -271,6 +271,11 @@ html, body {
   will-change: transform;
   aspect-ratio: 3/4;
   background: var(--bg-surface);
+  
+  /* DOM Frustum Culling / LOD Fix */
+  contain: strict;
+  content-visibility: auto;
+  contain-intrinsic-size: 150px 200px;
 }
 
 /* Golden shimmer overlay */
@@ -798,6 +803,150 @@ html, body {
   font-size: 1.15rem;
   line-height: 1.85;
   color: #c8d0dc;
+}
+
+/* ═══════════════════════════════════════════════
+   WIKIPEDIA MODAL
+   ═══════════════════════════════════════════════ */
+
+.wiki-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 2, 5, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.wiki-modal-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wiki-modal-window {
+  background: rgba(10, 12, 22, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(20px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.wiki-modal-backdrop.open .wiki-modal-window {
+  transform: translateY(0) scale(1);
+}
+
+.wiki-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.wiki-modal-header h3 {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wiki-modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.wiki-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.wiki-modal-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #e2e8f0;
+}
+
+.wiki-modal-thumbnail {
+  float: right;
+  margin: 0 0 1rem 1.5rem;
+  border-radius: 12px;
+  max-width: 40%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.wiki-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  text-align: right;
+}
+
+.wiki-modal-btn {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.wiki-modal-btn:hover {
+  background: #fff;
+  transform: translateY(-2px);
+}
+
+.wiki-inline-link {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 240, 255, 0.3);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  transition: color 0.2s;
+}
+
+.wiki-inline-link:hover {
+  color: #fff;
+  text-decoration-color: var(--accent-cyan);
+}
   letter-spacing: 0.01em;
 }
 
