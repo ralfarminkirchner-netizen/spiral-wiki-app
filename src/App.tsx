@@ -545,52 +545,16 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
   const dragState = useRef({ dragging: false, lastX: 0, lastY: 0, startX: 0, startY: 0 });
   const [hoveredItem, setHoveredItem] = useState<{ item: any; sx: number; sy: number } | null>(null);
   const navigate = useNavigate();
-  const localTransform = useRef({ x: 0, y: 0, scale: 0.22 });
-  const needsDraw = useRef(true);
+  
+  // NEW: targetTransform for physics-based lerping, currentTransform for actual drawing
+  const targetTransform = useRef({ x: 0, y: 0, scale: 0.22 });
+  const currentTransform = useRef({ x: 0, y: 0, scale: 0.22 });
   const hoverRef = useRef<any>(null);
 
-  // Pre-load images in batches (don't flood the browser).
-  // FIX: Cleanup beim Wechsel — vorher lief die alte Kette weiter, und der
-  // Spiral→Kreis-Switch hat zwei parallele Lade-Ketten produziert (1400+
-  // gleichzeitige Wikimedia-Requests → Browser-Pool tot → Kreis-Ansicht fror ein).
-  useEffect(() => {
-    const cache = imgCache.current;
-    let cancelled = false;
-    let loadIdx = 0;
-    let timer: any = null;
-    const BATCH_SIZE = 20;
+  // Lazy Loading Queue State
+  const loadingQueue = useRef<Set<string>>(new Set());
 
-    const loadBatch = () => {
-      if (cancelled) return;
-      const end = Math.min(loadIdx + BATCH_SIZE, positions.length);
-      for (let i = loadIdx; i < end; i++) {
-        const { item } = positions[i];
-        if (item.finalImageUrl && !cache.has(item.finalImageUrl)) {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => { if (!cancelled) needsDraw.current = true; };
-          img.onerror = () => { if (!cancelled) needsDraw.current = true; };
-          img.src = item.finalImageUrl;
-          cache.set(item.finalImageUrl, img);
-        }
-      }
-      loadIdx = end;
-      if (loadIdx < positions.length && !cancelled) {
-        timer = setTimeout(loadBatch, 100); // stagger loading
-      }
-    };
-    loadBatch();
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [positions]);
-
-  // FIX: Auto-Fit Initial-Scale je nach positions-Layout.
-  // Spiral spreizt sich auf Radius ~1600, Kreis bleibt kompakt bei ~800 — ein
-  // fix verdrahtetes 0.22 ließ den Kreis als winzigen Klumpen am Zentrum
-  // erscheinen ("Kreis-Ansicht geht überhaupt nicht"). Jetzt skaliert es
-  // auf ~84% Containerdurchmesser bei jedem positions-Wechsel.
+  // Auto-Fit Initial-Scale depending on positions-Layout
   useEffect(() => {
     const container = containerRef.current;
     if (!container || positions.length === 0) return;
@@ -603,15 +567,31 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
     const w = container.clientWidth || 1000;
     const h = container.clientHeight || 800;
     const fitScale = Math.max(0.08, Math.min(0.6, (Math.min(w, h) * 0.42) / maxR));
-    localTransform.current = { x: 0, y: 0, scale: fitScale };
-    needsDraw.current = true;
-  }, [positions]);
+    
+    // Jump instantly on mount or mode change
+    targetTransform.current = { x: 0, y: 0, scale: fitScale };
+  }, [positions, viewMode]);
 
-  // Draw
-  const draw = useCallback(() => {
+  // Main Draw / Physics Loop
+  const tick = useCallback(() => {
     const canvas = canvasElRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
+
+    // Physics Lerp (Interpolation)
+    const dt = 0.15; // Speed of lerp
+    const cur = currentTransform.current;
+    const tar = targetTransform.current;
+    
+    // Calculate difference
+    const diffX = tar.x - cur.x;
+    const diffY = tar.y - cur.y;
+    const diffScale = tar.scale - cur.scale;
+    
+    // Update current with dampening
+    cur.x += diffX * dt;
+    cur.y += diffY * dt;
+    cur.scale += diffScale * dt;
 
     const dpr = window.devicePixelRatio || 1;
     const w = container.clientWidth;
@@ -627,13 +607,12 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
-    const { x: tx, y: ty, scale } = localTransform.current;
     const cx = w / 2;
     const cy = h / 2;
 
     ctx.save();
-    ctx.translate(cx + tx, cy + ty);
-    ctx.scale(scale, scale);
+    ctx.translate(cx + cur.x, cy + cur.y);
+    ctx.scale(cur.scale, cur.scale);
 
     // Arm guide curves (spiral only)
     if (viewMode === 'spiral') {
@@ -659,25 +638,26 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       });
     }
 
-    // Draw nodes with frustum culling + LOD
+    // Draw nodes with strict frustum culling + lazy loading
     const r = 22;
     const cache = imgCache.current;
+    const queue = loadingQueue.current;
 
     for (let i = 0; i < positions.length; i++) {
       const { item, x, y } = positions[i];
-      const screenX = cx + tx + x * scale;
-      const screenY = cy + ty + y * scale;
-      const screenR = r * scale;
+      const screenX = cx + cur.x + x * cur.scale;
+      const screenY = cy + cur.y + y * cur.scale;
+      const screenR = r * cur.scale;
 
-      // Frustum culling
+      // 1. Frustum culling (Off-screen skip)
       if (screenX + screenR < -50 || screenX - screenR > w + 50 || screenY + screenR < -50 || screenY - screenR > h + 50) {
         continue;
       }
 
       const color = superArms[getArmIndex(item.topCategory)]?.color || '#64748b';
 
-      // LOD: ultra-small dots when zoomed out
-      if (scale < 0.1) {
+      // 2. LOD: ultra-small dots when zoomed out
+      if (cur.scale < 0.12) {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fillStyle = color;
@@ -691,7 +671,26 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       ctx.fillStyle = color;
       ctx.fill();
 
-      // Image circle
+      // True Lazy Loading: Only load if it's visible, large enough, and not already loading/loaded
+      if (cur.scale >= 0.12 && item.finalImageUrl && !cache.has(item.finalImageUrl) && !queue.has(item.finalImageUrl)) {
+        // Prevent 1000 simultaneous requests. Limit queue size to 20.
+        if (queue.size < 20) {
+          queue.add(item.finalImageUrl);
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            cache.set(item.finalImageUrl!, img);
+            queue.delete(item.finalImageUrl!);
+          };
+          img.onerror = () => {
+            img.naturalWidth = 0;
+            cache.set(item.finalImageUrl!, img);
+            queue.delete(item.finalImageUrl!);
+          };
+          img.src = item.finalImageUrl;
+        }
+      }
+
       const img = cache.get(item.finalImageUrl);
       const imgLoaded = !!(img && img.complete && img.naturalWidth > 0);
       const imgFailed = !!(img && img.complete && img.naturalWidth === 0);
@@ -701,21 +700,19 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.clip();
 
-      if (scale >= 0.15 && imgLoaded) {
+      if (imgLoaded) {
         ctx.drawImage(img!, x - r, y - r, r * 2, r * 2);
       } else if (imgFailed) {
-        // FIX: Bild-Fehler bekommt jetzt Kategorie-Farbe statt dauerhaft schwarzer Lücke
         ctx.fillStyle = color;
         ctx.fill();
       } else {
-        // Noch nicht geladen → dunkles Placeholder
         ctx.fillStyle = '#1a1a2e';
         ctx.fill();
       }
       ctx.restore();
 
-      // FIX: Initial-Letter als Ersatz-Identität, wenn das Bild fehlgeschlagen ist
-      if (scale >= 0.25 && imgFailed) {
+      // Initial-Letter fallback or when still loading
+      if (cur.scale >= 0.25 && (!imgLoaded)) {
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.font = `bold ${Math.round(r * 0.85)}px Outfit, Inter, sans-serif`;
         ctx.textAlign = 'center';
@@ -726,7 +723,7 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       }
 
       // Label (only when zoomed in enough)
-      if (scale > 0.6) {
+      if (cur.scale > 0.6) {
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.font = '4px Inter, sans-serif';
         ctx.textAlign = 'center';
@@ -747,25 +744,22 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
     ctx.fillText('MiND', 0, 8);
 
     ctx.restore();
+
   }, [positions, viewMode, superArms, getArmIndex]);
 
-  // Animation frame loop — only draws when needed
+  // Always run requestAnimationFrame (60fps lerp engine)
   useEffect(() => {
     let running = true;
-    needsDraw.current = true;
     const loop = () => {
       if (!running) return;
-      if (needsDraw.current) {
-        draw();
-        needsDraw.current = false;
-      }
+      tick();
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
     return () => { running = false; cancelAnimationFrame(rafRef.current); };
-  }, [draw]);
+  }, [tick]);
 
-  // Pan
+  // Pan (Smooth Drag)
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     dragState.current = { dragging: true, lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY };
@@ -778,8 +772,9 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       const dy = e.clientY - ds.lastY;
       ds.lastX = e.clientX;
       ds.lastY = e.clientY;
-      localTransform.current = { ...localTransform.current, x: localTransform.current.x + dx, y: localTransform.current.y + dy };
-      needsDraw.current = true;
+      // Update targetTransform (NOT currentTransform) for physics dragging
+      targetTransform.current.x += dx;
+      targetTransform.current.y += dy;
     } else {
       // Hover hit test
       const canvas = canvasElRef.current;
@@ -787,7 +782,7 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       const rect = canvas.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
-      const { x: tx, y: ty, scale } = localTransform.current;
+      const { x: tx, y: ty, scale } = currentTransform.current;
       const cxp = rect.width / 2;
       const cyp = rect.height / 2;
       const wx = (mx - cxp - tx) / scale;
@@ -821,7 +816,7 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    const { x: tx, y: ty, scale } = localTransform.current;
+    const { x: tx, y: ty, scale } = currentTransform.current;
     const cxp = rect.width / 2;
     const cyp = rect.height / 2;
     const wx = (mx - cxp - tx) / scale;
@@ -836,15 +831,27 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
     }
   }, [positions, navigate]);
 
-  // Wheel zoom
+  // Smooth Wheel Zoom (updates target scale)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const factor = e.deltaY > 0 ? 0.92 : 1.08;
-      localTransform.current = { ...localTransform.current, scale: Math.max(0.05, Math.min(5, localTransform.current.scale * factor)) };
-      needsDraw.current = true;
+      const factor = e.deltaY > 0 ? 0.8 : 1.25;
+      
+      const rect = el.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+
+      const tar = targetTransform.current;
+      const newScale = Math.max(0.05, Math.min(5, tar.scale * factor));
+      
+      const ratio = newScale / tar.scale;
+      tar.x = (tar.x - mx + cx) * ratio + mx - cx;
+      tar.y = (tar.y - my + cy) * ratio + my - cy;
+      tar.scale = newScale;
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
