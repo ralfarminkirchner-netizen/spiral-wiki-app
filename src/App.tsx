@@ -518,6 +518,7 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
       {(viewMode === 'spiral' || viewMode === 'circle') && (
         <CanvasSpiral
           positions={viewMode === 'spiral' ? spiralPositions : circlePositions}
+          allData={data}
           viewMode={viewMode}
           superArms={SUPER_ARMS}
           getArmIndex={getArmIndex}
@@ -533,12 +534,13 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
 
 interface CanvasSpiralProps {
   positions: { item: any; x: number; y: number; armIdx: number }[];
+  allData: any[];
   viewMode: ViewMode;
   superArms: { name: string; cats: string[]; color: string }[];
   getArmIndex: (cat: string) => number;
 }
 
-function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpiralProps) {
+function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: CanvasSpiralProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<PIXI.Application | null>(null);
   const targetTransform = useRef({ x: 0, y: 0, scale: 0.22 });
@@ -547,7 +549,11 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
   const navigate = useNavigate();
   const dragState = useRef({ dragging: false, lastX: 0, lastY: 0, startX: 0, startY: 0 });
 
-  // PixiJS Initialization & Scene Graph
+  const nodeMapRef = useRef<Map<string, any>>(new Map());
+  const drawArmsRef = useRef<(vm: ViewMode) => void>(() => {});
+  const fitScaleRef = useRef<(posList: typeof positions) => void>(() => {});
+
+  // PixiJS Initialization & Scene Graph (Mount once)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -574,6 +580,7 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
 
       const r = 22;
       const nodeMap = new Map();
+      nodeMapRef.current = nodeMap;
       const loadQueue = new Set<string>();
       const cache = new Set<string>();
 
@@ -592,9 +599,9 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       // Spiral Arms Guide
       const armsGraphics = new PIXI.Graphics();
       world.addChild(armsGraphics);
-      const drawArms = () => {
+      const drawArms = (vm: ViewMode) => {
         armsGraphics.clear();
-        if (viewMode === 'spiral') {
+        if (vm === 'spiral') {
           const guideStartR = 58 * 2.5;
           const guideTightness = 0.18;
           const guideGrowth = 58 * 0.52;
@@ -612,17 +619,18 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
           });
         }
       };
+      drawArmsRef.current = drawArms;
 
       const nodesContainer = new PIXI.Container();
       world.addChild(nodesContainer);
 
-      // Create GPU Nodes
-      positions.forEach(pos => {
+      // Create GPU Nodes for all items
+      allData.forEach(item => {
         const node = new PIXI.Container();
-        node.position.set(pos.x, pos.y);
         node.eventMode = 'none';
+        node.visible = false;
 
-        const colorHex = superArms[getArmIndex(pos.item.topCategory)]?.color.replace('#', '0x') || '0x64748b';
+        const colorHex = superArms[getArmIndex(item.topCategory)]?.color.replace('#', '0x') || '0x64748b';
         
         const base = new PIXI.Graphics();
         base.circle(0, 0, r + 1.5).fill({ color: Number(colorHex) });
@@ -645,14 +653,14 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
         sprite.mask = mask;
 
         const letter = new PIXI.Text({
-          text: (pos.item.cleanTitle || '?').charAt(0).toUpperCase(),
+          text: (item.cleanTitle || '?').charAt(0).toUpperCase(),
           style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: Math.round(r * 0.85), fill: 0xffffff, alpha: 0.9, fontWeight: 'bold' }
         });
         letter.anchor.set(0.5);
         node.addChild(letter);
 
         const label = new PIXI.Text({
-          text: pos.item.cleanTitle.length > 12 ? pos.item.cleanTitle.slice(0, 11) + '…' : pos.item.cleanTitle,
+          text: item.cleanTitle.length > 12 ? item.cleanTitle.slice(0, 11) + '…' : item.cleanTitle,
           style: { fontFamily: 'Inter, sans-serif', fontSize: 4, fill: 0xffffff, alpha: 0.4 }
         });
         label.anchor.set(0.5, 0);
@@ -661,20 +669,34 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
         node.addChild(label);
 
         nodesContainer.addChild(node);
-        nodeMap.set(pos.item.id, { node, sprite, inner, letter, label, pos });
+        nodeMap.set(item.id, { 
+          node, 
+          sprite, 
+          inner, 
+          letter, 
+          label, 
+          item,
+          active: false,
+          targetX: 0,
+          targetY: 0
+        });
       });
 
-      drawArms();
+      drawArms(viewMode);
 
-      // Fit Initial Scale
-      let maxR = 0;
-      positions.forEach(p => { const d = Math.hypot(p.x, p.y); if (d > maxR) maxR = d; });
-      if (maxR > 0) {
-        const w = el.clientWidth || 1000;
-        const h = el.clientHeight || 800;
-        targetTransform.current = { x: 0, y: 0, scale: Math.max(0.08, Math.min(0.6, (Math.min(w, h) * 0.42) / maxR)) };
-        currentTransform.current = { ...targetTransform.current };
-      }
+      // Fit Scale helper
+      const fitScale = (posList: typeof positions) => {
+        let maxR = 0;
+        posList.forEach(p => { const d = Math.hypot(p.x, p.y); if (d > maxR) maxR = d; });
+        if (maxR > 0) {
+          const w = el.clientWidth || 1000;
+          const h = el.clientHeight || 800;
+          targetTransform.current = { x: 0, y: 0, scale: Math.max(0.08, Math.min(0.6, (Math.min(w, h) * 0.42) / maxR)) };
+        }
+      };
+      fitScaleRef.current = fitScale;
+      fitScale(positions);
+      currentTransform.current = { ...targetTransform.current };
 
       // Physics / Camera Loop
       let lastLoadCheck = 0;
@@ -701,11 +723,21 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
           lastLoadCheck = now;
         }
 
-        // Frustum & LOD
+        // Frustum, LOD & Smooth Position update
         nodeMap.forEach((data) => {
-          const { node, sprite, inner, letter, label, pos } = data;
-          const screenX = cx + cur.x + pos.x * cur.scale;
-          const screenY = cy + cur.y + pos.y * cur.scale;
+          const { node, sprite, inner, letter, label, item, active, targetX, targetY } = data;
+          
+          if (!active) {
+            node.visible = false;
+            return;
+          }
+
+          // Interpolate positions smoothly
+          node.x += (targetX - node.x) * dt;
+          node.y += (targetY - node.y) * dt;
+
+          const screenX = cx + cur.x + node.x * cur.scale;
+          const screenY = cy + cur.y + node.y * cur.scale;
           
           if (screenX + boundsR < -50 || screenX - boundsR > app.screen.width + 50 || 
               screenY + boundsR < -50 || screenY - boundsR > app.screen.height + 50) {
@@ -732,7 +764,7 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
               inner.visible = true;
               label.visible = cur.scale > 0.6;
               
-              const imageUrl = pos.item.finalImageUrl;
+              const imageUrl = item.finalImageUrl;
               if (imageUrl) {
                   const corsUrl = imageUrl.includes('?') ? `${imageUrl}&cors=1` : `${imageUrl}?cors=1`;
                   
@@ -775,7 +807,38 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
         appRef.current.destroy(true, { children: true, texture: false, baseTexture: false });
       }
     };
-  }, [positions, viewMode, superArms, getArmIndex]);
+  }, [allData, superArms, getArmIndex]);
+
+  // Update positions and viewMode dynamically without re-mounting
+  useEffect(() => {
+    const nodeMap = nodeMapRef.current;
+    if (!nodeMap || nodeMap.size === 0) return;
+
+    if (drawArmsRef.current) {
+      drawArmsRef.current(viewMode);
+    }
+
+    nodeMap.forEach(data => {
+      data.active = false;
+    });
+
+    positions.forEach(pos => {
+      const data = nodeMap.get(pos.item.id);
+      if (data) {
+        data.active = true;
+        data.targetX = pos.x;
+        data.targetY = pos.y;
+        
+        if (!data.node.visible) {
+          data.node.position.set(pos.x, pos.y);
+        }
+      }
+    });
+
+    if (fitScaleRef.current) {
+      fitScaleRef.current(positions);
+    }
+  }, [positions, viewMode]);
 
   // Viewport Events
   const onMouseDown = useCallback((e: React.MouseEvent) => {
@@ -803,17 +866,17 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       const wy = (my - cyp - ty) / scale;
 
       let found: any = null;
-      for (const pos of positions) {
-        const dx = pos.x - wx;
-        const dy = pos.y - wy;
+      nodeMapRef.current.forEach((data) => {
+        if (!data.active || !data.node.visible) return;
+        const dx = data.node.x - wx;
+        const dy = data.node.y - wy;
         if (dx * dx + dy * dy < 24 * 24) {
-          found = { item: pos.item, sx: e.clientX, sy: e.clientY };
-          break;
+          found = { item: data.item, sx: e.clientX, sy: e.clientY };
         }
-      }
+      });
       setHoveredItem(prev => (prev?.item?.id === found?.item?.id ? prev : found));
     }
-  }, [positions]);
+  }, []);
 
   const onMouseUp = useCallback(() => {
     dragState.current.dragging = false;
@@ -832,15 +895,22 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
     const cyp = rect.height / 2;
     const wx = (mx - cxp - tx) / scale;
     const wy = (my - cyp - ty) / scale;
-    for (const pos of positions) {
-      const dx = pos.x - wx;
-      const dy = pos.y - wy;
+    
+    let clickedNodeId: string | null = null;
+    nodeMapRef.current.forEach((data, id) => {
+      if (clickedNodeId) return;
+      if (!data.active || !data.node.visible) return;
+      const dx = data.node.x - wx;
+      const dy = data.node.y - wy;
       if (dx * dx + dy * dy < 24 * 24) {
-        navigate(`/monograph/${pos.item.id}`);
-        return;
+        clickedNodeId = id;
       }
+    });
+
+    if (clickedNodeId) {
+      navigate(`/monograph/${clickedNodeId}`);
     }
-  }, [positions, navigate]);
+  }, [navigate]);
 
   useEffect(() => {
     const el = containerRef.current;
