@@ -677,6 +677,7 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
       }
 
       // Physics / Camera Loop
+      let lastLoadCheck = 0;
       app.ticker.add((ticker) => {
         const dt = ticker.deltaTime * 0.15;
         const cur = currentTransform.current;
@@ -694,6 +695,12 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
         
         const boundsR = r * cur.scale;
         
+        const now = performance.now();
+        const checkLoads = now - lastLoadCheck > 200;
+        if (checkLoads) {
+          lastLoadCheck = now;
+        }
+
         // Frustum & LOD
         nodeMap.forEach((data) => {
           const { node, sprite, inner, letter, label, pos } = data;
@@ -709,33 +716,50 @@ function CanvasSpiral({ positions, viewMode, superArms, getArmIndex }: CanvasSpi
           node.visible = true;
           
           if (cur.scale < 0.12) {
+              // Sehr weit herausgezoomt: Nur farbiger Basiskreis sichtbar
               inner.visible = false;
               sprite.visible = false;
               letter.visible = false;
               label.visible = false;
+          } else if (cur.scale < 0.35) {
+              // Leicht herausgezoomt: Zeige Kreis und Buchstabe, keine Bilder
+              inner.visible = true;
+              sprite.visible = false;
+              letter.visible = true;
+              label.visible = false;
           } else {
+              // Hineingezoomt: Zeige Details, ggf. Bilder und Text-Label
               inner.visible = true;
               label.visible = cur.scale > 0.6;
               
-              if (pos.item.finalImageUrl && !cache.has(pos.item.finalImageUrl) && !loadQueue.has(pos.item.finalImageUrl) && loadQueue.size < 15) {
-                  loadQueue.add(pos.item.finalImageUrl);
-                  PIXI.Assets.load(pos.item.finalImageUrl).then((tex) => {
-                      if (tex && sprite) {
-                          sprite.texture = tex;
-                          sprite.visible = true;
-                          letter.visible = false;
+              const imageUrl = pos.item.finalImageUrl;
+              if (imageUrl) {
+                  const corsUrl = imageUrl.includes('?') ? `${imageUrl}&cors=1` : `${imageUrl}?cors=1`;
+                  
+                  if (sprite.texture && sprite.texture !== PIXI.Texture.EMPTY) {
+                      sprite.visible = true;
+                      letter.visible = false;
+                  } else {
+                      sprite.visible = false;
+                      letter.visible = true;
+                      
+                      if (checkLoads && !cache.has(corsUrl) && !loadQueue.has(corsUrl) && loadQueue.size < 15) {
+                          loadQueue.add(corsUrl);
+                          PIXI.Assets.load(corsUrl).then((tex) => {
+                              if (tex && sprite) {
+                                  sprite.texture = tex;
+                                  sprite.visible = true;
+                                  letter.visible = false;
+                              }
+                              cache.add(corsUrl);
+                              loadQueue.delete(corsUrl);
+                          }).catch((err) => {
+                              console.warn('Failed to load image via CORS:', corsUrl, err);
+                              cache.add(corsUrl);
+                              loadQueue.delete(corsUrl);
+                          });
                       }
-                      cache.add(pos.item.finalImageUrl);
-                      loadQueue.delete(pos.item.finalImageUrl);
-                  }).catch(() => {
-                      cache.add(pos.item.finalImageUrl);
-                      loadQueue.delete(pos.item.finalImageUrl);
-                  });
-              }
-              
-              if (sprite.texture !== PIXI.Texture.EMPTY) {
-                  sprite.visible = true;
-                  letter.visible = false;
+                  }
               } else {
                   sprite.visible = false;
                   letter.visible = true;
