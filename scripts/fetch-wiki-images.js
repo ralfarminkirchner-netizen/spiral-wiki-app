@@ -108,14 +108,25 @@ async function run() {
     if (!titleMatch) continue;
 
     let title = titleMatch[1];
+    title = title.replace(/\[\[/g, '').replace(/\]\]/g, '');
     title = title.replace(/Monographie:\s*(Masterclass)?\s*/i, '').trim();
     let cleanTitle = title.replace(/\(.*?\)/g, '').trim();
     
+    // Normalisiere den Titel, um den primären Personennamen zu extrahieren
+    if (cleanTitle.includes(' – ')) {
+      cleanTitle = cleanTitle.split(' – ')[0].trim();
+    }
     if (cleanTitle.includes(' - ')) {
       cleanTitle = cleanTitle.split(' - ')[0].trim();
     }
+    if (cleanTitle.includes(', ')) {
+      cleanTitle = cleanTitle.split(', ')[0].trim();
+    }
     if (cleanTitle.includes(': ')) {
       cleanTitle = cleanTitle.split(': ')[0].trim();
+    }
+    if (cleanTitle.includes(' und ')) {
+      cleanTitle = cleanTitle.split(' und ')[0].trim();
     }
     
     let finalUrl = null;

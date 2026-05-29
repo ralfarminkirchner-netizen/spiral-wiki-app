@@ -274,6 +274,40 @@ async function buildData() {
   });
   console.log(`  → ${fixedCount} URLs repariert`);
 
+  // 3️⃣b Inherit images from sibling monographs of the same person/subject
+  console.log('\n🔗 Bild-Vererbung für Unterthemen/Vertiefungen...');
+  let inheritedCount = 0;
+  monographs.forEach(m => {
+    if (m.hasRealImage) return; // Already has a real image
+    
+    // Find a sibling monograph with a real image that shares a name match
+    const sibling = monographs.find(s => {
+      if (!s.hasRealImage || s.id === m.id) return false;
+      
+      // Simple substring check: e.g. "Gregory Bateson" in "Gregory Bateson – Vertiefung"
+      if (m.cleanTitle.includes(s.cleanTitle) || s.cleanTitle.includes(m.cleanTitle)) {
+        return true;
+      }
+      
+      // Check first two words (e.g. "Gaston Bachelard")
+      const wordsM = m.cleanTitle.split(/\s+/).slice(0, 2).join(' ');
+      const wordsS = s.cleanTitle.split(/\s+/).slice(0, 2).join(' ');
+      if (wordsM === wordsS && wordsM.length > 5) {
+        return true;
+      }
+      
+      return false;
+    });
+
+    if (sibling) {
+      m.finalImageUrl = sibling.finalImageUrl;
+      m.hasRealImage = true;
+      inheritedCount++;
+      console.log(`  🔗 Bild vererbt von [${sibling.cleanTitle}] an [${m.cleanTitle}]`);
+    }
+  });
+  console.log(`  → ${inheritedCount} Bilder erfolgreich vererbt`);
+
   // 4️⃣ Generate cross-links (max 5 per monograph)
   console.log('\n🔗 Querverweise generieren...');
   const MAX_LINKS = 5;
