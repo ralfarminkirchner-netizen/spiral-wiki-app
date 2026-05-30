@@ -300,32 +300,27 @@ function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, 
     }
 
     const nodeDiam = 58;
-    const minDist = nodeDiam;
     const positions: { item: typeof items[0]; x: number; y: number; armIdx: number }[] = [];
     const startR = nodeDiam * 2.5;
-    const spiralTightness = 0.18;
-    const radialGrowth = nodeDiam * 0.52;
+    const nodePadding = 6; // Padding between nodes
+    
+    // For a multi-arm spiral to not overlap, the radial growth per radian 
+    // must be large enough to clear all other arms!
+    const radialGrowthPerRadian = ((nodeDiam + nodePadding) * armCount) / (2 * Math.PI); 
 
     for (let a = 0; a < armCount; a++) {
       const baseAngle = (a / armCount) * 2 * Math.PI;
-      let prevX = 0, prevY = 0;
-      armBuckets[a].forEach((item, i) => {
-        const theta = i * spiralTightness;
-        const r = startR + i * radialGrowth;
+      let theta = 0;
+      let r = startR;
+      armBuckets[a].forEach((item) => {
         const angle = baseAngle + theta;
-        let x = r * Math.cos(angle);
-        let y = r * Math.sin(angle);
-        if (i > 0) {
-          const dx = x - prevX, dy = y - prevY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < minDist && dist > 0) {
-            const s = minDist / dist;
-            x = prevX + dx * s;
-            y = prevY + dy * s;
-          }
-        }
-        prevX = x; prevY = y;
+        const x = r * Math.cos(angle);
+        const y = r * Math.sin(angle);
         positions.push({ item, x, y, armIdx: a });
+        
+        // Calculate next position perfectly spaced along the curve
+        theta += (nodeDiam + nodePadding) / r;
+        r = startR + radialGrowthPerRadian * theta;
       });
     }
     return positions;
@@ -542,6 +537,7 @@ interface CanvasSpiralProps {
 
 function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: CanvasSpiralProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [pixiReady, setPixiReady] = useState(false);
   const appRef = useRef<PIXI.Application | null>(null);
   const targetTransform = useRef({ x: 0, y: 0, scale: 0.22 });
   const currentTransform = useRef({ x: 0, y: 0, scale: 0.22 });
@@ -763,11 +759,9 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
               // Hineingezoomt: Zeige Details, ggf. Bilder und Text-Label
               inner.visible = true;
               label.visible = cur.scale > 0.6;
-              
-              const imageUrl = item.finalImageUrl;
+              // Only load the image if it's a REAL image, not a repetitive fallback
+              const imageUrl = item.hasRealImage ? item.finalImageUrl : null;
               if (imageUrl) {
-                  const corsUrl = imageUrl.includes('?') ? `${imageUrl}&cors=1` : `${imageUrl}?cors=1`;
-                  
                   if (sprite.texture && sprite.texture !== PIXI.Texture.EMPTY) {
                       sprite.visible = true;
                       letter.visible = false;
@@ -775,20 +769,20 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
                       sprite.visible = false;
                       letter.visible = true;
                       
-                      if (checkLoads && !cache.has(corsUrl) && !loadQueue.has(corsUrl) && loadQueue.size < 15) {
-                          loadQueue.add(corsUrl);
-                          PIXI.Assets.load(corsUrl).then((tex) => {
+                      if (checkLoads && !cache.has(imageUrl) && !loadQueue.has(imageUrl) && loadQueue.size < 15) {
+                          loadQueue.add(imageUrl);
+                          PIXI.Assets.load(imageUrl).then((tex) => {
                               if (tex && sprite) {
                                   sprite.texture = tex;
                                   sprite.visible = true;
                                   letter.visible = false;
                               }
-                              cache.add(corsUrl);
-                              loadQueue.delete(corsUrl);
+                              cache.add(imageUrl);
+                              loadQueue.delete(imageUrl);
                           }).catch((err) => {
-                              console.warn('Failed to load image via CORS:', corsUrl, err);
-                              cache.add(corsUrl);
-                              loadQueue.delete(corsUrl);
+                              console.warn('Failed to load image:', imageUrl, err);
+                              cache.add(imageUrl);
+                              loadQueue.delete(imageUrl);
                           });
                       }
                   }
@@ -799,18 +793,21 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
           }
         });
       });
+      setPixiReady(true);
     });
 
     return () => {
       isDestroyed = true;
       if (appRef.current) {
         appRef.current.destroy(true, { children: true, texture: false, baseTexture: false });
+        setPixiReady(false);
       }
     };
   }, [allData, superArms, getArmIndex]);
 
   // Update positions and viewMode dynamically without re-mounting
   useEffect(() => {
+    if (!pixiReady) return;
     const nodeMap = nodeMapRef.current;
     if (!nodeMap || nodeMap.size === 0) return;
 
@@ -838,7 +835,7 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
     if (fitScaleRef.current) {
       fitScaleRef.current(positions);
     }
-  }, [positions, viewMode]);
+  }, [positions, viewMode, pixiReady]);
 
   // Viewport Events
   const onMouseDown = useCallback((e: React.MouseEvent) => {
