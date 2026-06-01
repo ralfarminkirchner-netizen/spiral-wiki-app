@@ -611,7 +611,7 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
               const angle = baseAngle + theta;
               armsGraphics.lineTo(rr * Math.cos(angle), rr * Math.sin(angle));
             }
-            armsGraphics.stroke({ color: arm.color, alpha: 0.18, width: 1 });
+            armsGraphics.stroke({ color: arm.color, alpha: 0.02, width: 1 });
           });
         }
       };
@@ -619,6 +619,19 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
 
       const nodesContainer = new PIXI.Container();
       world.addChild(nodesContainer);
+
+      // Cache for letter textures to avoid 1000+ canvas allocations
+      const sharedLetterTextures: Record<string, PIXI.Texture> = {};
+      const getLetterTexture = (char: string) => {
+        if (!sharedLetterTextures[char]) {
+          const txt = new PIXI.Text({
+            text: char,
+            style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: Math.round(r * 0.85), fill: 0xffffff, alpha: 0.9, fontWeight: 'bold' }
+          });
+          sharedLetterTextures[char] = app.renderer.generateTexture(txt);
+        }
+        return sharedLetterTextures[char];
+      };
 
       // Create GPU Nodes for all items
       allData.forEach(item => {
@@ -648,21 +661,10 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
         node.addChild(mask);
         sprite.mask = mask;
 
-        const letter = new PIXI.Text({
-          text: (item.cleanTitle || '?').charAt(0).toUpperCase(),
-          style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: Math.round(r * 0.85), fill: 0xffffff, alpha: 0.9, fontWeight: 'bold' }
-        });
+        const char = (item.cleanTitle || '?').charAt(0).toUpperCase();
+        const letter = new PIXI.Sprite(getLetterTexture(char));
         letter.anchor.set(0.5);
         node.addChild(letter);
-
-        const label = new PIXI.Text({
-          text: item.cleanTitle.length > 12 ? item.cleanTitle.slice(0, 11) + '…' : item.cleanTitle,
-          style: { fontFamily: 'Inter, sans-serif', fontSize: 4, fill: 0xffffff, alpha: 0.4 }
-        });
-        label.anchor.set(0.5, 0);
-        label.position.set(0, r + 6);
-        label.visible = false;
-        node.addChild(label);
 
         nodesContainer.addChild(node);
         nodeMap.set(item.id, { 
@@ -670,7 +672,6 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
           sprite, 
           inner, 
           letter, 
-          label, 
           item,
           active: false,
           targetX: 0,
@@ -721,7 +722,7 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
 
         // Frustum, LOD & Smooth Position update
         nodeMap.forEach((data) => {
-          const { node, sprite, inner, letter, label, item, active, targetX, targetY } = data;
+          const { node, sprite, inner, letter, item, active, targetX, targetY } = data;
           
           if (!active) {
             node.visible = false;
@@ -748,17 +749,14 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
               inner.visible = false;
               sprite.visible = false;
               letter.visible = false;
-              label.visible = false;
           } else if (cur.scale < 0.35) {
               // Leicht herausgezoomt: Zeige Kreis und Buchstabe, keine Bilder
               inner.visible = true;
               sprite.visible = false;
               letter.visible = true;
-              label.visible = false;
           } else {
-              // Hineingezoomt: Zeige Details, ggf. Bilder und Text-Label
+              // Hineingezoomt: Zeige Details, ggf. Bilder
               inner.visible = true;
-              label.visible = cur.scale > 0.6;
               // Only load the image if it's a REAL image, not a repetitive fallback
               const imageUrl = item.hasRealImage ? item.finalImageUrl : null;
               if (imageUrl) {
