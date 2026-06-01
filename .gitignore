@@ -25,3 +25,10 @@ dist-ssr
 
 # WICHTIG: Den public-Ordner NICHT ignorieren!
 # Er enthält die data.json und appData.js, die Railway für die Production braucht!
+
+# Scripts & Envs
+venv/
+scripts/generate_causality.py
+scripts/scan-*.cjs
+scripts/STYLE_GUIDE*.md
+public/data-content/carl_gustav_jung_primaerquellen_anker.json
