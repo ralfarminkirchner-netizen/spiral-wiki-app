@@ -341,7 +341,7 @@ export default function MindcelWikiView({ data }: { data: any }) {
         nodeLabel="name"
         nodeColor="color"
         nodeRelSize={6}
-        nodeOpacity={0.9}
+        nodeOpacity={1.0}
         nodeThreeObject={(node: any) => {
           if (node.__cachedObj) return node.__cachedObj;
 
@@ -352,7 +352,7 @@ export default function MindcelWikiView({ data }: { data: any }) {
             color: new THREE.Color(node.color),
             map: circleTexture,
             transparent: true,
-            opacity: 0.9,
+            opacity: 1.0,
             alphaTest: 0.05
           });
           material.userData = { originalColor: new THREE.Color(node.color) };
@@ -378,14 +378,14 @@ export default function MindcelWikiView({ data }: { data: any }) {
           return group;
         }}
         nodeThreeObjectExtend={false}
-        linkWidth={link => isLinkActive(link) ? 1.5 : (link.type === 'bridge' ? 0.2 : 0.02)}
+        linkWidth={link => isLinkActive(link) ? 0.4 : (link.type === 'bridge' ? 0.2 : 0.05)}
         linkResolution={6}
         linkColor={link => {
           if (isLinkActive(link)) return '#00ffff';
           return link.type === 'bridge' ? '#00ffcc' : '#ffffff';
         }}
         linkOpacity={link => {
-          if (isLinkActive(link)) return 0.7;
+          if (isLinkActive(link)) return 0.3;
           return link.type === 'bridge' ? 0.04 : 0.02; // Ghostly background links
         }}
         linkDirectionalParticles={link => {
