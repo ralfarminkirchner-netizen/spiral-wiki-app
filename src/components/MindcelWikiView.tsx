@@ -182,6 +182,13 @@ export default function MindcelWikiView({ data }: { data: any }) {
     } else {
       // Single click (focus camera)
       clickTimesRef.current[node.id] = now;
+      
+      // If clicking the currently selected node again, deselect it
+      if (clickedNode && clickedNode.id === node.id) {
+        setClickedNode(null);
+        return;
+      }
+      
       setClickedNode(node);
       if (fgRef.current) {
         const distance = 80;
@@ -209,7 +216,14 @@ export default function MindcelWikiView({ data }: { data: any }) {
         );
       }
     }
-  }, [navigate]);
+  }, [navigate, clickedNode]);
+
+  const isLinkActive = useCallback((link: any) => {
+    if (!clickedNode) return false;
+    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+    return sourceId === clickedNode.id || targetId === clickedNode.id;
+  }, [clickedNode]);
 
   // Dynamic Label LOD and Hover opacity logic
   useEffect(() => {
@@ -364,15 +378,28 @@ export default function MindcelWikiView({ data }: { data: any }) {
           return group;
         }}
         nodeThreeObjectExtend={false}
-        linkWidth={link => link.type === 'bridge' ? 0.3 : 0.1}
-        linkColor={link => link.type === 'bridge' ? '#00ffcc' : '#1e3a5f'}
-        linkOpacity={link => link.type === 'bridge' ? 0.15 : 0.05}
-        linkDirectionalParticles={link => link.type === 'bridge' ? 1 : 0}
-        linkDirectionalParticleSpeed={0.005}
-        linkDirectionalParticleWidth={1.5}
-        linkDirectionalParticleColor={link => '#00ffcc'}
+        linkWidth={link => isLinkActive(link) ? 1.5 : (link.type === 'bridge' ? 0.2 : 0.02)}
+        linkResolution={6}
+        linkColor={link => {
+          if (isLinkActive(link)) return '#00ffff';
+          return link.type === 'bridge' ? '#00ffcc' : '#ffffff';
+        }}
+        linkOpacity={link => {
+          if (isLinkActive(link)) return 0.7;
+          return link.type === 'bridge' ? 0.04 : 0.02; // Ghostly background links
+        }}
+        linkDirectionalParticles={link => {
+          if (isLinkActive(link)) return 3; // Fließen
+          return link.type === 'bridge' ? 1 : 0;
+        }}
+        linkDirectionalParticleSpeed={link => isLinkActive(link) ? 0.01 : 0.003}
+        linkDirectionalParticleWidth={link => isLinkActive(link) ? 3.5 : 1.5}
+        linkDirectionalParticleColor={link => isLinkActive(link) ? '#ffffff' : '#00ffcc'}
+        linkDirectionalArrowLength={link => isLinkActive(link) ? 4 : 0} // Arrow (Größer-kleiner Zeichen)
+        linkDirectionalArrowRelPos={0.8}
         onNodeHover={setHoverNode}
         onNodeClick={handleNodeClick}
+        onBackgroundClick={() => setClickedNode(null)}
         backgroundColor="#050508"
         enableNodeDrag={false}
       />
