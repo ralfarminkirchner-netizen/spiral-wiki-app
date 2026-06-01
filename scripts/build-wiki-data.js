@@ -71,6 +71,13 @@ const IMAGE_OVERRIDES = {
   'Andreas Knöpken': 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Riga_Peter_church.jpg',
   'Andreas Poach': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
   'Andreas Wilms': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
+  // ── Missing Q12 Images ──
+  'Das Zentrale Dogma der Molekularbiologie': 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Central_dogma_of_molecular_biology.svg',
+  'Gotthard Günther': 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Gotthard_Guenther.jpg',
+  'Edward F. Edinger': 'https://upload.wikimedia.org/wikipedia/en/2/26/Ego_and_Archetype_Cover.jpg',
+  'Achtsamkeit und ihre wissenschaftliche Grundlage – Eine Synthese': 'https://upload.wikimedia.org/wikipedia/commons/2/2c/FMRI_scan_during_working_memory_tasks.jpg',
+  'Adverse Childhood Experiences': 'https://upload.wikimedia.org/wikipedia/commons/8/87/ACE_Pyramid.png',
+  'Peter A. Levine': 'https://upload.wikimedia.org/wikipedia/commons/3/36/Peter_A_Levine.jpg',
   'Anton Anger': 'https://upload.wikimedia.org/wikipedia/commons/1/13/Lutherbibel.jpg',
   'Anton Corvinus': 'https://upload.wikimedia.org/wikipedia/commons/8/88/Anton_Corvinus_1501-1553.jpg',
   'Antoine Froment': 'https://upload.wikimedia.org/wikipedia/commons/a/a2/ReformationWallGeneva.JPG',
@@ -261,9 +268,15 @@ async function buildData() {
   console.log('\n🖼️  Bild-URLs validieren und reparieren...');
   let fixedCount = 0;
   monographs.forEach(m => {
+    const originalUrl = m.finalImageUrl;
     const sanitized = sanitizeImageUrl(m.finalImageUrl, m.cleanTitle, m.topCategory);
     if (sanitized !== m.finalImageUrl) fixedCount++;
     m.finalImageUrl = sanitized;
+
+    // Check if we used a curated override or a valid fix, which means we now have a REAL image
+    if (IMAGE_OVERRIDES[m.cleanTitle] || BROKEN_IMAGE_FIXES[m.cleanTitle]) {
+      m.hasRealImage = true;
+    }
 
     // Assign fallback if still missing
     if (!m.finalImageUrl) {
