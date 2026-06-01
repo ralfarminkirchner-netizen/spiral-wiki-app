@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import * as PIXI from 'pixi.js';
-
+import MindcelWikiView from './components/MindcelWikiView';
 // ─── Utilities ───
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
@@ -548,6 +548,8 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
   const nodeMapRef = useRef<Map<string, any>>(new Map());
   const drawArmsRef = useRef<(vm: ViewMode) => void>(() => {});
   const fitScaleRef = useRef<(posList: typeof positions) => void>(() => {});
+  const loadQueueRef = useRef(new Set<string>());
+  const cacheRef = useRef(new Set<string>());
 
   // PixiJS Initialization & Scene Graph (Mount once)
   useEffect(() => {
@@ -577,8 +579,6 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
       const r = 22;
       const nodeMap = new Map();
       nodeMapRef.current = nodeMap;
-      const loadQueue = new Set<string>();
-      const cache = new Set<string>();
 
       // Center Glow
       const glow = new PIXI.Graphics();
@@ -769,20 +769,20 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
                       sprite.visible = false;
                       letter.visible = true;
                       
-                      if (checkLoads && !cache.has(imageUrl) && !loadQueue.has(imageUrl) && loadQueue.size < 15) {
-                          loadQueue.add(imageUrl);
+                      if (checkLoads && !cacheRef.current.has(imageUrl) && !loadQueueRef.current.has(imageUrl) && loadQueueRef.current.size < 15) {
+                          loadQueueRef.current.add(imageUrl);
                           PIXI.Assets.load(imageUrl).then((tex) => {
                               if (tex && sprite) {
                                   sprite.texture = tex;
                                   sprite.visible = true;
                                   letter.visible = false;
                               }
-                              cache.add(imageUrl);
-                              loadQueue.delete(imageUrl);
+                              cacheRef.current.add(imageUrl);
+                              loadQueueRef.current.delete(imageUrl);
                           }).catch((err) => {
                               console.warn('Failed to load image:', imageUrl, err);
-                              cache.add(imageUrl);
-                              loadQueue.delete(imageUrl);
+                              cacheRef.current.add(imageUrl);
+                              loadQueueRef.current.delete(imageUrl);
                           });
                       }
                   }
@@ -803,9 +803,11 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
         setPixiReady(false);
       }
     };
-  }, [allData, superArms, getArmIndex]);
+  }, []);
 
   // Update positions and viewMode dynamically without re-mounting
+  const prevViewMode = useRef(viewMode);
+  
   useEffect(() => {
     if (!pixiReady) return;
     const nodeMap = nodeMapRef.current;
@@ -832,8 +834,9 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
       }
     });
 
-    if (fitScaleRef.current) {
+    if (fitScaleRef.current && prevViewMode.current !== viewMode) {
       fitScaleRef.current(positions);
+      prevViewMode.current = viewMode;
     }
   }, [positions, viewMode, pixiReady]);
 
@@ -1290,6 +1293,7 @@ export default function App() {
   const [readMonographs, setReadMonographs] = useLocalStorage<string[]>('spiral-wiki-read', []);
   const [favorites, setFavorites] = useLocalStorage<string[]>('spiral-wiki-favorites', []);
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>('spiral-view-mode', 'spiral');
+  const [appView, setAppView] = useLocalStorage<'spiral'|'mindcel'|'disc'>('app-view-mode', 'spiral');
 
   const markAsRead = useCallback((id: string) => {
     setReadMonographs(prev => {
@@ -1355,13 +1359,50 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={
-        <Dashboard data={data} readMonographs={readMonographs} favorites={favorites} toggleFavorite={toggleFavorite} viewMode={viewMode} setViewMode={setViewMode} />
-      } />
-      <Route path="/monograph/:id" element={
-        <MonographReader data={data} markAsRead={markAsRead} favorites={favorites} toggleFavorite={toggleFavorite} />
-      } />
-    </Routes>
+    <>
+      <div style={{
+        position: 'fixed', top: '15px', left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', gap: '8px', zIndex: 1000,
+        background: 'rgba(10,10,15,0.7)', backdropFilter: 'blur(12px)',
+        padding: '6px', borderRadius: '100px', border: '1px solid rgba(255,255,255,0.05)',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+      }}>
+        {(['spiral', 'mindcel', 'disc'] as const).map(v => (
+          <button 
+            key={v}
+            onClick={() => {
+               if (v === 'disc') alert('DiSC WiKi – In Entwicklung');
+               else setAppView(v);
+            }}
+            style={{
+              padding: '8px 20px', borderRadius: '100px', border: 'none', cursor: 'pointer',
+              fontWeight: '600', fontSize: '13px', transition: 'all 0.3s ease',
+              background: appView === v ? 'rgba(255,255,255,0.1)' : 'transparent',
+              color: appView === v ? '#00e5ff' : '#64748b',
+              boxShadow: appView === v ? '0 0 15px rgba(0,229,255,0.2)' : 'none'
+            }}
+          >
+            {v === 'spiral' ? 'SPiRAL Wiki' : v === 'mindcel' ? 'MiNDCEL WiKi' : 'DiSC WiKi'}
+          </button>
+        ))}
+      </div>
+
+      <Routes>
+        <Route path="/" element={
+          appView === 'spiral' ? (
+            <Dashboard data={data} readMonographs={readMonographs} favorites={favorites} toggleFavorite={toggleFavorite} viewMode={viewMode} setViewMode={setViewMode} />
+          ) : appView === 'mindcel' ? (
+            <MindcelWikiView data={data} />
+          ) : (
+            <div style={{ color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: 'var(--bg-dark)' }}>
+              <h1>DiSC WiKi Coming Soon</h1>
+            </div>
+          )
+        } />
+        <Route path="/monograph/:id" element={
+          <MonographReader data={data} markAsRead={markAsRead} favorites={favorites} toggleFavorite={toggleFavorite} />
+        } />
+      </Routes>
+    </>
   );
 }
