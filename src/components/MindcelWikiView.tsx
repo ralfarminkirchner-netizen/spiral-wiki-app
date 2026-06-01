@@ -54,12 +54,6 @@ const CATEGORY_COLOR: Record<string, string> = {
   'Synthesen': '#00ffcc',
 };
 
-// Seeded random for consistent links
-const rng = (seed: number) => {
-  let s = seed;
-  return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return Math.abs(s) / 0x7fffffff; };
-};
-
 export default function MindcelWikiView({ data }: { data: any }) {
   const navigate = useNavigate();
   const fgRef = useRef<any>();
@@ -106,65 +100,15 @@ export default function MindcelWikiView({ data }: { data: any }) {
 
     let links: any[] = [];
 
+    // Only REAL links are rendered. 'influence' = directed (Wikidata P737),
+    // 'association' = undirected (corpus [[wiki-links]]). No links are ever
+    // fabricated; if none are supplied the graph simply shows unconnected nodes.
     if (hasExplicitLinks) {
       links = rawLinks.map(l => ({
         source: typeof l.source === 'object' ? l.source.id : l.source,
         target: typeof l.target === 'object' ? l.target.id : l.target,
-        type: l.type || 'similar'
+        type: l.type || 'association'
       }));
-    } else {
-      const byCategory: Record<string, string[]> = {};
-      nodes.forEach(n => {
-        if (!byCategory[n.cluster]) byCategory[n.cluster] = [];
-        byCategory[n.cluster].push(n.id);
-      });
-
-      const rand = rng(42);
-      const addedLinks = new Set<string>();
-
-      // 1. Guarantee connection: create a ring inside each category
-      Object.values(byCategory).forEach(clusterIds => {
-        if (clusterIds.length < 2) return;
-        for (let i = 0; i < clusterIds.length; i++) {
-          const s = clusterIds[i];
-          const t = clusterIds[(i + 1) % clusterIds.length];
-          const key = [s, t].sort().join('|');
-          addedLinks.add(key);
-          links.push({ source: s, target: t, type: 'similar' });
-        }
-      });
-
-      // 2. Add random mesh connections for visual density
-      nodes.forEach(n => {
-        const peers = byCategory[n.cluster]?.filter(id => id !== n.id) || [];
-        const extraCount = Math.min(2, peers.length);
-        for (let i = 0; i < extraCount; i++) {
-          const targetId = peers[Math.floor(rand() * peers.length)];
-          const key = [n.id, targetId].sort().join('|');
-          if (!addedLinks.has(key)) {
-            addedLinks.add(key);
-            links.push({ source: n.id, target: targetId, type: 'similar' });
-          }
-        }
-      });
-
-      // 3. Connect 'Synthesen' category to all other categories as bridges
-      const synthesenNodes = nodes.filter(n => n.cluster === 'Synthesen');
-      const otherCategories = Object.keys(byCategory).filter(k => k !== 'Synthesen');
-      synthesenNodes.forEach(sn => {
-        // Connect to 1-2 random categories
-        for (let i = 0; i < 2; i++) {
-          const targetCat = otherCategories[Math.floor(rand() * otherCategories.length)];
-          const pool = byCategory[targetCat];
-          if (!pool || pool.length === 0) continue;
-          const targetId = pool[Math.floor(rand() * pool.length)];
-          const key = [sn.id, targetId].sort().join('|');
-          if (!addedLinks.has(key)) {
-            addedLinks.add(key);
-            links.push({ source: sn.id, target: targetId, type: 'bridge' });
-          }
-        }
-      });
     }
 
     return { nodes, links };
@@ -218,12 +162,56 @@ export default function MindcelWikiView({ data }: { data: any }) {
     }
   }, [navigate, clickedNode]);
 
+  // Full-Network Traversal (BFS) to find the entire connected subgraph
+  const activeSubgraph = useMemo(() => {
+    if (!clickedNode) return { nodes: new Set<string>(), links: new Set<any>() };
+    
+    const activeNodes = new Set<string>();
+    const activeLinks = new Set<any>();
+    
+    // Build adjacency list for fast traversal
+    const adj = new Map<string, any[]>();
+    graphData.links.forEach(l => {
+      const src = typeof l.source === 'object' ? l.source.id : l.source;
+      const tgt = typeof l.target === 'object' ? l.target.id : l.target;
+      if (!adj.has(src)) adj.set(src, []);
+      if (!adj.has(tgt)) adj.set(tgt, []);
+      adj.get(src)!.push(l);
+      adj.get(tgt)!.push(l);
+    });
+    
+    const queue = [clickedNode.id];
+    activeNodes.add(clickedNode.id);
+    
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      const neighbors = adj.get(curr) || [];
+      
+      neighbors.forEach(link => {
+        activeLinks.add(link);
+        const src = typeof link.source === 'object' ? link.source.id : link.source;
+        const tgt = typeof link.target === 'object' ? link.target.id : link.target;
+        const nextNode = src === curr ? tgt : src;
+        
+        if (!activeNodes.has(nextNode)) {
+          activeNodes.add(nextNode);
+          queue.push(nextNode);
+        }
+      });
+    }
+    
+    return { nodes: activeNodes, links: activeLinks };
+  }, [clickedNode, graphData]);
+
   const isLinkActive = useCallback((link: any) => {
     if (!clickedNode) return false;
-    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-    return sourceId === clickedNode.id || targetId === clickedNode.id;
-  }, [clickedNode]);
+    return activeSubgraph.links.has(link);
+  }, [clickedNode, activeSubgraph]);
+
+  const isNodeActive = useCallback((node: any) => {
+    if (!clickedNode) return true; // If nothing clicked, all are "active"
+    return activeSubgraph.nodes.has(node.id);
+  }, [clickedNode, activeSubgraph]);
 
   // Dynamic Label LOD and Hover opacity logic
   useEffect(() => {
@@ -264,7 +252,13 @@ export default function MindcelWikiView({ data }: { data: any }) {
           } else {
             node.__labelSprite.visible = true;
             const dist = Math.sqrt(distSq);
-            const opacity = Math.max(0, Math.min(1, (maxDist - dist) / (maxDist - minDist)));
+            let opacity = Math.max(0, Math.min(1, (maxDist - dist) / (maxDist - minDist)));
+            
+            // Dim label if ghost node
+            if (clickedNode && !isNodeActive(node)) {
+              opacity *= 0.1; 
+            }
+            
             if (node.__labelSprite.material) {
               node.__labelSprite.material.opacity = opacity;
               node.__labelSprite.material.transparent = true;
@@ -348,14 +342,23 @@ export default function MindcelWikiView({ data }: { data: any }) {
           const group = new THREE.Group();
           const size = node.val * 1.5;
 
+          // Ghost node dimming
+          const nodeOpacity = clickedNode && !isNodeActive(node) ? 0.08 : 1.0;
+
           const material = new THREE.SpriteMaterial({ 
             color: new THREE.Color(node.color),
             map: circleTexture,
             transparent: true,
-            opacity: 1.0,
+            opacity: nodeOpacity,
             alphaTest: 0.05
           });
           material.userData = { originalColor: new THREE.Color(node.color) };
+          
+          // Re-apply opacity if we are returning a cached object
+          if (node.__cachedObj) {
+            const mat = node.__cachedObj.children[0].material;
+            mat.opacity = nodeOpacity;
+          }
           
           const sprite = new THREE.Sprite(material);
           sprite.scale.set(size, size, 1);
@@ -378,25 +381,24 @@ export default function MindcelWikiView({ data }: { data: any }) {
           return group;
         }}
         nodeThreeObjectExtend={false}
-        linkWidth={link => isLinkActive(link) ? 0.4 : (link.type === 'bridge' ? 0.2 : 0.05)}
+        linkWidth={link => isLinkActive(link) ? 0.8 : 0.05}
         linkResolution={6}
         linkColor={link => {
           if (isLinkActive(link)) return '#00ffff';
-          return link.type === 'bridge' ? '#00ffcc' : '#ffffff';
+          return '#ffffff';
         }}
         linkOpacity={link => {
-          if (isLinkActive(link)) return 0.3;
-          return link.type === 'bridge' ? 0.04 : 0.02; // Ghostly background links
+          if (isLinkActive(link)) return 0.6;
+          return 0.02; // ultra-transparent ghostly connections
         }}
         linkDirectionalParticles={link => {
-          if (isLinkActive(link)) return 3; // Fließen
-          return link.type === 'bridge' ? 1 : 0;
+          if (!clickedNode) return 1; // gentle flow everywhere when idle
+          if (isLinkActive(link)) return 4; // heavy flow along active network
+          return 0; // dead links have no flow
         }}
-        linkDirectionalParticleSpeed={link => isLinkActive(link) ? 0.01 : 0.003}
-        linkDirectionalParticleWidth={link => isLinkActive(link) ? 3.5 : 1.5}
-        linkDirectionalParticleColor={link => isLinkActive(link) ? '#ffffff' : '#00ffcc'}
-        linkDirectionalArrowLength={link => isLinkActive(link) ? 4 : 0} // Arrow (Größer-kleiner Zeichen)
-        linkDirectionalArrowRelPos={0.8}
+        linkDirectionalParticleSpeed={link => isLinkActive(link) ? 0.008 : 0.002}
+        linkDirectionalParticleWidth={link => isLinkActive(link) ? 3.5 : 1.0}
+        linkDirectionalParticleColor={link => isLinkActive(link) ? '#ffffff' : '#4dd0e1'}
         onNodeHover={setHoverNode}
         onNodeClick={handleNodeClick}
         onBackgroundClick={() => setClickedNode(null)}

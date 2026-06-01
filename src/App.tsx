@@ -1287,6 +1287,7 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
 
 export default function App() {
   const [data, setData] = useState<MonographMeta[]>([]);
+  const [graphLinks, setGraphLinks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [readMonographs, setReadMonographs] = useLocalStorage<string[]>('spiral-wiki-read', []);
   const [favorites, setFavorites] = useLocalStorage<string[]>('spiral-wiki-favorites', []);
@@ -1308,17 +1309,20 @@ export default function App() {
   }, [setFavorites]);
 
   useEffect(() => {
-    // Load the TINY index file (~50KB) instead of the monolithic 5.9MB data.json
-    fetch(`/data-index.json?_=${Date.now()}`)
-      .then(res => {
-        if (!res.ok) throw new Error('Index not found, falling back to legacy');
-        return res.json();
-      })
-      .then(json => {
-        setData(json);
+    // Load the TINY index file (~50KB) and causality-graph.json
+    Promise.all([
+      fetch(`/data-index.json?_=${Date.now()}`).then(res => res.json()),
+      fetch(`/causality-graph.json?_=${Date.now()}`).then(res => res.ok ? res.json() : { edges: [] }).catch(() => ({ edges: [] }))
+    ])
+      .then(([indexJson, causalityJson]) => {
+        setData(indexJson);
+        if (causalityJson && causalityJson.edges) {
+          setGraphLinks(causalityJson.edges);
+        }
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Failed to load optimized data:', err);
         // Fallback: legacy data.json (if data-index.json not yet built)
         fetch(`/data.json?_=${Date.now()}`)
           .then(res => res.json())
@@ -1343,6 +1347,15 @@ export default function App() {
             setLoading(false);
           });
       });
+  }, []);
+
+  // Load the real two-layer influence/association links for the 3D graph.
+  // (Wikidata P737 = directed influence; corpus [[wiki-links]] = undirected association.)
+  useEffect(() => {
+    fetch(`/graph-links.json?_=${Date.now()}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(json => { if (json && Array.isArray(json.links)) setGraphLinks(json.links); })
+      .catch(() => { /* no links file yet → graph renders nodes only */ });
   }, []);
 
   if (loading) {
@@ -1390,7 +1403,7 @@ export default function App() {
           appView === 'spiral' ? (
             <Dashboard data={data} readMonographs={readMonographs} favorites={favorites} toggleFavorite={toggleFavorite} viewMode={viewMode} setViewMode={setViewMode} />
           ) : appView === 'mindcel' ? (
-            <MindcelWikiView data={data} />
+            <MindcelWikiView data={{ nodes: data, links: graphLinks }} />
           ) : (
             <div style={{ color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: 'var(--bg-dark)' }}>
               <h1>DiSC WiKi Coming Soon</h1>
