@@ -86,7 +86,13 @@ export default function MindcelWikiView({ data }: { data: any }) {
       }
     }
 
-    const nodes = rawNodes.map(e => ({
+    // Deduplicate nodes by ID
+    const uniqueMap = new Map();
+    rawNodes.forEach(n => {
+      if (!uniqueMap.has(n.id)) uniqueMap.set(n.id, n);
+    });
+    
+    const nodes = Array.from(uniqueMap.values()).map(e => ({
       id: e.id,
       name: e.cleanTitle || e.title,
       cluster: e.topCategory || e.category || 'Wissenschaft',
@@ -116,39 +122,47 @@ export default function MindcelWikiView({ data }: { data: any }) {
       const rand = rng(42);
       const addedLinks = new Set<string>();
 
+      // 1. Guarantee connection: create a ring inside each category
+      Object.values(byCategory).forEach(clusterIds => {
+        if (clusterIds.length < 2) return;
+        for (let i = 0; i < clusterIds.length; i++) {
+          const s = clusterIds[i];
+          const t = clusterIds[(i + 1) % clusterIds.length];
+          const key = [s, t].sort().join('|');
+          addedLinks.add(key);
+          links.push({ source: s, target: t, type: 'similar' });
+        }
+      });
+
+      // 2. Add random mesh connections for visual density
       nodes.forEach(n => {
         const peers = byCategory[n.cluster]?.filter(id => id !== n.id) || [];
-        const count = Math.min(3, peers.length);
-        for (let i = 0; i < count; i++) {
-          const idx = Math.floor(rand() * peers.length);
-          const targetId = peers[idx];
+        const extraCount = Math.min(2, peers.length);
+        for (let i = 0; i < extraCount; i++) {
+          const targetId = peers[Math.floor(rand() * peers.length)];
           const key = [n.id, targetId].sort().join('|');
           if (!addedLinks.has(key)) {
             addedLinks.add(key);
-            links.push({
-              source: n.id,
-              target: targetId,
-              type: 'similar',
-            });
+            links.push({ source: n.id, target: targetId, type: 'similar' });
           }
         }
       });
 
+      // 3. Connect 'Synthesen' category to all other categories as bridges
       const synthesenNodes = nodes.filter(n => n.cluster === 'Synthesen');
       const otherCategories = Object.keys(byCategory).filter(k => k !== 'Synthesen');
       synthesenNodes.forEach(sn => {
-        const targetCat = otherCategories[Math.floor(rand() * otherCategories.length)];
-        const pool = byCategory[targetCat];
-        if (!pool || pool.length === 0) return;
-        const targetId = pool[Math.floor(rand() * pool.length)];
-        const key = [sn.id, targetId].sort().join('|');
-        if (!addedLinks.has(key)) {
-          addedLinks.add(key);
-          links.push({
-            source: sn.id,
-            target: targetId,
-            type: 'bridge',
-          });
+        // Connect to 1-2 random categories
+        for (let i = 0; i < 2; i++) {
+          const targetCat = otherCategories[Math.floor(rand() * otherCategories.length)];
+          const pool = byCategory[targetCat];
+          if (!pool || pool.length === 0) continue;
+          const targetId = pool[Math.floor(rand() * pool.length)];
+          const key = [sn.id, targetId].sort().join('|');
+          if (!addedLinks.has(key)) {
+            addedLinks.add(key);
+            links.push({ source: sn.id, target: targetId, type: 'bridge' });
+          }
         }
       });
     }
