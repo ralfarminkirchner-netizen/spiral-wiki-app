@@ -2,10 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pLimit from './limit.js';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 // Path to the core library containing markdown monographs
 const libraryDir = path.resolve('/Users/ralfkirchner/spiral-os/knowledge_base/core_library');
 // Output directory (served by Vite/VitePress)
@@ -15,7 +13,6 @@ const contentDir = path.join(outputDir, 'data-content');
 // Legacy files (still generated for backwards compat during transition)
 const legacyJsonFile = path.join(outputDir, 'data.json');
 const legacyJsFile = path.join(outputDir, 'appData.js');
-
 /** Recursively collect all *.md files under a directory */
 function getMarkdownFiles(dir, fileList = []) {
   try {
@@ -33,7 +30,6 @@ function getMarkdownFiles(dir, fileList = []) {
   }
   return fileList;
 }
-
 // ─── IMAGE URL SANITIZATION ───
 // Known broken URLs that need replacing
 const BROKEN_IMAGE_FIXES = {
@@ -47,7 +43,6 @@ const BROKEN_IMAGE_FIXES = {
   'Aleydis von Schaerbeek': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Villiersstbartholomew.jpg/440px-Villiersstbartholomew.jpg',
   'Arthur B. Chatelain': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/GodfreyKneller-IsaacNewton-1689.jpg/440px-GodfreyKneller-IsaacNewton-1689.jpg',
 };
-
 // Curated image overrides: replaces generic category fallbacks with
 // specific portraits, artworks, or thematic images for individual entries
 const IMAGE_OVERRIDES = {
@@ -72,81 +67,73 @@ const IMAGE_OVERRIDES = {
   'Andreas Poach': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
   'Andreas Wilms': 'https://upload.wikimedia.org/wikipedia/commons/6/64/Lutherbibel.jpg',
   // ── 53 Fehlende Bilder (D11 Audit Auto-Fetch) ──
-  'Marvin Harris': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Max Gluckman': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Victor Turner': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Bernard Baars': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Synthetische Evolutionstheorie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Die Zelltheorie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Turingmaschine': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Emergenz': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Virginia Woolf': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Macy-Konferenzen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'György Buzsáki': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Paul Churchland': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Friedrich Nietzsche': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Stoizismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Konstruktivismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'George Kelly (Psychologe)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Konstruktivismus (Lernpsychologie)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Konstruktivismus (Philosophie)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Peter L. Berger': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Sozialkonstruktivismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Standardmodell': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Charles W. Morris': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'A.H. Almaas': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'P. D. Ouspensky': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Janina Fisher': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Posttraumatische Belastungsstörung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Michaela Huber': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Onno van der Hart': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Pat Ogden': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Rachel Yehuda': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Richard C. Schwartz': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Arthur Janov': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Ida Rolf': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Stanley Keleman': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'E.F. Schumacher': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Klimapsychologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Tiefenökologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Bernard Baars und die Global Workspace Theory': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Die Synthetische Evolutionstheorie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Die Turingmaschine': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Emergenz und Selbstorganisation': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Virginia_Woolf_monographie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Die Macy-Konferenzen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'György Buzsáki, Gehirnrhythmen und neuronale Syntax': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Paul Churchland und der eliminative Materialismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Nietzsche – Vertiefung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Stoizismus – Die Kunst des guten Lebens': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Erlanger Konstruktivismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'George A. Kelly': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Konstruktivistische Didaktik': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Konstruktivistische Erkenntnistheorie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Peter L. Berger und Thomas Luckmann': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Sozialer Konstruktivismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Standardmodell der Teilchenphysik': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'SYNTHESEN-MASTER-REGISTER': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Anthropologie der Rituale und Übergänge': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Aufmerksamkeitsökonomie – Die wertvollste Ressource des 21. Jahrhunderts': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Bindungstheorie – Von Bowlby bis zur Neurobiologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Das Fraktal als Denkgrundlage': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Das Selbst – Konstrukt, Illusion oder Wirklichkeit?': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Frieden und Gewalt – Eine politische Psychologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Der leidende Körper und die heilende Gemeinschaft': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Informationstheorie, Komplexität und Bedeutung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Der Körper als Wissen – Leibphilosophie und Somaforschung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Kreativität und Schöpfung – Eine Synthese': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Mathematik und Ästhetik – Die Schönheit der Struktur': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Soziale Bewegungen und kollektiver Wandel': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Das Unbewusste als Feld – Kollektive und morphische Dimensionen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Pjotr Demianovich Ouspenski': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Komplexe Posttraumatische Belastungsstörung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Komplexes Trauma und KPTBS': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Klimapsychologie – Die psychischen Dimensionen der ökologischen Krise': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Tiefenökologie – Die Philosophie der Naturverbundenheit': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-  'Tiefenökologie und Ökopsychologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg',
-
+  'Marvin Harris': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/00/Marvin_Harris.jpg/330px-Marvin_Harris.jpg',
+  'Max Gluckman': 'https://upload.wikimedia.org/wikipedia/en/thumb/6/67/Max_Gluckman.jpg/330px-Max_Gluckman.jpg',
+  'Victor Turner': 'https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/Victor_Turner.jpg/330px-Victor_Turner.jpg',
+  'Bernard Baars': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Bernard_Baars.jpg/330px-Bernard_Baars.jpg',
+  'Synthetische Evolutionstheorie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Charles_Darwin_seated.jpg/330px-Charles_Darwin_seated.jpg',
+  'Die Zelltheorie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Cork_Micrographia_Hooke.png/330px-Cork_Micrographia_Hooke.png',
+  'Turingmaschine': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Turing_machine_2b.svg/330px-Turing_machine_2b.svg.png',
+  'Emergenz': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Flock_of_birds.jpg/330px-Flock_of_birds.jpg',
+  'Virginia Woolf': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/George_Charles_Beresford_-_Virginia_Woolf_in_1902_-_Restoration.jpg/330px-George_Charles_Beresford_-_Virginia_Woolf_in_1902_-_Restoration.jpg',
+  'Macy-Konferenzen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Macy_conference_1946.jpg/330px-Macy_conference_1946.jpg',
+  'György Buzsáki': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Gyorgy_Buzsaki.jpg/330px-Gyorgy_Buzsaki.jpg',
+  'Paul Churchland': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Paul_Churchland.jpg/330px-Paul_Churchland.jpg',
+  'Friedrich Nietzsche': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Nietzsche187a.jpg/330px-Nietzsche187a.jpg',
+  'Stoizismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg/330px-Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg',
+  'Konstruktivismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Piaget.jpg/330px-Piaget.jpg',
+  'George Kelly (Psychologe)': 'https://upload.wikimedia.org/wikipedia/en/thumb/5/5b/George_Alexander_Kelly.jpg/330px-George_Alexander_Kelly.jpg',
+  'Konstruktivismus (Lernpsychologie)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Piaget.jpg/330px-Piaget.jpg',
+  'Konstruktivismus (Philosophie)': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Paul_Watzlawick.jpg/330px-Paul_Watzlawick.jpg',
+  'Peter L. Berger': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Peter_Ludwig_Berger.jpg/330px-Peter_Ludwig_Berger.jpg',
+  'Sozialkonstruktivismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Peter_Ludwig_Berger.jpg/330px-Peter_Ludwig_Berger.jpg',
+  'Standardmodell': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Standard_Model_of_Elementary_Particles.svg/330px-Standard_Model_of_Elementary_Particles.svg.png',
+  'Charles W. Morris': 'https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/Charles_W._Morris.jpg/330px-Charles_W._Morris.jpg',
+  'P. D. Ouspensky': 'https://upload.wikimedia.org/wikipedia/en/2/28/P._D._Ouspensky.jpg',
+  'Posttraumatische Belastungsstörung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/The_Scream.jpg/800px-The_Scream.jpg',
+  'Rachel Yehuda': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Rachel_Yehuda.jpg/330px-Rachel_Yehuda.jpg',
+  'Arthur Janov': 'https://upload.wikimedia.org/wikipedia/en/5/54/Arthur_Janov.jpg',
+  'Ida Rolf': 'https://upload.wikimedia.org/wikipedia/en/e/ee/Ida_Pauline_Rolf.jpg',
+  'E.F. Schumacher': 'https://upload.wikimedia.org/wikipedia/en/4/42/SchumacherSiB200.jpg',
+  'Klimapsychologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Global_Temperature_Anomaly.svg/800px-Global_Temperature_Anomaly.svg.png',
+  'Tiefenökologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/The_Earth_seen_from_Apollo_17.jpg/800px-The_Earth_seen_from_Apollo_17.jpg',
+  'Bernard Baars und die Global Workspace Theory': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Bernard_Baars.jpg/330px-Bernard_Baars.jpg',
+  'Die Synthetische Evolutionstheorie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Charles_Darwin_seated.jpg/330px-Charles_Darwin_seated.jpg',
+  'Die Turingmaschine': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Turing_machine_2b.svg/330px-Turing_machine_2b.svg.png',
+  'Emergenz und Selbstorganisation': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Flock_of_birds.jpg/330px-Flock_of_birds.jpg',
+  'Virginia_Woolf_monographie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/George_Charles_Beresford_-_Virginia_Woolf_in_1902_-_Restoration.jpg/330px-George_Charles_Beresford_-_Virginia_Woolf_in_1902_-_Restoration.jpg',
+  'Die Macy-Konferenzen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Norbert_Wiener.jpg/330px-Norbert_Wiener.jpg',
+  'György Buzsáki, Gehirnrhythmen und neuronale Syntax': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Gyorgy_Buzsaki.jpg/330px-Gyorgy_Buzsaki.jpg',
+  'Paul Churchland und der eliminative Materialismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Paul_Churchland.jpg/330px-Paul_Churchland.jpg',
+  'Nietzsche – Vertiefung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Nietzsche187a.jpg/330px-Nietzsche187a.jpg',
+  'Stoizismus – Die Kunst des guten Lebens': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg/330px-Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg',
+  'Erlanger Konstruktivismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Paul_Lorenzen.jpg/330px-Paul_Lorenzen.jpg',
+  'George A. Kelly': 'https://upload.wikimedia.org/wikipedia/en/thumb/5/5b/George_Alexander_Kelly.jpg/330px-George_Alexander_Kelly.jpg',
+  'Konstruktivistische Didaktik': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Piaget.jpg/330px-Piaget.jpg',
+  'Konstruktivistische Erkenntnistheorie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Paul_Watzlawick.jpg/330px-Paul_Watzlawick.jpg',
+  'Peter L. Berger und Thomas Luckmann': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Peter_Ludwig_Berger.jpg/330px-Peter_Ludwig_Berger.jpg',
+  'Sozialer Konstruktivismus': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Peter_Ludwig_Berger.jpg/330px-Peter_Ludwig_Berger.jpg',
+  'Standardmodell der Teilchenphysik': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Standard_Model_of_Elementary_Particles.svg/330px-Standard_Model_of_Elementary_Particles.svg.png',
+  'SYNTHESEN-MASTER-REGISTER': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Network_representation_of_brain_connectivity.jpg/800px-Network_representation_of_brain_connectivity.jpg',
+  'Anthropologie der Rituale und Übergänge': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Rite_of_passage_-_Bwiti.jpg/800px-Rite_of_passage_-_Bwiti.jpg',
+  'Aufmerksamkeitsökonomie – Die wertvollste Ressource des 21. Jahrhunderts': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Piccadilly_Circus_at_Night.jpg/800px-Piccadilly_Circus_at_Night.jpg',
+  'Bindungstheorie – Von Bowlby bis zur Neurobiologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Mother_and_baby.jpg/800px-Mother_and_baby.jpg',
+  'Das Fraktal als Denkgrundlage': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Mandelbrot_sequence_new.gif/800px-Mandelbrot_sequence_new.gif',
+  'Das Selbst – Konstrukt, Illusion oder Wirklichkeit?': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Rembrandt_van_Rijn_-_Self-Portrait_-_Google_Art_Project.jpg/800px-Rembrandt_van_Rijn_-_Self-Portrait_-_Google_Art_Project.jpg',
+  'Frieden und Gewalt – Eine politische Psychologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Peace_dove.svg/800px-Peace_dove.svg.png',
+  'Der leidende Körper und die heilende Gemeinschaft': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Michelangelo%27s_Pieta_5450_cropncleaned.jpg/800px-Michelangelo%27s_Pieta_5450_cropncleaned.jpg',
+  'Informationstheorie, Komplexität und Bedeutung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Shannon_communication_system.svg/800px-Shannon_communication_system.svg.png',
+  'Der Körper als Wissen – Leibphilosophie und Somaforschung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Da_Vinci_Vitruve_Luc_Viatour.jpg/800px-Da_Vinci_Vitruve_Luc_Viatour.jpg',
+  'Kreativität und Schöpfung – Eine Synthese': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Creation_of_Adam.jpg/800px-Creation_of_Adam.jpg',
+  'Mathematik und Ästhetik – Die Schönheit der Struktur': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/FibonacciSpiral.svg/800px-FibonacciSpiral.svg.png',
+  'Soziale Bewegungen und kollektiver Wandel': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Eug%C3%A8ne_Delacroix_-_Le_28_Juillet._La_Libert%C3%A9_guidant_le_peuple.jpg/800px-Eug%C3%A8ne_Delacroix_-_Le_28_Juillet._La_Libert%C3%A9_guidant_le_peuple.jpg',
+  'Das Unbewusste als Feld – Kollektive und morphische Dimensionen': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Mandala_11.jpg/800px-Mandala_11.jpg',
+  'Pjotr Demianovich Ouspenski': 'https://upload.wikimedia.org/wikipedia/en/2/28/P._D._Ouspensky.jpg',
+  'Komplexe Posttraumatische Belastungsstörung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/The_Scream.jpg/800px-The_Scream.jpg',
+  'Komplexes Trauma und KPTBS': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/The_Scream.jpg/800px-The_Scream.jpg',
+  'Klimapsychologie – Die psychischen Dimensionen der ökologischen Krise': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Global_Temperature_Anomaly.svg/800px-Global_Temperature_Anomaly.svg.png',
+  'Tiefenökologie – Die Philosophie der Naturverbundenheit': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/The_Earth_seen_from_Apollo_17.jpg/800px-The_Earth_seen_from_Apollo_17.jpg',
+  'Tiefenökologie und Ökopsychologie': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/The_Earth_seen_from_Apollo_17.jpg/800px-The_Earth_seen_from_Apollo_17.jpg',
   // ── Missing Q12 Images ──
   'Das Zentrale Dogma der Molekularbiologie': 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Central_dogma_of_molecular_biology.svg',
   'Gotthard Günther': 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Gotthard_Guenther.jpg',
@@ -226,8 +213,14 @@ const IMAGE_OVERRIDES = {
   'Anton Musa': 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Merseburger_Dom.jpg',
   'Antonie Rädler': 'https://upload.wikimedia.org/wikipedia/commons/3/37/Wigratzbad_1.jpg',
   'Andrei Anatoljewitsch Atutschin': 'https://upload.wikimedia.org/wikipedia/commons/3/37/Kulindadromeus_by_Tom_Parker.png',
+  'A.H. Almaas': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Diamond_and_graphite2.jpg/800px-Diamond_and_graphite2.jpg',
+  'Janina Fisher': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Kintsugi_bowl.jpg/800px-Kintsugi_bowl.jpg',
+  'Michaela Huber': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Phrenology.jpg/800px-Phrenology.jpg',
+  'Onno van der Hart': 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Broken_glass.jpg/800px-Broken_glass.jpg',
+  'Pat Ogden': 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Nervous_system_diagram.png/800px-Nervous_system_diagram.png',
+  'Richard C. Schwartz': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Russian-Matroshka_no_bg.jpg/800px-Russian-Matroshka_no_bg.jpg',
+  'Stanley Keleman': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Human_body_silhouette.svg/800px-Human_body_silhouette.svg.png'
 };
-
 function sanitizeImageUrl(url, title, topCategory) {
   // Check curated overrides first (highest priority)
   if (IMAGE_OVERRIDES[title]) {
@@ -246,7 +239,6 @@ function sanitizeImageUrl(url, title, topCategory) {
   }
   return url;
 }
-
 const CATEGORY_FALLBACK_IMAGES = {
   'Psychologie': 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Rorschach_blot_01.jpg',
   'Philosophie': 'https://upload.wikimedia.org/wikipedia/commons/8/8c/David_-_The_Death_of_Socrates.jpg',
@@ -263,34 +255,27 @@ const CATEGORY_FALLBACK_IMAGES = {
   'Traumaforschung': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/The_Scream.jpg/800px-The_Scream.jpg',
   'Physik_und_Mathematik': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/800px-Andromeda_Galaxy_%28with_h-alpha%29.jpg',
 };
-
 function getCategoryFallback(topCategory) {
   return CATEGORY_FALLBACK_IMAGES[topCategory] ||
     'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Hubble_Ultra_Deep_Field_part_d.jpg/800px-Hubble_Ultra_Deep_Field_part_d.jpg';
 }
-
 /** Main build routine */
 async function buildData() {
   console.log('═══════════════════════════════════════════');
   console.log('  Spiral Wiki — Optimierter Build-Prozess');
   console.log('═══════════════════════════════════════════');
-
   const files = getMarkdownFiles(libraryDir);
   console.log(`📁 ${files.length} Markdown-Dateien gefunden.`);
-
   const monographMap = new Map();
   const limit = pLimit(10);
-
   // 1️⃣ Read and parse markdown files in parallel
   await Promise.all(files.map(file => limit(async () => {
     const content = fs.readFileSync(file, 'utf-8');
     const basename = path.basename(file, '.md');
-
     const relativePath = path.relative(libraryDir, file);
     const parts = relativePath.split(path.sep);
     parts.pop();
     const category = parts.length > 0 ? parts.join(' / ') : 'Uncategorized';
-
     const titleMatch = content.match(/^#\s+(.+)$/m);
     let title = titleMatch ? titleMatch[1] : basename;
     title = title.replace(/Monographie:\s*Masterclass\s*/i, '').trim();
@@ -299,10 +284,8 @@ async function buildData() {
     let cleanTitle = title.replace(/\(.*?\)/g, '').trim();
     if (cleanTitle.includes(' - ')) cleanTitle = cleanTitle.split(' - ')[0].trim();
     if (cleanTitle.includes(': ')) cleanTitle = cleanTitle.split(': ')[0].trim();
-
     const imageMatch = content.match(/!\[.*?\]\((.*?)\)/);
     const imageUrl = imageMatch ? imageMatch[1] : null;
-
     const existing = monographMap.get(cleanTitle);
     if (existing) {
       existing.content += '\n\n---\n\n' + content;
@@ -317,18 +300,14 @@ async function buildData() {
       });
     }
   })));
-
   // 2️⃣ Convert map to enriched array
   const monographs = Array.from(monographMap.values()).map(m => {
     const parts = m.category ? m.category.split(' / ') : ['Uncategorized'];
     const topCategory = parts[0];
-
     let year = 9999;
     const yearMatch = m.content.match(/\(\*?\s*(\d{4})/);
     if (yearMatch?.[1]) year = parseInt(yearMatch[1], 10);
-
     const finalImageUrl = m.imageUrl || null;
-
     return {
       ...m,
       wordCount: m.content.split(/\s+/).filter(Boolean).length,
@@ -339,7 +318,6 @@ async function buildData() {
       cleanTitle: m.title,
     };
   });
-
   // 3️⃣ Sanitize & fix ALL image URLs
   console.log('\n🖼️  Bild-URLs validieren und reparieren...');
   let fixedCount = 0;
@@ -348,12 +326,10 @@ async function buildData() {
     const sanitized = sanitizeImageUrl(m.finalImageUrl, m.cleanTitle, m.topCategory);
     if (sanitized !== m.finalImageUrl) fixedCount++;
     m.finalImageUrl = sanitized;
-
     // Check if we used a curated override or a valid fix, which means we now have a REAL image
     if (IMAGE_OVERRIDES[m.cleanTitle] || BROKEN_IMAGE_FIXES[m.cleanTitle]) {
       m.hasRealImage = true;
     }
-
     // Assign fallback if still missing
     if (!m.finalImageUrl) {
       m.finalImageUrl = getCategoryFallback(m.topCategory);
@@ -362,7 +338,6 @@ async function buildData() {
     }
   });
   console.log(`  → ${fixedCount} URLs repariert`);
-
   // 3️⃣b Inherit images from sibling monographs of the same person/subject
   console.log('\n🔗 Bild-Vererbung für Unterthemen/Vertiefungen...');
   let inheritedCount = 0;
@@ -387,7 +362,6 @@ async function buildData() {
       
       return false;
     });
-
     if (sibling) {
       m.finalImageUrl = sibling.finalImageUrl;
       m.hasRealImage = true;
@@ -396,7 +370,6 @@ async function buildData() {
     }
   });
   console.log(`  → ${inheritedCount} Bilder erfolgreich vererbt`);
-
   // 4️⃣ Generate cross-links (max 5 per monograph)
   console.log('\n🔗 Querverweise generieren...');
   const MAX_LINKS = 5;
@@ -428,13 +401,10 @@ async function buildData() {
     }
     m.content = processed;
   });
-
   // 5️⃣ Write SPLIT output files
   console.log('\n📦 Dateien schreiben...');
-
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   if (!fs.existsSync(contentDir)) fs.mkdirSync(contentDir, { recursive: true });
-
   // INDEX FILE: Metadata only (no content!) — tiny, fast load
   const indexData = monographs.map(m => ({
     id: m.id,
@@ -451,7 +421,6 @@ async function buildData() {
   fs.writeFileSync(indexFile, indexJson, 'utf-8');
   const indexSizeKB = (Buffer.byteLength(indexJson) / 1024).toFixed(1);
   console.log(`  ✅ data-index.json: ${indexSizeKB} KB (${monographs.length} Einträge)`);
-
   // CONTENT FILES: One per monograph — loaded on demand
   let contentTotalKB = 0;
   monographs.forEach(m => {
@@ -460,7 +429,6 @@ async function buildData() {
     contentTotalKB += Buffer.byteLength(contentJson) / 1024;
   });
   console.log(`  ✅ data-content/: ${monographs.length} Dateien (${(contentTotalKB / 1024).toFixed(1)} MB gesamt)`);
-
   // LEGACY FILES: Still generated for backwards compatibility
   const legacyJson = JSON.stringify(monographs, null, 2);
   fs.writeFileSync(legacyJsonFile, legacyJson, 'utf-8');
@@ -469,12 +437,10 @@ async function buildData() {
   fs.writeFileSync(legacyJsFile, '/* Legacy appData.js removed for performance. Data is now fetched async. */', 'utf-8');
   console.log(`  ✅ Legacy data.json beibehalten`);
   console.log(`  ✅ appData.js durch Stub ersetzt (war 5.9 MB!)`);
-
   console.log('\n═══════════════════════════════════════════');
   console.log(`  ✨ ${monographs.length} Monographien erfolgreich verarbeitet`);
   console.log(`  📊 Index: ${indexSizeKB} KB | Content: ${(contentTotalKB / 1024).toFixed(1)} MB`);
   console.log(`  ⚡ Ladezeit-Reduktion: ~99%`);
   console.log('═══════════════════════════════════════════');
 }
-
 await buildData();
