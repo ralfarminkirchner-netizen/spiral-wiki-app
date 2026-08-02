@@ -1370,7 +1370,7 @@ export default function App() {
 
   return (
     <>
-      <div style={{
+      <div className="app-view-switcher" style={{
         position: 'fixed', top: '15px', left: '50%', transform: 'translateX(-50%)',
         display: 'flex', gap: '8px', zIndex: 1000,
         background: 'rgba(10,10,15,0.7)', backdropFilter: 'blur(12px)',
