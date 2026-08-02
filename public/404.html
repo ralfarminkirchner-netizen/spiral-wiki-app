@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SPiRAL MiND WiKi</title>
+    <script>
+      (() => {
+        const base = '/spiral-wiki-app/';
+        const path = window.location.pathname.startsWith(base)
+          ? window.location.pathname.slice(base.length)
+          : '';
+        const route = path ? `#/${path.replace(/^\/+/, '')}` : '#/';
+        window.location.replace(`${base}${route}${window.location.search}`);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Weiterleitung zur SPiRAL MiND WiKi …</p>
+  </body>
+</html>

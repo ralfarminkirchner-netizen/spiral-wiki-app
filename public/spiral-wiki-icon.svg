@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title">
+  <title id="title">SPiRAL MiND WiKi</title>
+  <rect width="192" height="192" rx="38" fill="#0d1117"/>
+  <path d="M96 35c-34 0-58 22-58 51 0 26 21 43 47 43 23 0 39-14 39-32 0-15-12-25-28-25-12 0-21 7-21 17 0 8 7 13 15 13 7 0 11-4 11-9" fill="none" stroke="#00e5ff" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="101" cy="93" r="7" fill="#c084fc"/>
+  <path d="M56 151h80" stroke="#c084fc" stroke-width="8" stroke-linecap="round"/>
+</svg>

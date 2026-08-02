@@ -225,7 +225,6 @@ export default function MindcelWikiView({ data }: { data: any }) {
         const maxDist = 70;
         const maxDistSq = maxDist * maxDist;
         const minDist = 30;
-        const minDistSq = minDist * minDist;
 
         graphData.nodes.forEach((node: any) => {
           if (node.x === undefined || node.y === undefined || node.z === undefined) return;
@@ -309,13 +308,15 @@ export default function MindcelWikiView({ data }: { data: any }) {
       // Enforce LRU cache of 3 images to prevent iPad crashes
       if (activeMaterials.size >= 3) {
         const oldestUrl = activeMaterials.keys().next().value;
-        const oldMat = activeMaterials.get(oldestUrl);
-        if (oldMat && oldMat !== material) {
-           oldMat.map = circleTexture;
-           oldMat.color.copy(oldMat.userData.originalColor);
-           oldMat.needsUpdate = true;
+        if (oldestUrl) {
+          const oldMat = activeMaterials.get(oldestUrl);
+          if (oldMat && oldMat !== material) {
+            oldMat.map = circleTexture;
+            oldMat.color.copy(oldMat.userData.originalColor);
+            oldMat.needsUpdate = true;
+          }
+          activeMaterials.delete(oldestUrl);
         }
-        activeMaterials.delete(oldestUrl);
       }
       
       activeMaterials.set(clickedNode.image, material);
@@ -387,10 +388,7 @@ export default function MindcelWikiView({ data }: { data: any }) {
           if (isLinkActive(link)) return '#00ffff';
           return '#ffffff';
         }}
-        linkOpacity={link => {
-          if (isLinkActive(link)) return 0.6;
-          return 0.02; // ultra-transparent ghostly connections
-        }}
+        linkOpacity={0.6}
         linkDirectionalParticles={link => {
           if (!clickedNode) return 1; // gentle flow everywhere when idle
           if (isLinkActive(link)) return 4; // heavy flow along active network

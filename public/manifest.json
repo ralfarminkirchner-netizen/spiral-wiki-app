@@ -4,12 +4,13 @@
   "description": "Eine kybernetische Erkundung von Geist, Welt und Systemen.",
   "icons": [
     {
-      "src": "/vite.svg",
-      "sizes": "192x192",
+      "src": "spiral-wiki-icon.svg",
+      "sizes": "any",
       "type": "image/svg+xml"
     }
   ],
-  "start_url": "/",
+  "start_url": "./#/",
+  "scope": "./",
   "display": "standalone",
   "theme_color": "#0d1117",
   "background_color": "#0d1117"
