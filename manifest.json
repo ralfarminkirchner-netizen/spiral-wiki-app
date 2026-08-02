@@ -1,0 +1,17 @@
+{
+  "short_name": "SPiRAL MiND",
+  "name": "SPiRAL MiND WiKi",
+  "description": "Eine kybernetische Erkundung von Geist, Welt und Systemen.",
+  "icons": [
+    {
+      "src": "spiral-wiki-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#0d1117",
+  "background_color": "#0d1117"
+}

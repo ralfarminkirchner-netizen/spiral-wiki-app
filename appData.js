@@ -1,0 +1,1 @@
+/* Legacy appData.js removed for performance. Data is now fetched async. */
