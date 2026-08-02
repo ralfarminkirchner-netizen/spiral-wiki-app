@@ -1862,12 +1862,30 @@ html, body {
   .mosaic-header {
     flex-direction: column;
     gap: 0.5rem;
-    padding: 0.8rem 0.8rem 0.3rem;
+    padding: 3.6rem 0.8rem 0.3rem;
   }
 
   .mosaic-header-right {
     width: 100%;
     justify-content: flex-end;
+  }
+
+  .app-view-switcher {
+    top: 0.5rem !important;
+    left: 0.8rem !important;
+    right: 0.8rem !important;
+    transform: none !important;
+    justify-content: center;
+    gap: 0.25rem !important;
+    padding: 0.3rem !important;
+  }
+
+  .app-view-switcher > button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.7rem !important;
+    white-space: nowrap;
   }
 }
 

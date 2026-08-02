@@ -6,6 +6,9 @@ import * as PIXI from 'pixi.js';
 import MindcelWikiView from './components/MindcelWikiView';
 // ─── Utilities ───
 
+const publicAssetUrl = (assetPath: string): string =>
+  `${import.meta.env.BASE_URL}${assetPath.replace(/^\/+/, '')}`;
+
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -42,11 +45,6 @@ interface MonographMeta {
   hasRealImage: boolean;
   wordCount?: number;
   cleanTitle: string;
-}
-
-/** Full monograph with content — loaded on demand */
-interface MonographFull extends MonographMeta {
-  content: string;
 }
 
 type ViewMode = 'spiral' | 'circle' | 'portrait';
@@ -143,12 +141,11 @@ interface DashboardProps {
   data: MonographMeta[];
   readMonographs: string[];
   favorites: string[];
-  toggleFavorite: (id: string) => void;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
 }
 
-function Dashboard({ data, readMonographs, favorites, toggleFavorite, viewMode, setViewMode }: DashboardProps) {
+function Dashboard({ data, readMonographs, favorites, viewMode, setViewMode }: DashboardProps) {
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
   const [activeCategory, setActiveCategory] = useState<string>('Alle');
@@ -587,8 +584,9 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
 
       const textTitle = new PIXI.Text({
         text: 'SPiRAL\nMiND',
-        style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: 10, fill: 0xffffff, alpha: 0.2, fontWeight: 'bold', align: 'center' }
+        style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: 10, fill: 0xffffff, fontWeight: 'bold', align: 'center' }
       });
+      textTitle.alpha = 0.2;
       textTitle.anchor.set(0.5);
       world.addChild(textTitle);
 
@@ -626,8 +624,9 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
         if (!sharedLetterTextures[char]) {
           const txt = new PIXI.Text({
             text: char,
-            style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: Math.round(r * 0.85), fill: 0xffffff, alpha: 0.9, fontWeight: 'bold' }
+            style: { fontFamily: 'Outfit, Inter, sans-serif', fontSize: Math.round(r * 0.85), fill: 0xffffff, fontWeight: 'bold' }
           });
+          txt.alpha = 0.9;
           sharedLetterTextures[char] = app.renderer.generateTexture(txt);
         }
         return sharedLetterTextures[char];
@@ -797,7 +796,7 @@ function CanvasSpiral({ positions, allData, viewMode, superArms, getArmIndex }: 
     return () => {
       isDestroyed = true;
       if (appRef.current) {
-        appRef.current.destroy(true, { children: true, texture: false, baseTexture: false });
+        appRef.current.destroy(true, { children: true, texture: false, textureSource: false });
         setPixiReady(false);
       }
     };
@@ -1064,7 +1063,7 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
     setContent(null);
 
     // Try individual content file first, fall back to legacy data.json
-    fetch(`/data-content/${id}.json`)
+    fetch(publicAssetUrl(`data-content/${id}.json`))
       .then(res => {
         if (!res.ok) throw new Error('Content file not found');
         return res.json();
@@ -1075,7 +1074,7 @@ function MonographReader({ data, markAsRead, favorites, toggleFavorite }: Reader
       })
       .catch(() => {
         // Fallback: fetch from legacy monolithic data.json
-        fetch(`/data.json?_=${Date.now()}`)
+        fetch(`${publicAssetUrl('data.json')}?_=${Date.now()}`)
           .then(res => res.json())
           .then(all => {
             const found = all.find((m: any) => m.id === id);
@@ -1311,8 +1310,8 @@ export default function App() {
   useEffect(() => {
     // Load the TINY index file (~50KB) and causality-graph.json
     Promise.all([
-      fetch(`/data-index.json?_=${Date.now()}`).then(res => res.json()),
-      fetch(`/causality-graph.json?_=${Date.now()}`).then(res => res.ok ? res.json() : { edges: [] }).catch(() => ({ edges: [] }))
+      fetch(`${publicAssetUrl('data-index.json')}?_=${Date.now()}`).then(res => res.json()),
+      fetch(`${publicAssetUrl('causality-graph.json')}?_=${Date.now()}`).then(res => res.ok ? res.json() : { edges: [] }).catch(() => ({ edges: [] }))
     ])
       .then(([indexJson, causalityJson]) => {
         setData(indexJson);
@@ -1324,7 +1323,7 @@ export default function App() {
       .catch((err) => {
         console.error('Failed to load optimized data:', err);
         // Fallback: legacy data.json (if data-index.json not yet built)
-        fetch(`/data.json?_=${Date.now()}`)
+        fetch(`${publicAssetUrl('data.json')}?_=${Date.now()}`)
           .then(res => res.json())
           .then(json => {
             // Strip content from legacy data to keep memory low
@@ -1352,7 +1351,7 @@ export default function App() {
   // Load the real two-layer influence/association links for the 3D graph.
   // (Wikidata P737 = directed influence; corpus [[wiki-links]] = undirected association.)
   useEffect(() => {
-    fetch(`/graph-links.json?_=${Date.now()}`)
+    fetch(`${publicAssetUrl('graph-links.json')}?_=${Date.now()}`)
       .then(res => (res.ok ? res.json() : null))
       .then(json => { if (json && Array.isArray(json.links)) setGraphLinks(json.links); })
       .catch(() => { /* no links file yet → graph renders nodes only */ });
@@ -1371,7 +1370,7 @@ export default function App() {
 
   return (
     <>
-      <div style={{
+      <div className="app-view-switcher" style={{
         position: 'fixed', top: '15px', left: '50%', transform: 'translateX(-50%)',
         display: 'flex', gap: '8px', zIndex: 1000,
         background: 'rgba(10,10,15,0.7)', backdropFilter: 'blur(12px)',
@@ -1401,7 +1400,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={
           appView === 'spiral' ? (
-            <Dashboard data={data} readMonographs={readMonographs} favorites={favorites} toggleFavorite={toggleFavorite} viewMode={viewMode} setViewMode={setViewMode} />
+            <Dashboard data={data} readMonographs={readMonographs} favorites={favorites} viewMode={viewMode} setViewMode={setViewMode} />
           ) : appView === 'mindcel' ? (
             <MindcelWikiView data={{ nodes: data, links: graphLinks }} />
           ) : (
